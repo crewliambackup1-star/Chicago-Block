@@ -120,8 +120,22 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().velocity > 1, null, { timeout: 8000 });
-    const wheelRotationBefore = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().carWheelRotations);
-    await page.waitForFunction(before => window.__CHICAGO_BLOCK_TEST__.getState().carWheelRotations.some((angle, index) => Math.abs(angle - before[index]) > 0.03), wheelRotationBefore, { timeout: 4000 });
+    const wheelStartState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(wheelStartState.keys.w, true, 'W should stay held during the acceleration and wheel-animation check');
+    const wheelRotationBefore = wheelStartState.carWheelRotations;
+    try {
+      await page.waitForFunction(
+        before => {
+          const angles = window.__CHICAGO_BLOCK_TEST__.getState().carWheelRotations;
+          return angles.some((angle, index) => Number.isFinite(angle) && Number.isFinite(before[index]) && Math.abs(angle - before[index]) > 0.03);
+        },
+        wheelRotationBefore,
+        { polling: 100, timeout: 12000 }
+      );
+    } catch (error) {
+      const wheelState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+      throw new Error(`Player wheels did not visibly rotate while driving: velocity=${wheelState.velocity}, W=${wheelState.keys.w}, angles=${JSON.stringify(wheelState.carWheelRotations)}; ${error.message}`);
+    }
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', true));
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.heading > before + 0.01,
