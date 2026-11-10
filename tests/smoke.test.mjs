@@ -44,6 +44,6 @@ test('README documents V2 progress, future scope, and automated checks', () => {
   assert.match(readme, /fictional/);
   assert.match(readme, /delivery activity/);
   assert.match(readme, /clear, rain, and fog/);
-  assert.match(readme, /five collectible neighborhood snapshots/);
+  assert.match(readme, /Five collectible neighborhood snapshots/);
   assert.match(readme, /Chromium and WebKit/);
 });
