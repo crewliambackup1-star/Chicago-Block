@@ -546,11 +546,13 @@ brake.addEventListener('pointerdown',e=>{e.preventDefault();brake.setPointerCapt
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
 
 let locked=false;
+const automationMode=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  &&new URLSearchParams(location.search).has('automation');
 function canUsePointerLock(){
   return innerWidth>760&&matchMedia('(pointer:fine)').matches;
 }
 function requestLookLock(){
-  if(!canUsePointerLock()||document.pointerLockElement===renderer.domElement)return;
+  if(automationMode||!canUsePointerLock()||document.pointerLockElement===renderer.domElement)return;
   try{
     const request=renderer.domElement.requestPointerLock?.();
     if(request&&typeof request.catch==='function')request.catch(()=>{});
@@ -681,7 +683,7 @@ function frame(){
   renderer.render(scene,camera);
 }
 frame();
-if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSearchParams(location.search).has('automation')){
+if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
