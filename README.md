@@ -1,37 +1,43 @@
-# CHICAGO BLOCK — The Living City (Update 1)
+# CHICAGO BLOCK — Life on the Streets (V2 development)
 
 A browser-based 3D neighborhood exploration game built with Three.js. The setting is an original, fictional Chicago-inspired district, not a precise recreation of any real residential property.
 
-## What's in Update 1
+## V2 development progress
 
-### 1. Playable foundation
-- Third-person character model and first-person camera option.
-- Mouse-look on desktop and drag-look on touch screens.
-- Walking, sprinting, jumping, basic building collision, and a responsive HUD.
-- Keyboard and on-screen mobile controls.
+### Visual foundation pass
+- Procedural asphalt, sidewalk, brick, and concrete surface textures.
+- More detailed building facades with exterior trim, floor bands, corner columns, and framed windows.
+- Instanced illuminated window accents to add depth without a separate draw call for every window.
+- Improved directional shadow resolution and tone-mapping exposure.
+- Detailed sedan body accents, wheel hubs, mirrors, and front/rear lights.
+- Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
 
-### 2. Expanded neighborhood
-- A compact 3-by-3 street grid with intersections, crosswalks, sidewalks, and lane markings.
-- A mix of fictional apartment buildings, a corner market, courtyard green space, benches, trees, streetlights, and a recreation pad.
-- A minimap and neighborhood zone label.
+### Driving controls
+- Corrected car steering mapping: A / Left Arrow steers left; D / Right Arrow steers right.
+- Steering mapping is isolated in controls.js so it can be tested without launching WebGL.
 
-### 3. Living city
-- 20 pedestrian characters following sidewalk routes.
-- 7 traffic vehicles circulating on a neighborhood loop.
-- A parked blue sedan that the player can enter, drive, and exit.
-- A running in-game clock and changing daylight.
+### Preserved V1 gameplay
+- Third-person character and first-person camera option.
+- Walking, sprinting, jumping, building collision, and keyboard/mobile controls.
+- 3-by-3 fictional street grid, sidewalks, crosswalks, market, courtyard, trees, benches, and minimap.
+- 20 pedestrians, 7 traffic vehicles, a drivable blue sedan, and a changing day/night clock.
 
-## Play
+## Planned for later V2 passes
+- More playable activities, delivery tasks, and exploration challenges.
+- Weather effects such as rain, fog, and wet-road reflections.
+- Further visual refinement and optimization based on real-device performance.
 
-Open the GitHub Pages site after Pages is enabled. The game is also designed to run from a local web server because browsers restrict ES modules opened directly from a file.
+These later features are planned but are not implemented yet.
 
-\`\`\`bash
+## Run locally
+
+Use a web server because browsers restrict ES modules opened directly from a file:
+
+```bash
 python3 -m http.server 8080
-\`\`\`
+```
 
-Then open \`http://localhost:8080\`.
-
-An internet connection is required because Three.js is loaded from jsDelivr.
+Then open http://localhost:8080. An internet connection is required because Three.js is loaded from jsDelivr.
 
 ## Controls
 
@@ -47,19 +53,13 @@ An internet connection is required because Three.js is loaded from jsDelivr.
 | Advance displayed time | N | — |
 | Release mouse capture | Esc | — |
 
-To enter the blue sedan, walk close to it and press **E** (or tap **Interact**). Use **WASD / arrows** to drive. Press **E** again to exit.
+To enter the blue sedan, walk close to it and press E (or tap Interact). Use A / Left Arrow to steer left and D / Right Arrow to steer right. Press E again to exit.
 
-## Checks
+## Automated checks
 
-The repository includes dependency-free checks:
-
-\`\`\`bash
-npm test
+```bash
 npm run check
-\`\`\`
+npm test
+```
 
-GitHub Actions runs these checks on pushes and pull requests. These checks verify the JavaScript syntax and key game structure; they do not replace a real Safari / Chrome playtest on the target device.
-
-## Current scope
-
-This is an early playable release, not a finished open-world game. Interiors, advanced vehicle physics, mission progression, saved game state, and full weather simulation are not included in Update 1. Those are candidates for later updates.
+GitHub Actions runs syntax and smoke tests on pushes and pull requests. The steering helper has a direct automated unit test. Automated checks do not replace a real Safari/WebGL playtest; camera behavior, visuals, touch input, frame rate, and driving still need target-device testing before V2 can be called complete.
