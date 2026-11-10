@@ -124,6 +124,25 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     await page.locator('#playButton').tap();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     assert.equal(await page.locator('#mobile').isVisible(), true, 'mobile control dock should be visible');
+    const brandBox = await page.locator('#brand').boundingBox();
+    const statsBox = await page.locator('#stats').boundingBox();
+    const mapBox = await page.locator('#mapWrap').boundingBox();
+    assert.ok(brandBox.y + brandBox.height <= statsBox.y, 'mobile brand and stats should not overlap');
+    assert.ok(statsBox.x + statsBox.width <= mapBox.x, 'mobile stats and minimap should not overlap');
+
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-91, -40));
+    await page.locator('#activityButton').tap();
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).discoveredLandmarks, 1);
+
+    const brake = page.locator('#brakeButton');
+    const brakeBounds = await brake.boundingBox();
+    assert.ok(brakeBounds, 'mobile brake button should be visible');
+    await page.mouse.move(brakeBounds.x + brakeBounds.width / 2, brakeBounds.y + brakeBounds.height / 2);
+    await page.mouse.down();
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).braking, true);
+    await page.mouse.up();
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).braking, false);
+
     const beforeMove = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().player.z);
     const forwardButton = page.locator('[data-key="forward"]');
     const bounds = await forwardButton.boundingBox();
