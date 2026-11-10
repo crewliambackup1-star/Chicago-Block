@@ -25,7 +25,7 @@ test('V1 gameplay systems remain present after the V2 visual pass', () => {
 });
 
 test('V2 contains procedural materials, facade detail, and dynamic lamps', () => {
-  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker']) {
+  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker', 'marketSignCanvas', 'function streetBin', 'function hydrant', 'const landmarks', 'updateActivityHud', 'clearInputState']) {
     assert.ok(game.includes(feature), 'Missing V2 visual feature: ' + feature);
   }
 });
@@ -44,4 +44,6 @@ test('README documents V2 progress, future scope, and automated checks', () => {
   assert.match(readme, /fictional/);
   assert.match(readme, /delivery activity/);
   assert.match(readme, /clear, rain, and fog/);
+  assert.match(readme, /five collectible neighborhood snapshots/);
+  assert.match(readme, /Chromium and WebKit/);
 });
