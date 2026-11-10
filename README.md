@@ -11,9 +11,12 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - Improved directional shadow resolution and tone-mapping exposure.
 - Detailed sedan body accents, wheel hubs, mirrors, and front/rear lights.
 - Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
+- A neighborhood delivery activity with a pickup point at the corner market and a drop-off marker in the courtyard.
+- Switchable clear, rain, and fog modes; rain includes animated rainfall and road-side puddle accents.
 
 ### Driving controls
 - Corrected car steering mapping: A / Left Arrow steers left; D / Right Arrow steers right.
+- Press F near the gold marker to collect and deliver a package; press R to cycle clear, rain, and fog weather.
 - Steering mapping is isolated in controls.js so it can be tested without launching WebGL.
 
 ### Preserved V1 gameplay
@@ -27,7 +30,7 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - Weather effects such as rain, fog, and wet-road reflections.
 - Further visual refinement and optimization based on real-device performance.
 
-These later features are planned but are not implemented yet.
+Additional missions, more activity types, deeper weather polish, and further environmental effects remain planned for later V2 passes.
 
 ## Run locally
 
