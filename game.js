@@ -143,6 +143,38 @@ function building(x,z,w,d,h,color,side=true){
  [119,120,40,31,17,M.cream]
 ].forEach(args=>building(...args));
 
+function rooftopUnit(x,z,roofHeight,rotation=0){
+  const group=new THREE.Group();group.position.set(x,roofHeight,z);group.rotation.y=rotation;world.add(group);
+  cube(group,0,.42,0,2.25,.84,1.55,M.metal);
+  cube(group,0,.88,0,2.32,.12,1.62,M.silver,false);
+  for(let i=0;i<7;i++)cube(group,-.86+i*.287,.43,.79,.055,.52,.035,M.trim,false);
+  const fan=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.09,18),M.trim);fan.position.set(0,.96,0);group.add(fan);
+  const fanHub=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.12,12),M.silver);fanHub.position.set(0,1.03,0);group.add(fanHub);
+  for(let i=0;i<4;i++){
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(.12,.035,.72),M.silver);
+    blade.position.set(0,1.025,0);blade.rotation.y=i*Math.PI/2;group.add(blade);
+  }
+  return group;
+}
+[
+  [-129,-124,15.55,0],[-110,-114,15.55,.4],[-51,-42,18.55,0],
+  [112,-39,17.55,.6],[128,-31,17.55,0],[-128,38,15.55,.2],
+  [111,37,16.55,0],[-42,116,15.55,.5],[50,117,15.55,0],[126,116,17.55,.3]
+].forEach(args=>rooftopUnit(...args));
+
+function rooftopWaterTank(x,z,roofHeight){
+  const group=new THREE.Group();group.position.set(x,roofHeight,z);world.add(group);
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+    cube(group,sx*.92,1.25,sz*.92,.12,2.5,.12,M.metal);
+    cube(group,sx*.92,2.5,sz*.92,.2,.12,.2,M.silver,false);
+  }
+  const tank=new THREE.Mesh(new THREE.CylinderGeometry(1.35,1.42,2.1,16,1),M.wood);
+  tank.position.y=3.55;tank.castShadow=true;group.add(tank);
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(1.38,1.38,.12,16),M.trim);top.position.y=4.65;group.add(top);
+  for(let i=0;i<5;i++)cube(group,-.75+i*.375,3.55,1.405,.045,1.65,.045,M.trim,false);
+}
+rooftopWaterTank(-119,-120,15.55);
+
 const windowMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), M.glass, windows.length);
 const windowTransform = new THREE.Object3D();
 windows.forEach((item,index)=>{
