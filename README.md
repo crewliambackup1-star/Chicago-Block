@@ -16,6 +16,7 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - Brighter, more varied asphalt with subtle pavement cracks, clearer sidewalk coloring, and corrected texture tinting.
 - A more readable day/night lighting balance, with streetlamp bulbs and local lights responding to the in-game clock.
 - More detailed sedan wheel assemblies with rims, spokes, center caps, and wheel arches; wheels rotate as cars move.
+- A more sculpted sedan silhouette with beveled body panels, sloped cabin lines, and separate side/front/rear glass.
 - Improved shadows, brighter material/lighting balance, clearer double-yellow center lines, dashed lane dividers, and crosswalk markings.
 - Animated wheel rotation on the player sedan and traffic cars, with headlights and taillights that brighten naturally at night.
 

@@ -498,9 +498,50 @@ const plateTexture=new THREE.CanvasTexture(plateCanvas);plateTexture.colorSpace=
 const licensePlateMaterial=new THREE.MeshStandardMaterial({map:plateTexture,roughness:.82});
 
 function car(color=0x365b78){
-  const g=new THREE.Group(),bodyMat=mat(color,.5),wheelRigs=[];
-  cube(g,0,.76,0,2.1,.82,4.35,bodyMat);
-  cube(g,0,1.38,-.25,1.78,.76,2.38,M.glass);
+  const g=new THREE.Group(),bodyMat=mat(color,.38),wheelRigs=[];
+  // Rounded, sloped side profiles replace the old rectangular body and cabin blocks.
+  const extrudedProfile=(points,depth,material)=>{
+    const profile=new THREE.Shape();
+    points.forEach(([x,y],index)=>index===0?profile.moveTo(x,y):profile.lineTo(x,y));
+    profile.closePath();
+    const geometry=new THREE.ExtrudeGeometry(profile,{
+      depth,steps:1,bevelEnabled:true,bevelSegments:3,bevelSize:.035,bevelThickness:.035,curveSegments:8
+    });
+    geometry.translate(0,0,-depth/2);
+    geometry.rotateY(Math.PI/2);
+    geometry.computeVertexNormals();
+    const mesh=new THREE.Mesh(geometry,material);
+    mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);
+    return mesh;
+  };
+  // Profile X is reversed local Z because the side shape is rotated into the car's length axis.
+  extrudedProfile([
+    [-2.22,.36],[2.2,.36],[2.18,.58],[1.98,.77],[1.3,.86],[1.05,1.02],
+    [.88,1.08],[-1.12,1.08],[-1.35,.9],[-1.98,.81],[-2.17,.64]
+  ],2.02,bodyMat);
+  extrudedProfile([
+    [-1.3,.88],[1.2,.88],[.78,1.48],[.48,1.62],[-.82,1.62],[-1.15,1.4]
+  ],1.76,bodyMat);
+  const windowMaterial=M.glass.clone();windowMaterial.side=THREE.DoubleSide;windowMaterial.roughness=.2;
+  const addSideWindow=(points,side)=>{
+    const shape=new THREE.Shape();
+    points.forEach(([x,y],index)=>index===0?shape.moveTo(x,y):shape.lineTo(x,y));
+    shape.closePath();
+    const geometry=new THREE.ShapeGeometry(shape,8);geometry.rotateY(Math.PI/2);
+    const pane=new THREE.Mesh(geometry,windowMaterial);
+    pane.position.x=side*.895;pane.position.y=0;pane.position.z=0;
+    pane.castShadow=false;g.add(pane);
+  };
+  for(const side of [-1,1]){
+    addSideWindow([[-1.08,1.01],[-.16,1.01],[-.16,1.5],[-.78,1.5]],side);
+    addSideWindow([[-.04,1.01],[.94,1.01],[.66,1.47],[.08,1.5]],side);
+    cube(g,side*.905,1.26,.02,.045,.48,.055,M.trim,false);
+  }
+  const windshield=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.5),windowMaterial);
+  windshield.position.set(0,1.27,-1.17);windshield.rotation.x=.42;g.add(windshield);
+  const rearGlass=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.44),windowMaterial);
+  rearGlass.position.set(0,1.26,1.12);rearGlass.rotation.x=-.42;g.add(rearGlass);
+  cube(g,0,1.65,-.16,1.36,.055,1.38,bodyMat,false);
   cube(g,0,.48,-2.2,1.9,.18,.18,M.silver,false);cube(g,0,.48,2.2,1.9,.18,.18,M.silver,false);
   cube(g,0,.83,-2.22,.92,.24,.08,M.metal,false);
   for(let slat=0;slat<3;slat++){

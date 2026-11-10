@@ -43,6 +43,20 @@ test('V2 visual polish adds neighborhood landmarks and readable road materials',
   assert.ok(game.includes("ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);"));
 });
 
+test('V2 sedan uses a sloped, beveled body and separate cabin glass', () => {
+  for (const feature of [
+    'new THREE.ExtrudeGeometry(profile',
+    'bevelEnabled:true,bevelSegments:3',
+    'extrudedProfile([',
+    'const addSideWindow=',
+    'new THREE.PlaneGeometry(1.5,.5)',
+    'const rearGlass='
+  ]) {
+    assert.ok(game.includes(feature), 'Missing improved sedan geometry: ' + feature);
+  }
+  assert.ok(!game.includes('cube(g,0,.76,0,2.1,.82,4.35,bodyMat)'), 'The old rectangular car body should be removed');
+});
+
 test('V2 sedan has detailed rotating wheels while retaining plates and door handles', () => {
   for (const feature of [
     'wheelSpokeCount=0', 'new THREE.TorusGeometry(.205,.028,8,22)',
