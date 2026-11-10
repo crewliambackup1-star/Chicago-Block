@@ -259,6 +259,18 @@ function car(color=0x365b78){
   return g;
 }
 const playerCar=car(0x315e83);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
+function activityBeacon(){
+  const group=new THREE.Group();
+  const ringMaterial=new THREE.MeshStandardMaterial({color:0xf3bd62,emissive:0x9b5c18,emissiveIntensity:1.1,roughness:.3});
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.085,8,32),ringMaterial);ring.rotation.x=-Math.PI/2;ring.position.y=.12;group.add(ring);
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.1,.58,3.5,14,1,true),new THREE.MeshBasicMaterial({color:0xf2c36e,transparent:true,opacity:.16,depthWrite:false}));beam.position.y=1.9;group.add(beam);
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),M.lampGlow);orb.position.y=3.8;group.add(orb);
+  return group;
+}
+const deliveryPickup=new THREE.Vector3(39,0,-27);
+const deliveryDropoff=new THREE.Vector3(-35,0,38);
+const deliveryMarker=activityBeacon();deliveryMarker.position.copy(deliveryPickup);world.add(deliveryMarker);
+let carryingPackage=false,deliveriesCompleted=0;
 const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-82,-75]].map(p=>new THREE.Vector3(p[0],0,p[1]));
 for(let i=0;i<7;i++){
   const g=car([0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92][i]);world.add(g);
@@ -269,8 +281,61 @@ const player={x:-22,z:-14,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue);world.add(avatar);
 let started=false,inCar=false,firstPerson=false,yaw=0,pitch=-.08,velocity=0;
 let gameHours=14+20/60,lastToast=0,dragging=false,lastPointer={x:0,y:0};
+let weatherMode='clear';
+const rainCount=380,rainPositions=new Float32Array(rainCount*6);
+for(let i=0;i<rainCount;i++){
+  const j=i*6,x=(Math.random()-.5)*210,z=(Math.random()-.5)*210,y=6+Math.random()*42;
+  rainPositions[j]=x;rainPositions[j+1]=y;rainPositions[j+2]=z;
+  rainPositions[j+3]=x-.13;rainPositions[j+4]=y-1.25;rainPositions[j+5]=z;
+}
+const rainGeometry=new THREE.BufferGeometry();rainGeometry.setAttribute('position',new THREE.BufferAttribute(rainPositions,3));
+const rainLines=new THREE.LineSegments(rainGeometry,new THREE.LineBasicMaterial({color:0xb6c9da,transparent:true,opacity:.48}));
+rainLines.visible=false;rainLines.frustumCulled=false;scene.add(rainLines);
+const puddleGroup=new THREE.Group();
+const puddleMaterial=new THREE.MeshStandardMaterial({color:0x607887,transparent:true,opacity:.52,roughness:.2,metalness:.18,depthWrite:false});
+for(let i=0;i<22;i++){
+  const puddle=new THREE.Mesh(new THREE.CircleGeometry(1,20),puddleMaterial);
+  puddle.rotation.x=-Math.PI/2;puddle.scale.set(.7+(i%4)*.35,.35+(i%3)*.22,1);
+  puddle.position.set(((i*37)%190)-95,-.035,((i*61)%190)-95);puddleGroup.add(puddle);
+}
+puddleGroup.visible=false;world.add(puddleGroup);
 const touchMap={forward:'w',back:'s',left:'a',right:'d'};
 function showToast(message){$('toast').textContent=message;$('toast').classList.add('show');lastToast=performance.now();}
+function cycleWeather(){
+  const modes=['clear','rain','fog'];weatherMode=modes[(modes.indexOf(weatherMode)+1)%modes.length];
+  rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
+  M.road.roughness=weatherMode==='rain'?.34:.96;M.road.metalness=weatherMode==='rain'?.16:0;
+  $('weatherLabel').textContent='· '+weatherMode.toUpperCase();
+  showToast('Weather: '+weatherMode.toUpperCase());
+}
+function updateRain(dt){
+  if(weatherMode!=='rain')return;
+  const positions=rainGeometry.attributes.position.array;
+  for(let j=0;j<positions.length;j+=6){
+    positions[j+1]-=dt*34;
+    if(positions[j+1]<-2){
+      positions[j]=player.x+(Math.random()-.5)*190;
+      positions[j+1]=24+Math.random()*30;
+      positions[j+2]=player.z+(Math.random()-.5)*190;
+    }
+    positions[j+3]=positions[j]-.13;positions[j+4]=positions[j+1]-1.25;positions[j+5]=positions[j+2];
+  }
+  rainGeometry.attributes.position.needsUpdate=true;
+}
+function handleActivity(){
+  if(inCar){showToast('Exit the sedan to do the delivery');return;}
+  if(!carryingPackage){
+    if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find the gold marker by the corner market');return;}
+    carryingPackage=true;deliveryMarker.position.copy(deliveryDropoff);
+    $('objectiveText').textContent='Package collected! Take it to the gold marker in the courtyard and press F.';
+    showToast('Package collected — deliver it to the courtyard');
+  }else{
+    if(Math.hypot(player.x-deliveryDropoff.x,player.z-deliveryDropoff.z)>7){showToast('Head to the courtyard delivery marker');return;}
+    carryingPackage=false;deliveriesCompleted++;deliveryMarker.position.copy(deliveryPickup);
+    $('objectiveText').textContent='Delivery complete! Deliveries: '+deliveriesCompleted+'. Return to the market marker for another job.';
+    showToast('Delivery complete! Total deliveries: '+deliveriesCompleted);
+  }
+}
 function updateHud(){
   $('mode').textContent=(inCar?'DRIVING':'ON FOOT')+' · '+(firstPerson?'FIRST':'THIRD')+' PERSON';
   $('speed').textContent=inCar?Math.round(Math.abs(velocity)*2.237)+' MPH':'ON FOOT';
@@ -299,6 +364,7 @@ function keyDown(event){
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))event.preventDefault();
   keys[k]=true;if(event.repeat)return;
   if(k==='e')interact();if(k==='v')changeCamera();
+  if(k==='f')handleActivity();if(k==='r')cycleWeather();
   if(k==='n'){gameHours=(gameHours+4)%24;showToast('Time advanced');}
   if(k===' '&&!inCar&&player.grounded){player.vertical=5.5;player.grounded=false;}
 }
@@ -392,11 +458,15 @@ function updateClock(dt){
   gameHours=(gameHours+dt*.015)%24;const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const daylight=Math.max(.16,Math.sin((gameHours-6)/12*Math.PI));
-  sun.intensity=.18+daylight*2.12;ambientLight.intensity=.38+daylight*1.04;
+  const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
+  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.38+daylight*1.04)*(weatherMode==='fog'?.84:1);
   sun.position.set(-85+daylight*35,25+daylight*95,-65);
   const night=1-daylight;
   for(const item of nightLights){item.glow.intensity=night*1.65;item.bulb.material.emissiveIntensity=.25+night*1.8;}
-  scene.fog.color.setHSL(.55,.13,.19+daylight*.37);scene.background.copy(scene.fog.color);
+  scene.fog.near=weatherMode==='fog'?20:weatherMode==='rain'?58:125;
+  scene.fog.far=weatherMode==='fog'?175:weatherMode==='rain'?245:340;
+  const skyLightness=weatherMode==='fog'?.31:weatherMode==='rain'?.24:.19+daylight*.37;
+  scene.fog.color.setHSL(.55,.13,skyLightness);scene.background.copy(scene.fog.color);
 }
 function updateMap(){
   const ctx=$('minimap').getContext('2d');ctx.clearRect(0,0,248,248);ctx.fillStyle='#596d55';ctx.fillRect(0,0,248,248);
@@ -415,7 +485,8 @@ const timer=new THREE.Clock();let elapsed=0;
 function frame(){
   requestAnimationFrame(frame);const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
   if(started){
-    elapsed+=dt;movePlayer(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);
+    elapsed+=dt;movePlayer(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+    deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
     if(elapsed%0.22<dt){updateMap();updateZone();}
     if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   }
