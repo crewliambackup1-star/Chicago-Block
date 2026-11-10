@@ -5,6 +5,37 @@ const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9eafb4);
 scene.fog = new THREE.Fog(0x9eafb4, 125, 340);
+
+// A lightweight procedural sky dome adds a proper horizon, cloud texture, and night stars.
+const skyCanvas=document.createElement('canvas');skyCanvas.width=1024;skyCanvas.height=512;
+const skyContext=skyCanvas.getContext('2d');
+const skyGradient=skyContext.createLinearGradient(0,0,0,512);
+skyGradient.addColorStop(0,'#315b7c');skyGradient.addColorStop(.43,'#78a0b1');
+skyGradient.addColorStop(.78,'#c4c3b4');skyGradient.addColorStop(1,'#e3b991');
+skyContext.fillStyle=skyGradient;skyContext.fillRect(0,0,1024,512);
+for(let i=0;i<95;i++){
+  const x=(Math.sin(i*91.73)*.5+.5)*1024,y=65+(Math.sin(i*17.31)*.5+.5)*205;
+  const rx=22+(Math.sin(i*7.91)*.5+.5)*58,ry=5+(Math.sin(i*3.17)*.5+.5)*12;
+  const cloud=skyContext.createRadialGradient(x,y,1,x,y,rx);
+  cloud.addColorStop(0,'rgba(244,244,235,.20)');cloud.addColorStop(1,'rgba(244,244,235,0)');
+  skyContext.fillStyle=cloud;skyContext.beginPath();skyContext.ellipse(x,y,rx,ry,0,0,Math.PI*2);skyContext.fill();
+}
+const skyTexture=new THREE.CanvasTexture(skyCanvas);skyTexture.colorSpace=THREE.SRGBColorSpace;
+const skyMaterial=new THREE.MeshBasicMaterial({map:skyTexture,side:THREE.BackSide,depthWrite:false,fog:false});
+const skyDome=new THREE.Mesh(new THREE.SphereGeometry(490,48,32),skyMaterial);
+skyDome.renderOrder=-1000;skyDome.frustumCulled=false;scene.add(skyDome);
+const starPositions=[];
+for(let i=0;i<180;i++){
+  const y=.15+Math.random()*.84,angle=Math.random()*Math.PI*2,r=Math.sqrt(1-y*y)*480;
+  starPositions.push(Math.cos(angle)*r,y*480,Math.sin(angle)*r);
+}
+const starGeometry=new THREE.BufferGeometry();
+starGeometry.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));
+const starMaterial=new THREE.PointsMaterial({color:0xe4efff,size:1.65,transparent:true,opacity:0,depthWrite:false});
+const stars=new THREE.Points(starGeometry,starMaterial);stars.frustumCulled=false;scene.add(stars);
+const sunDisc=new THREE.Mesh(new THREE.SphereGeometry(7,18,14),new THREE.MeshBasicMaterial({color:0xffe4b3,fog:false}));
+sunDisc.frustumCulled=false;scene.add(sunDisc);
+
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
@@ -595,6 +626,10 @@ function updateClock(dt){
   sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.38+daylight*1.04)*(weatherMode==='fog'?.84:1);
   sun.position.set(-85+daylight*35,25+daylight*95,-65);
   const night=1-daylight;
+  skyMaterial.color.setRGB(.2+daylight*.8,.24+daylight*.76,.42+daylight*.58);
+  stars.material.opacity=night*.88;
+  sunDisc.visible=daylight>.28;
+  sunDisc.position.copy(sun.position).normalize().multiplyScalar(475);
   for(const item of nightLights){item.glow.intensity=night*1.65;item.bulb.material.emissiveIntensity=.25+night*1.8;}
   scene.fog.near=weatherMode==='fog'?20:weatherMode==='rain'?58:125;
   scene.fog.far=weatherMode==='fog'?175:weatherMode==='rain'?245:340;
