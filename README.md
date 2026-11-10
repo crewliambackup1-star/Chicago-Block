@@ -12,7 +12,8 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - More detailed pedestrians with animated arms and legs.
 - A more detailed blue sedan with wheel hubs, mirrors, and front/rear lights.
 - Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
-- Improved shadows, tone mapping, and rendering settings.
+- Improved shadows, brighter material/lighting balance, clearer double-yellow center lines, dashed lane dividers, and crosswalk markings.
+- Animated wheel rotation on the player sedan and traffic cars, with headlights and taillights that brighten naturally at night.
 
 ### Things to do
 - Find five collectible neighborhood snapshots at distinct landmarks. Cyan beacons appear on the minimap; press F nearby to collect each one.
