@@ -187,7 +187,23 @@ windowFrameMesh.instanceMatrix.needsUpdate=true;windowFrameMesh.castShadow=false
 // Corner market, courtyard, benches and trees.
 const shop=new THREE.Group();shop.position.set(39,0,-38);world.add(shop);
 cube(shop,0,4.7,0,27,9.4,12,M.dark);cube(shop,0,9.55,0,27.6,.5,12.6,M.brick);
-cube(shop,0,6.4,6.08,10,2.2,.16,M.glass,false);cube(shop,0,8.2,6.2,12,.75,.35,M.yellow,false);
+cube(shop,0,6.4,6.08,10,2.2,.16,M.glass,false);
+const marketSignCanvas=document.createElement('canvas');marketSignCanvas.width=1024;marketSignCanvas.height=160;
+const marketSignContext=marketSignCanvas.getContext('2d');
+marketSignContext.fillStyle='#d7a84f';marketSignContext.fillRect(0,0,1024,160);
+marketSignContext.fillStyle='#26343a';marketSignContext.fillRect(12,12,1000,136);
+marketSignContext.strokeStyle='#f4d58d';marketSignContext.lineWidth=7;marketSignContext.strokeRect(24,24,976,112);
+marketSignContext.fillStyle='#f7e8c8';marketSignContext.font='900 68px system-ui, sans-serif';marketSignContext.textAlign='center';marketSignContext.textBaseline='middle';
+marketSignContext.fillText('CORNER MARKET',512,80);
+const marketSignTexture=new THREE.CanvasTexture(marketSignCanvas);marketSignTexture.colorSpace=THREE.SRGBColorSpace;
+const marketSignMaterial=new THREE.MeshStandardMaterial({map:marketSignTexture,roughness:.62});
+cube(shop,0,8.2,6.24,13,.82,.18,marketSignMaterial,false);
+cube(shop,-6.2,3.1,6.18,2.1,6.2,.2,M.wood,false);
+cube(shop,-6.2,3.1,6.31,1.72,5.8,.08,M.glass,false);
+cube(shop,-6.2,6.35,6.37,1.9,.12,.1,M.silver,false);
+for(let awning=-4.5;awning<=4.5;awning+=1.5){
+  cube(shop,awning,5.2,6.75,1.38,.18,1.35,awning%3===0?M.white:M.red,false);
+}
 block(39,-38,27,12);
 ground(-35,38,58,54,M.leaf,-.01);ground(-35,38,4.5,54,M.walk,.012);ground(-35,38,58,4.5,M.walk,.013);
 function tree(x,z){
@@ -203,6 +219,29 @@ function bench(x,z,rotation=0){
 }
 bench(-48,38);bench(-22,54,Math.PI/2);
 ground(-35,82,34,12,M.road,.01);
+
+// Small street fixtures add neighborhood scale and give sidewalks more visual detail.
+function streetBin(x,z){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.38,.43,.92,12),M.metal);body.position.y=.48;body.castShadow=true;group.add(body);
+  const lid=new THREE.Mesh(new THREE.CylinderGeometry(.44,.44,.12,12),M.trim);lid.position.y=1.0;group.add(lid);
+  cube(group,0,.34,.405,.18,.38,.035,M.silver,false);
+  block(x,z,.9,.9);
+}
+function hydrant(x,z){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  const redMaterial=mat(0xa94735,.48);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(.42,.5,.28,10),redMaterial);base.position.y=.15;group.add(base);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.27,.34,.82,10),redMaterial);body.position.y=.68;body.castShadow=true;group.add(body);
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.16,10),M.silver);cap.position.y=1.16;group.add(cap);
+  for(const side of [-1,1]){
+    const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,.34,8),redMaterial);nozzle.rotation.z=Math.PI/2;nozzle.position.set(side*.34,.78,0);group.add(nozzle);
+    const nozzleCap=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.1,8),M.silver);nozzleCap.rotation.z=Math.PI/2;nozzleCap.position.set(side*.52,.78,0);group.add(nozzleCap);
+  }
+  block(x,z,.9,.9);
+}
+streetBin(55,-28);streetBin(-9,45);streetBin(-58,48);
+hydrant(-92,-43);hydrant(92,44);hydrant(43,-92);hydrant(-44,92);
 
 // Street lamps with warm bulbs and restrained local lighting for nighttime.
 const nightLights=[];
@@ -259,18 +298,32 @@ function car(color=0x365b78){
   return g;
 }
 const playerCar=car(0x315e83);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
-function activityBeacon(){
+function activityBeacon(color=0xf3bd62){
   const group=new THREE.Group();
-  const ringMaterial=new THREE.MeshStandardMaterial({color:0xf3bd62,emissive:0x9b5c18,emissiveIntensity:1.1,roughness:.3});
+  const glowColor=new THREE.Color(color);
+  const ringMaterial=new THREE.MeshStandardMaterial({color:glowColor,emissive:glowColor.clone().multiplyScalar(.38),emissiveIntensity:1.1,roughness:.3});
   const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.085,8,32),ringMaterial);ring.rotation.x=-Math.PI/2;ring.position.y=.12;group.add(ring);
-  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.1,.58,3.5,14,1,true),new THREE.MeshBasicMaterial({color:0xf2c36e,transparent:true,opacity:.16,depthWrite:false}));beam.position.y=1.9;group.add(beam);
-  const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),M.lampGlow);orb.position.y=3.8;group.add(orb);
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.1,.58,3.5,14,1,true),new THREE.MeshBasicMaterial({color:glowColor,transparent:true,opacity:.18,depthWrite:false}));beam.position.y=1.9;group.add(beam);
+  const orbMaterial=new THREE.MeshStandardMaterial({color:glowColor,emissive:glowColor,emissiveIntensity:1.45,roughness:.22});
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),orbMaterial);orb.position.y=3.8;group.add(orb);
   return group;
 }
 const deliveryPickup=new THREE.Vector3(39,0,-27);
 const deliveryDropoff=new THREE.Vector3(-35,0,38);
 const deliveryMarker=activityBeacon();deliveryMarker.position.copy(deliveryPickup);world.add(deliveryMarker);
 let carryingPackage=false,deliveriesCompleted=0;
+const landmarkSpots=[
+  {name:'West Avenue Mural',x:-91,z:-40},
+  {name:'North Brick Row',x:-5,z:-92},
+  {name:'East Side Corner',x:92,z:44},
+  {name:'Courtyard Garden',x:-48,z:52},
+  {name:'South Street View',x:12,z:93}
+];
+const landmarks=landmarkSpots.map(spot=>{
+  const marker=activityBeacon(0x63cbd2);marker.scale.setScalar(.78);
+  marker.position.set(spot.x,0,spot.z);world.add(marker);
+  return {...spot,marker,discovered:false};
+});
 const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-82,-75]].map(p=>new THREE.Vector3(p[0],0,p[1]));
 for(let i=0;i<7;i++){
   const g=car([0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92][i]);world.add(g);
@@ -301,6 +354,13 @@ for(let i=0;i<puddlePositions.length;i++){
 }
 puddleGroup.visible=false;world.add(puddleGroup);
 const touchMap={forward:'w',back:'s',left:'a',right:'d'};
+function clearInputState(){
+  for(const key of Object.keys(keys))keys[key]=false;
+  for(const key of Object.keys(touch))touch[key]=false;
+  dragging=false;
+}
+window.addEventListener('blur',clearInputState);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInputState();});
 function showToast(message){$('toast').textContent=message;$('toast').classList.add('show');lastToast=performance.now();}
 function cycleWeather(){
   const modes=['clear','rain','fog'];weatherMode=modes[(modes.indexOf(weatherMode)+1)%modes.length];
@@ -323,16 +383,29 @@ function updateRain(dt){
   }
   rainGeometry.attributes.position.needsUpdate=true;
 }
+function updateActivityHud(){
+  const found=landmarks.filter(item=>item.discovered).length;
+  $('collectionLabel').textContent='SNAPSHOTS '+found+'/'+landmarks.length+' · DELIVERIES '+deliveriesCompleted;
+}
 function handleActivity(){
-  if(inCar){showToast('Exit the sedan to do the delivery');return;}
+  if(inCar){showToast('Exit the sedan to explore or deliver');return;}
+  const nearbyLandmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
+  if(nearbyLandmark){
+    nearbyLandmark.discovered=true;nearbyLandmark.marker.visible=false;updateActivityHud();
+    $('objectiveText').textContent=landmarks.every(item=>item.discovered)
+      ?'All five neighborhood snapshots found! You can still deliver packages and explore the district.'
+      :'Snapshot saved: '+nearbyLandmark.name+'. Find the remaining cyan beacons around the neighborhood.';
+    showToast('Snapshot saved — '+nearbyLandmark.name);
+    return;
+  }
   if(!carryingPackage){
-    if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find the gold marker by the corner market');return;}
+    if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find a cyan snapshot beacon or the gold market marker');return;}
     carryingPackage=true;deliveryMarker.position.copy(deliveryDropoff);
     $('objectiveText').textContent='Package collected! Take it to the gold marker in the courtyard and press F.';
     showToast('Package collected — deliver it to the courtyard');
   }else{
     if(Math.hypot(player.x-deliveryDropoff.x,player.z-deliveryDropoff.z)>7){showToast('Head to the courtyard delivery marker');return;}
-    carryingPackage=false;deliveriesCompleted++;deliveryMarker.position.copy(deliveryPickup);
+    carryingPackage=false;deliveriesCompleted++;deliveryMarker.position.copy(deliveryPickup);updateActivityHud();
     $('objectiveText').textContent='Delivery complete! Deliveries: '+deliveriesCompleted+'. Return to the market marker for another job.';
     showToast('Delivery complete! Total deliveries: '+deliveriesCompleted);
   }
@@ -446,7 +519,7 @@ function movePlayer(dt){
     player.vertical-=15*dt;player.y+=player.vertical*dt;
     if(player.y<=0){player.y=0;player.vertical=0;player.grounded=true;}
   }
-  avatar.position.set(player.x,player.y,player.z);avatar.visible=!firstPerson&&!inCar;updateHud();
+  avatar.position.set(player.x,player.y,player.z);avatar.visible=!firstPerson&&!inCar;updateHud();updateActivityHud();
 }
 function updateCamera(dt){
   const focus=new THREE.Vector3(player.x,player.y+(inCar?1.45:1.55),player.z);
@@ -477,6 +550,7 @@ function updateMap(){
   for(const v of [-82,0,82]){ctx.fillRect(0,(160+v-8.5)*scale,248,17*scale);ctx.fillRect((160+v-8.5)*scale,0,17*scale,248);}
   ctx.fillStyle='#416a49';ctx.fillRect(96*scale,171*scale,58*scale,54*scale);
   for(const item of traffic){ctx.fillStyle='#e0c17b';ctx.beginPath();ctx.arc((160+item.g.position.x)*scale,(160+item.g.position.z)*scale,2.5,0,Math.PI*2);ctx.fill();}
+  for(const landmark of landmarks){if(!landmark.discovered){ctx.fillStyle='#63cbd2';ctx.beginPath();ctx.arc((160+landmark.x)*scale,(160+landmark.z)*scale,3.2,0,Math.PI*2);ctx.fill();}}
   ctx.fillStyle='#e8b45f';ctx.beginPath();ctx.arc((160+player.x)*scale,(160+player.z)*scale,4.5,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.65)';ctx.lineWidth=2;ctx.strokeRect(1,1,246,246);
 }
@@ -496,6 +570,22 @@ function frame(){
   renderer.render(scene,camera);
 }
 frame();
+if(new URLSearchParams(location.search).has('automation')){
+  Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
+    getState:()=>({
+      started,inCar,firstPerson,weatherMode,carryingPackage,deliveriesCompleted,
+      discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
+      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
+      pedestrians:pedestrians.length,traffic:traffic.length
+    }),
+    teleport:(x,z)=>{
+      if(!Number.isFinite(x)||!Number.isFinite(z))throw new TypeError('Test coordinates must be finite');
+      if(inCar)throw new Error('Exit the car before teleporting the player');
+      player.x=x;player.z=z;player.y=0;player.vertical=0;player.grounded=true;avatar.position.set(x,0,z);
+    }
+  }),configurable:false});
+}
+updateActivityHud();
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
