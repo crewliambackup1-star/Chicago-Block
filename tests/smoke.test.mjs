@@ -13,6 +13,7 @@ test('page loads the game module and includes essential controls', () => {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
   assert.match(html, /UPDATE 2/);
+  assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
 test('V1 gameplay systems remain present after the V2 visual pass', () => {
@@ -24,7 +25,7 @@ test('V1 gameplay systems remain present after the V2 visual pass', () => {
 });
 
 test('V2 contains procedural materials, facade detail, and dynamic lamps', () => {
-  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure']) {
+  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker']) {
     assert.ok(game.includes(feature), 'Missing V2 visual feature: ' + feature);
   }
 });
@@ -41,5 +42,6 @@ test('README documents V2 progress, future scope, and automated checks', () => {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
-  assert.match(readme, /not implemented yet/);
+  assert.match(readme, /delivery activity/);
+  assert.match(readme, /clear, rain, and fog/);
 });
