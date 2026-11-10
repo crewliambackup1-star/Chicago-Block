@@ -11,7 +11,9 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - Improved directional shadow resolution and tone-mapping exposure.
 - Detailed sedan body accents, wheel hubs, mirrors, and front/rear lights.
 - Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
-- A neighborhood delivery activity with a pickup point at the corner market and a drop-off marker in the courtyard.
+- A repeatable package-delivery activity from the corner market to the courtyard.
+- Five collectible neighborhood snapshots at distinct landmarks, with live HUD and minimap progress.
+- Detailed corner-market signage, a storefront entrance, street bins, and hydrants for more environmental variety.
 - Switchable clear, rain, and fog modes; rain includes animated rainfall and road-side puddle accents.
 
 ### Driving controls
@@ -25,12 +27,10 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - 3-by-3 fictional street grid, sidewalks, crosswalks, market, courtyard, trees, benches, and minimap.
 - 20 pedestrians, 7 traffic vehicles, a drivable blue sedan, and a changing day/night clock.
 
-## Planned for later V2 passes
-- More playable activities, delivery tasks, and exploration challenges.
-- Weather effects such as rain, fog, and wet-road reflections.
-- Further visual refinement and optimization based on real-device performance.
-
-Additional missions, more activity types, deeper weather polish, and further environmental effects remain planned for later V2 passes.
+## V2 validation status
+- Browser smoke tests launch Chromium and WebKit, enter the neighborhood, verify movement and camera/weather controls, complete a snapshot and delivery, exercise vehicle steering, and check the mobile control layout.
+- GitHub Actions runs syntax, source-level, and browser tests on pushes and pull requests.
+- Automated browser checks are still not a substitute for a final hands-on Safari review on the target device.
 
 ## Run locally
 
@@ -53,7 +53,7 @@ Then open http://localhost:8080. An internet connection is required because Thre
 | First / third person | V | Camera button |
 | Look around | Mouse | Drag on the game view |
 | Brake | Space (while driving) | Brake button |
-| Delivery activity | F | Delivery button |
+| Delivery and snapshot activity | F | Activity button |
 | Cycle weather | R | Weather button |
 | Advance displayed time | N | — |
 | Release mouse capture | Esc | — |
