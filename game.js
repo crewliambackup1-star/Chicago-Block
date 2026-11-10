@@ -546,8 +546,20 @@ brake.addEventListener('pointerdown',e=>{e.preventDefault();brake.setPointerCapt
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
 
 let locked=false;
+function canUsePointerLock(){
+  return innerWidth>760&&matchMedia('(pointer:fine)').matches;
+}
+function requestLookLock(){
+  if(!canUsePointerLock()||document.pointerLockElement===renderer.domElement)return;
+  try{
+    const request=renderer.domElement.requestPointerLock?.();
+    if(request&&typeof request.catch==='function')request.catch(()=>{});
+  }catch(error){
+    // Pointer lock is optional; dragging remains available as a fallback.
+  }
+}
 renderer.domElement.addEventListener('click',()=>{
-  if(started&&innerWidth>760&&document.pointerLockElement!==renderer.domElement)renderer.domElement.requestPointerLock?.();
+  if(started)requestLookLock();
 });
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;$('crosshair').style.display=locked&&firstPerson?'block':'none';});
 document.addEventListener('mousemove',e=>{
@@ -563,7 +575,7 @@ document.addEventListener('pointermove',e=>{
 for(const ev of ['pointerup','pointercancel'])document.addEventListener(ev,()=>dragging=false);
 $('playButton').addEventListener('click',()=>{
   started=true;$('startScreen').style.display='none';$('loading').textContent='Ready';
-  if(innerWidth>760)renderer.domElement.requestPointerLock?.();
+  requestLookLock();
 });
 
 function walkNPCs(dt,time){
@@ -676,9 +688,10 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
       velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
+      elapsed,
       pedestrians:pedestrians.length,traffic:traffic.length,
-      npc0:{x:pedestrians[0].g.position.x,z:pedestrians[0].g.position.z},
-      traffic0:{x:traffic[0].g.position.x,z:traffic[0].g.position.z}
+      npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
+      trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
     }),
     setKey:(key,pressed)=>{
       const normalized=String(key).toLowerCase();
