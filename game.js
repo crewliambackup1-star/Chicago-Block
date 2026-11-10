@@ -392,7 +392,7 @@ for(const z of [-95,-69,-14,14,69,95])for(const x of [-95,95]){
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,7,8),M.metal);pole.position.set(x,3.5,z);pole.castShadow=true;world.add(pole);
   cube(world,x+.65,6.8,z,1.35,.12,.3,M.metal,false);
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),M.lampGlow);bulb.position.set(x+.65,6.66,z);world.add(bulb);
-  const glow=new THREE.PointLight(0xffc77b,0,23,2);glow.position.set(x+.65,6.35,z);world.add(glow);nightLights.push({glow,bulb});
+  const glow=new THREE.PointLight(0xffc77b,0,32,2);glow.position.set(x+.65,6.35,z);world.add(glow);nightLights.push({glow,bulb});
 }
 function person(material){
   const g=new THREE.Group(),body=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.68,4,9),material);
@@ -730,17 +730,17 @@ function updateClock(dt){
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const daylight=Math.max(.16,Math.sin((gameHours-6)/12*Math.PI));
   const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
-  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);
+  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(1.28+daylight*.55)*(weatherMode==='fog'?.95:1);
   sun.position.set(-85+daylight*35,25+daylight*95,-65);
   const night=1-daylight;
   skyMaterial.color.setRGB(.2+daylight*.8,.24+daylight*.76,.42+daylight*.58);
   stars.material.opacity=night*.88;
   sunDisc.visible=daylight>.28;
   sunDisc.position.copy(sun.position).normalize().multiplyScalar(475);
-  for(const item of nightLights){item.glow.intensity=night*1.65;item.bulb.material.emissiveIntensity=.25+night*1.8;}
+  for(const item of nightLights){item.glow.intensity=night*2.6;item.bulb.material.emissiveIntensity=.35+night*2.1;}
   scene.fog.near=weatherMode==='fog'?20:weatherMode==='rain'?58:125;
   scene.fog.far=weatherMode==='fog'?175:weatherMode==='rain'?245:340;
-  const skyLightness=weatherMode==='fog'?.31:weatherMode==='rain'?.24:.19+daylight*.37;
+  const skyLightness=weatherMode==='fog'?.34:weatherMode==='rain'?.29:.29+daylight*.27;
   scene.fog.color.setHSL(.55,.13,skyLightness);scene.background.copy(scene.fog.color);
 }
 function updateMap(){
