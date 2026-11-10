@@ -11,7 +11,10 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - Rooftop HVAC units and a wooden water tank, plus storefront signage, street bins, and hydrants.
 - More detailed pedestrians with animated arms and legs.
 - A more detailed blue sedan with wheel hubs, mirrors, and front/rear lights.
-- Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
+- Streetlamp bulbs and local lights that respond to the in-game day/night cycle, with stronger ambient fill so the streets remain readable after sunset.
+- New west-side neighborhood mural, intersection street-name signs, metal fire escapes, and planted courtyard beds.
+- More detailed sedan grille, bumpers, rims, wheel hardware, and side trim; player and traffic wheels rotate while vehicles move.
+- Brighter asphalt and sidewalk materials with added surface variation.
 - Improved shadows, tone mapping, and rendering settings.
 
 ### Things to do
