@@ -174,6 +174,24 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
     await context.close();
+  }
+
+  const landscapeContext = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true });
+  const landscapePage = await landscapeContext.newPage();
+  const landscapeErrors = [];
+  landscapePage.on('pageerror', error => landscapeErrors.push(error.message));
+  try {
+    await waitForReady(landscapePage);
+    await landscapePage.locator('#playButton').tap();
+    await landscapePage.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
+    assert.equal(await landscapePage.locator('#mobile').isVisible(), true, 'landscape touch controls should be visible');
+    assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
+    await landscapePage.locator('#weatherButton').tap();
+    assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
+    await landscapePage.screenshot({ path: 'artifacts/v2-webkit-landscape.png' });
+    assert.deepEqual(landscapeErrors, [], 'landscape WebKit page should not throw runtime exceptions');
+  } finally {
+    await landscapeContext.close();
     await browser.close();
   }
 });
