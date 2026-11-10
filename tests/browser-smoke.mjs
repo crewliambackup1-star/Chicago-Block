@@ -41,21 +41,27 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
-    await page.waitForTimeout(700);
+    await page.waitForFunction(
+      () => window.__CHICAGO_BLOCK_TEST__.getState().simulationRunning === true,
+      null,
+      { timeout: 10000 }
+    );
+    await page.waitForFunction(
+      baseline => window.__CHICAGO_BLOCK_TEST__.getState().npcPositions.some((p, i) =>
+        Math.hypot(p.x - baseline[i].x, p.z - baseline[i].z) > 0.02
+      ),
+      initial.npcPositions,
+      { timeout: 10000 }
+    );
+    await page.waitForFunction(
+      baseline => window.__CHICAGO_BLOCK_TEST__.getState().trafficPositions.some((p, i) =>
+        Math.hypot(p.x - baseline[i].x, p.z - baseline[i].z) > 0.02
+      ),
+      initial.trafficPositions,
+      { timeout: 10000 }
+    );
     const movingWorld = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(movingWorld.elapsed > initial.elapsed, 'the simulation clock should advance after starting');
-    assert.ok(
-      movingWorld.npcPositions.some((p, i) =>
-        Math.hypot(p.x - initial.npcPositions[i].x, p.z - initial.npcPositions[i].z) > 0.02
-      ),
-      'at least one pedestrian should continue walking'
-    );
-    assert.ok(
-      movingWorld.trafficPositions.some((p, i) =>
-        Math.hypot(p.x - initial.trafficPositions[i].x, p.z - initial.trafficPositions[i].z) > 0.02
-      ),
-      'at least one traffic vehicle should continue moving'
-    );
     await sendKey(page, 'w', 'keydown');
     await page.waitForTimeout(500);
     await sendKey(page, 'w', 'keyup');
