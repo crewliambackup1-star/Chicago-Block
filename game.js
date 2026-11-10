@@ -468,7 +468,7 @@ function car(color=0x365b78){
       spoke.rotation.x=angle;
     }
     const centerCap=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.27,14),M.trim);centerCap.rotation.z=Math.PI/2;wheelAssembly.add(centerCap);
-    const arch=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,7,20,Math.PI),M.trim);arch.rotation.set(0,Math.PI/2,Math.PI);arch.position.set(sx*1.05,.02,sz*1.38);g.add(arch);
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,7,20,Math.PI),M.trim);arch.rotation.set(0,Math.PI/2,Math.PI);arch.position.set(sx*1.05,.42,sz*1.38);g.add(arch);
   }
   for(const sx of [-1,1]){cube(g,sx*1.055,.76,0,.045,.48,1.55,M.trim,false);for(const sz of [-.62,.62])cube(g,sx*1.065,.98,sz,.055,.1,.28,M.silver,false);}
   cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);g.userData.wheels=wheels;
