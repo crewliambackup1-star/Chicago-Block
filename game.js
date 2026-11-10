@@ -669,7 +669,7 @@ frame();
 if(new URLSearchParams(location.search).has('automation')){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
-      started,inCar,firstPerson,weatherMode,carryingPackage,deliveriesCompleted,
+      started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
       velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
