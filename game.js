@@ -284,12 +284,35 @@ for(const z of [-95,-69,-14,14,69,95])for(const x of [-95,95]){
   const glow=new THREE.PointLight(0xffc77b,0,23,2);glow.position.set(x+.65,6.35,z);world.add(glow);nightLights.push({glow,bulb});
 }
 function person(material){
-  const g=new THREE.Group(),body=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.68,3,7),material);
+  const g=new THREE.Group(),body=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.68,4,9),material);
   body.position.y=1.05;body.castShadow=true;g.add(body);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),M.skin);head.position.y=1.72;g.add(head);
-  const legs=[];
-  for(const x of [-.13,.13]){const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.5,2,6),M.metal);leg.position.set(x,.38,0);g.add(leg);legs.push(leg);}
-  g.userData.legs=legs;return g;
+
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.105,.12,.18,9),M.skin);neck.position.y=1.58;g.add(neck);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.22,14,12),M.skin);head.position.y=1.77;head.castShadow=true;g.add(head);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.222,12,8,0,Math.PI*2,0,Math.PI*.48),M.trim);
+  hair.position.y=1.83;hair.rotation.x=-.08;g.add(hair);
+  const eyes=[];
+  for(const x of [-.075,.075]){
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.025,7,6),M.trim);
+    eye.position.set(x,1.79,.205);g.add(eye);eyes.push(eye);
+  }
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.045,8,7),M.skin);nose.position.set(0,1.735,.22);g.add(nose);
+
+  const arms=[],legs=[];
+  for(const x of [-1,1]){
+    const arm=new THREE.Group();arm.position.set(x*.36,1.34,0);arm.rotation.z=-x*.12;g.add(arm);
+    const sleeve=new THREE.Mesh(new THREE.CapsuleGeometry(.095,.39,3,7),material);
+    sleeve.position.y=-.25;sleeve.castShadow=true;arm.add(sleeve);
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.095,8,7),M.skin);
+    hand.position.set(0,-.52,.015);arm.add(hand);arms.push(arm);
+
+    const leg=new THREE.Group();leg.position.set(x*.14,.56,0);g.add(leg);
+    const pants=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.5,3,7),M.metal);
+    pants.position.y=-.17;pants.castShadow=true;leg.add(pants);
+    const shoe=new THREE.Mesh(new THREE.BoxGeometry(.23,.14,.39),M.tire);
+    shoe.position.set(0,-.49,.09);leg.add(shoe);legs.push(leg);
+  }
+  g.userData.legs=legs;g.userData.arms=arms;return g;
 }
 const routes=[
  [[-101,-63],[-90,-63],[-73,-63],[-73,-91],[-101,-91]],
@@ -517,7 +540,9 @@ function walkNPCs(dt,time){
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
     if(d<.9)p.target=(p.target+1)%p.route.length;
     else{const step=Math.min(d,p.speed*dt);p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;p.g.rotation.y=Math.atan2(dx,dz);}
-    const swing=Math.sin(time*7+p.phase)*.18;p.g.userData.legs[0].rotation.x=swing;p.g.userData.legs[1].rotation.x=-swing;
+    const swing=Math.sin(time*7+p.phase)*.2;
+    p.g.userData.legs[0].rotation.x=swing;p.g.userData.legs[1].rotation.x=-swing;
+    p.g.userData.arms[0].rotation.x=-swing*.72;p.g.userData.arms[1].rotation.x=swing*.72;
   }
 }
 function moveTraffic(dt){
