@@ -145,7 +145,11 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await sendKey(page, 'e');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, false);
 
-    await page.screenshot({ path: 'artifacts/v2-chromium-after-play.png' });
+    await page.evaluate(() => {
+      if (document.pointerLockElement) document.exitPointerLock();
+    });
+    await page.waitForFunction(() => document.pointerLockElement === null, null, { timeout: 3000 });
+    await page.screenshot({ path: 'artifacts/v2-chromium-after-play.png', animations: 'disabled', timeout: 60000 });
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
