@@ -30,6 +30,14 @@ test('V2 contains procedural materials, facade detail, and dynamic lamps', () =>
   }
 });
 
+test('V2 adds readable street details and animated vehicle wheels', () => {
+  for (const feature of ['function createMural', 'function streetSign', 'function fireEscape', 'function courtyardPlanter', 'g.userData.wheels=wheels', 'wheel.rotation.x-=velocity*dt/.39', 'vehicleWheelCount', 'carWheelRotations']) {
+    assert.ok(game.includes(feature), 'Missing V2 polish feature: ' + feature);
+  }
+  assert.match(game, /new THREE\.HemisphereLight\([^\n]+1\.62\)/);
+  assert.match(game, /ambientLight\.intensity=\(\.72\+daylight\*\.86\)/);
+});
+
 test('renderer uses the current soft shadow-map setting', () => {
   assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
   assert.doesNotMatch(game, /PCFSoftShadowMap/);
