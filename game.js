@@ -676,7 +676,9 @@ if(new URLSearchParams(location.search).has('automation')){
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
       velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
-      pedestrians:pedestrians.length,traffic:traffic.length
+      pedestrians:pedestrians.length,traffic:traffic.length,
+      npc0:{x:pedestrians[0].g.position.x,z:pedestrians[0].g.position.z},
+      traffic0:{x:traffic[0].g.position.x,z:traffic[0].g.position.z}
     }),
     setKey:(key,pressed)=>{
       const normalized=String(key).toLowerCase();
