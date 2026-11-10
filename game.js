@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getCarSteeringInput } from './controls.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -245,7 +246,7 @@ function car(color=0x365b78){
   for(const sx of [-.72,.72]){
     cube(g,sx,.91,-2.235,.38,.24,.07,M.headlight,false);
     cube(g,sx,.88,2.235,.34,.24,.07,M.tailLight,false);
-    cube(g,sx*1.38,1.17,-.95,.34,.17,.28,M.bodyMat||bodyMat,false);
+    cube(g,sx*1.38,1.17,-.95,.34,.17,.28,bodyMat,false);
     const mirror=cube(g,sx*1.12,1.24,-1.08,.2,.16,.3,M.metal,false);
     mirror.rotation.z=sx*.08;
   }
@@ -277,7 +278,7 @@ function updateHud(){
 function changeCamera(){firstPerson=!firstPerson;updateHud();$('crosshair').style.display=locked&&firstPerson?'block':'none';showToast(firstPerson?'First-person view':'Third-person view');}
 function input(k){return !!(keys[k]||touch[k]);}
 function nearCar(){return Math.hypot(player.x-playerCar.position.x,player.z-playerCar.position.z)<5.2;}
-function carSteeringInput(){return (input('a')||input('arrowleft')?1:0)-(input('d')||input('arrowright')?1:0);}
+function carSteeringInput(){return getCarSteeringInput(input('a')||input('arrowleft'),input('d')||input('arrowright'));}
 function interact(){
   if(inCar){
     inCar=false;velocity=0;
