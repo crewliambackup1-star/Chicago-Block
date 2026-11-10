@@ -93,10 +93,11 @@ const concreteTexture=makeTexture((ctx,w,h)=>{
 });
 concreteTexture.repeat.set(2,2);
 const asphaltTexture=makeTexture((ctx,w,h)=>{
-  ctx.fillStyle='#363e43';ctx.fillRect(0,0,w,h);
-  const wash=ctx.createLinearGradient(0,0,w,h);wash.addColorStop(0,'rgba(116,124,125,.10)');wash.addColorStop(.5,'rgba(12,19,23,.10)');wash.addColorStop(1,'rgba(151,145,130,.09)');ctx.fillStyle=wash;ctx.fillRect(0,0,w,h);
-  for(let i=0;i<5600;i++){const x=(i*47)%w,y=(i*113)%h,v=92+((i*19)%75);ctx.fillStyle=`rgba(${v},${v+2},${v+4},.19)`;ctx.fillRect(x,y,1+(i%3===0?1:0),1+(i%2));}
-  ctx.strokeStyle='rgba(15,19,21,.22)';ctx.lineWidth=2;for(let i=0;i<12;i++){const x=(i*83+31)%w,y=(i*137+57)%h;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+9+(i%4)*4,y+3+(i%3)*2);ctx.lineTo(x+14+(i%4)*4,y+15+(i%5)*3);ctx.stroke();}
+  // A lighter charcoal base preserves road texture detail beneath the scene shadows.
+  ctx.fillStyle='#50595e';ctx.fillRect(0,0,w,h);
+  const wash=ctx.createLinearGradient(0,0,w,h);wash.addColorStop(0,'rgba(164,169,168,.12)');wash.addColorStop(.5,'rgba(17,24,28,.035)');wash.addColorStop(1,'rgba(187,177,157,.12)');ctx.fillStyle=wash;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<6200;i++){const x=(i*47)%w,y=(i*113)%h,v=112+((i*19)%78);ctx.fillStyle=`rgba(${v},${v+2},${v+4},.23)`;ctx.fillRect(x,y,1+(i%3===0?1:0),1+(i%2));}
+  ctx.strokeStyle='rgba(15,19,21,.16)';ctx.lineWidth=2;for(let i=0;i<16;i++){const x=(i*83+31)%w,y=(i*137+57)%h;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+9+(i%4)*4,y+3+(i%3)*2);ctx.lineTo(x+14+(i%4)*4,y+15+(i%5)*3);ctx.stroke();}
 });
 asphaltTexture.repeat.set(12,3);
 const sidewalkTexture=makeTexture((ctx,w,h)=>{
