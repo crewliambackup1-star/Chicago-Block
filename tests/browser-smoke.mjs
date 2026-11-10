@@ -40,6 +40,8 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    assert.equal(initial.vehicleWheelCount, 4, 'the player sedan should have four animated wheels');
+    assert.equal(initial.trafficWheelCount, 28, 'all seven traffic vehicles should have four wheels each');
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
     await page.waitForFunction(
       () => window.__CHICAGO_BLOCK_TEST__.getState().simulationRunning === true,
@@ -118,6 +120,8 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().velocity > 1, null, { timeout: 8000 });
+    const wheelRotationBefore = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().carWheelRotations);
+    await page.waitForFunction(before => window.__CHICAGO_BLOCK_TEST__.getState().carWheelRotations.some((angle, index) => Math.abs(angle - before[index]) > 0.03), wheelRotationBefore, { timeout: 4000 });
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', true));
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.heading > before + 0.01,
