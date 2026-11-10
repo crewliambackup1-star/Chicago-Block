@@ -507,7 +507,7 @@ function handleActivity(){
   }
 }
 function updateHud(){
-  $('mode').textContent=(inCar?'DRIVING':'ON FOOT')+' · '+(firstPerson?'FIRST':'THIRD')+' PERSON';
+  $('mode').textContent=(inCar?'DRIVING · ':'')+(firstPerson?'FIRST':'THIRD')+' PERSON';
   $('speed').textContent=inCar?Math.round(Math.abs(velocity)*2.237)+' MPH':'WALKING';
 }
 function changeCamera(){firstPerson=!firstPerson;updateHud();$('crosshair').style.display=locked&&firstPerson?'block':'none';showToast(firstPerson?'First-person view':'Third-person view');}
