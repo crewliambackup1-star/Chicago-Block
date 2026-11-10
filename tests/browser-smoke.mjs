@@ -40,6 +40,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
     await page.waitForTimeout(700);
     const movingWorld = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(movingWorld.elapsed > initial.elapsed, 'the simulation clock should advance after starting');
@@ -183,6 +184,8 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal(await page.locator('#objectiveText').count(), 1);
     await page.locator('#cameraButton').tap();
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, false);
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-11, -12));
+    await page.waitForTimeout(1400);
     await page.screenshot({ path: 'artifacts/v2-webkit-mobile.png' });
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
