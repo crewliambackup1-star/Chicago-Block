@@ -175,6 +175,20 @@ const sidewalkTexture=makeTexture((ctx,w,h)=>{
   for(let y=0;y<h;y+=128){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
 });
 sidewalkTexture.repeat.set(5,2);
+const grassTexture=makeTexture((ctx,w,h)=>{
+  const grad=ctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,'#708263');grad.addColorStop(1,'#455d43');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<16000;i++){
+    const x=(i*67)%w,y=(i*137)%h,v=65+(i*29)%90;
+    ctx.fillStyle=`rgba(${v},${v+12},${Math.max(35,v-18)},.24)`;
+    ctx.fillRect(x,y,1+(i%2),1+(i%3));
+  }
+  for(let i=0;i<1200;i++){
+    const x=(i*43)%w,y=(i*97)%h;ctx.strokeStyle='rgba(30,56,32,.2)';
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+1+(i%4),y-3-(i%5));ctx.stroke();
+  }
+});
+grassTexture.repeat.set(22,22);
 const brickHeight=makeDataTexture((ctx,w,h)=>{
   ctx.fillStyle='#777';ctx.fillRect(0,0,w,h);
   const row=58,brick=142;
@@ -201,10 +215,15 @@ const sidewalkHeight=makeDataTexture((ctx,w,h)=>{
   for(let x=0;x<w;x+=128){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
   for(let y=0;y<h;y+=128){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
 });
+const grassHeight=makeDataTexture((ctx,w,h)=>{
+  ctx.fillStyle='#8b8b8b';ctx.fillRect(0,0,w,h);
+  for(let i=0;i<18000;i++){const x=(i*67)%w,y=(i*137)%h,v=65+(i*41)%155;ctx.fillStyle=`rgba(${v},${v},${v},.42)`;ctx.fillRect(x,y,1+(i%2),1+(i%2));}
+});
+grassHeight.repeat.copy(grassTexture.repeat);
 brickHeight.repeat.copy(brickTexture.repeat);concreteHeight.repeat.copy(concreteTexture.repeat);
 asphaltHeight.repeat.copy(asphaltTexture.repeat);sidewalkHeight.repeat.copy(sidewalkTexture.repeat);
 M.brick.map=brickTexture;M.dark.map=concreteTexture;M.cream.map=concreteTexture;M.limestone.map=concreteTexture;
-M.road.map=asphaltTexture;M.walk.map=sidewalkTexture;
+M.road.map=asphaltTexture;M.walk.map=sidewalkTexture;M.grass.map=grassTexture;M.grass.bumpMap=grassHeight;M.grass.bumpScale=.08;M.grass.roughnessMap=grassHeight;
 M.brick.bumpMap=brickHeight;M.brick.bumpScale=.14;M.brick.roughnessMap=brickHeight;
 M.dark.bumpMap=concreteHeight;M.dark.bumpScale=.09;M.dark.roughnessMap=concreteHeight;
 M.cream.bumpMap=concreteHeight;M.cream.bumpScale=.075;M.limestone.bumpMap=concreteHeight;M.limestone.bumpScale=.07;
@@ -240,9 +259,17 @@ const ambientLight=scene.children.find(item=>item.isHemisphereLight);
 
 // Three-by-three fictional street grid.
 ground(0,0,320,320,M.grass,-.2);
+const curbMaterial=new THREE.MeshStandardMaterial({color:0x8e8b82,roughness:.92});
+const curbTopMaterial=new THREE.MeshStandardMaterial({color:0xb9b5aa,roughness:.86});
 for(const v of [-82,0,82]){
   ground(0,v,320,17,M.road,-.08);ground(v,0,17,320,M.road,-.075);
-  for(const side of [-1,1]){ground(0,v+side*10.1,320,3.1,M.walk,-.02);ground(v+side*10.1,0,3.1,320,M.walk,-.02);}
+  for(const side of [-1,1]){
+    ground(0,v+side*10.1,320,3.1,M.walk,-.02);ground(v+side*10.1,0,3.1,320,M.walk,-.02);
+    cube(world,0,.015,v+side*8.65,320,.22,.38,curbMaterial,false);
+    cube(world,v+side*8.65,.015,0,.38,.22,320,curbMaterial,false);
+    cube(world,0,.13,v+side*8.65,320,.035,.4,curbTopMaterial,false);
+    cube(world,v+side*8.65,.13,0,.4,.035,320,curbTopMaterial,false);
+  }
   for(let p=-150;p<=150;p+=13){if(Math.abs(p-v)<18)continue;cube(world,p,.015,v,5,.025,.15,M.line,false);cube(world,v,.015,p,.15,.025,5,M.line,false);}
   cube(world,0,.02,v-.13,320,.025,.12,M.yellow,false);cube(world,0,.02,v+.13,320,.025,.12,M.yellow,false);
   cube(world,v-.13,.02,0,.12,.025,320,M.yellow,false);cube(world,v+.13,.02,0,.12,.025,320,M.yellow,false);
@@ -258,6 +285,24 @@ for(const x of [-82,0,82])for(const z of [-82,0,82])for(let k=-3;k<=3;k++){
   cube(world,x+k*1.15,.025,z-7,.55,.03,2.6,M.white,false);
   cube(world,x-7,.025,z+k*1.15,2.6,.03,.55,M.white,false);
 }
+// Road hardware: metal manhole covers and recessed curb storm drains.
+const manholeMaterial=new THREE.MeshStandardMaterial({color:0x414749,roughness:.72,metalness:.5});
+const manholeRingMaterial=new THREE.MeshStandardMaterial({color:0x727878,roughness:.48,metalness:.75});
+function manhole(x,z){
+  const plate=new THREE.Mesh(new THREE.CircleGeometry(.72,40),manholeMaterial);
+  plate.rotation.x=-Math.PI/2;plate.position.set(x,.025,z);plate.receiveShadow=true;world.add(plate);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.69,.045,8,40),manholeRingMaterial);
+  ring.rotation.x=Math.PI/2;ring.position.set(x,.035,z);world.add(ring);
+  for(let i=0;i<7;i++)cube(world,x-.48+i*.16,.039,z,.035,.012,.72,manholeRingMaterial,false);
+}
+function stormDrain(x,z,rotation=0){
+  const group=new THREE.Group();group.position.set(x,.035,z);group.rotation.y=rotation;world.add(group);
+  cube(group,0,0,0,1.8,.045,.48,manholeMaterial,false);
+  for(let i=0;i<9;i++)cube(group,-.78+i*.195,.028,0,.055,.025,.42,manholeRingMaterial,false);
+}
+[[-71,-82],[24,-82],[-45,0],[66,0],[-6,82],[57,82]].forEach(([x,z])=>manhole(x,z));
+[[-82,-53,Math.PI/2],[82,44,Math.PI/2],[-38,-82,0],[45,82,0]].forEach(([x,z,r])=>stormDrain(x,z,r));
+
 function building(x,z,w,d,h,color,side=true){
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
   cube(g,0,h/2,0,w,h,d,color);cube(g,0,h+.2,0,w+.5,.4,d+.5,M.dark);
@@ -375,6 +420,14 @@ windows.forEach((item,index)=>{
   windowTransform.updateMatrix();windowMullionMesh.setMatrixAt(index,windowTransform.matrix);
 });
 windowMullionMesh.instanceMatrix.needsUpdate=true;windowMullionMesh.castShadow=false;world.add(windowMullionMesh);
+const windowSillMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),M.limestone,windows.length);
+windows.forEach((item,index)=>{
+  const front=item.face==='z';
+  windowTransform.position.set(item.x+(front?0:item.faceSign*.09),item.y-item.sy/2-.1,item.z+(front?item.faceSign*.09:0));
+  windowTransform.scale.set(front?item.sx+.24:.18,.13,front?.18:item.sz+.24);
+  windowTransform.updateMatrix();windowSillMesh.setMatrixAt(index,windowTransform.matrix);
+});
+windowSillMesh.instanceMatrix.needsUpdate=true;windowSillMesh.castShadow=false;world.add(windowSillMesh);
 
 // Corner market, courtyard, benches and trees.
 const shop=new THREE.Group();shop.position.set(39,0,-38);world.add(shop);
@@ -411,8 +464,8 @@ function tree(x,z){
   const foliageLight=new THREE.MeshStandardMaterial({color:0x5b8056,roughness:.98});
   const foliageDark=new THREE.MeshStandardMaterial({color:0x36583e,roughness:.99});
   const clusters=[[-.92,3.45,0,1.16],[-.28,4.18,.2,1.28],[.66,3.72,.1,1.25],[.12,4.55,-.55,.98],[-.12,3.65,.78,1.04]];
-  clusters.forEach(([cx,cy,cz,r,i])=>{
-    const crown=new THREE.Mesh(new THREE.SphereGeometry(r,18,14),i%2?foliage:foliageLight);
+  clusters.forEach(([cx,cy,cz,r],index)=>{
+    const crown=new THREE.Mesh(new THREE.SphereGeometry(r,18,14),index%2?foliage:foliageLight);
     crown.position.set(cx,cy,cz);crown.scale.set(1.12,.88,1);crown.castShadow=true;crown.receiveShadow=true;g.add(crown);
   });
   const lower=new THREE.Mesh(new THREE.SphereGeometry(.95,16,12),foliageDark);lower.position.set(.4,3.1,-.5);lower.scale.set(1,.82,1.1);lower.castShadow=true;g.add(lower);
@@ -1073,3 +1126,4 @@ window.addEventListener('resize',()=>{
   renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(renderPixelRatio());
 });
 $('loading').textContent='Neighborhood ready';
+document.documentElement.dataset.visualVersion='v3-realism';
