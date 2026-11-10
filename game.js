@@ -607,6 +607,9 @@ function movePlayer(dt){
     player.vertical-=15*dt;player.y+=player.vertical*dt;
     if(player.y<=0){player.y=0;player.vertical=0;player.grounded=true;}
   }
+  const gait=!inCar&&(f||s)?Math.sin(timer.elapsedTime*9)*.55:0;
+  avatar.userData.legs[0].rotation.x=gait;avatar.userData.legs[1].rotation.x=-gait;
+  avatar.userData.arms[0].rotation.x=-gait*.72;avatar.userData.arms[1].rotation.x=gait*.72;
   avatar.position.set(player.x,player.y,player.z);avatar.visible=!firstPerson&&!inCar;updateHud();
 }
 function updateCamera(dt){
