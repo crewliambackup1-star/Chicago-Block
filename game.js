@@ -771,7 +771,7 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       elapsed,
       simulationRunning:started&&elapsed>0,
-      pedestrians:pedestrians.length,traffic:traffic.length,vehicleWheelCount:(playerCar.userData.wheels||[]).length,trafficWheelCount:traffic.reduce((sum,item)=>sum+(item.g.userData.wheels||[]).length,0),
+      pedestrians:pedestrians.length,traffic:traffic.length,vehicleWheelCount:(playerCar.userData.wheels||[]).length,trafficWheelCount:traffic.reduce((sum,item)=>sum+(item.g.userData.wheels||[]).length,0),carWheelRotations:(playerCar.userData.wheels||[]).map(wheel=>wheel.rotation.x),
       npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
       trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
     }),
