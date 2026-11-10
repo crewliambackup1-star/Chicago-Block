@@ -688,6 +688,14 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
+      movementDebug:(()=>{
+        const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
+        const s=(input('d')||input('arrowright')?1:0)-(input('a')||input('arrowleft')?1:0);
+        const len=Math.hypot(f,s)||1,speed=(input('shift')?7.6:4.4)*.04;
+        const dx=(-Math.sin(yaw)*f+Math.cos(yaw)*s)/len*speed;
+        const dz=(-Math.cos(yaw)*f-Math.sin(yaw)*s)/len*speed;
+        return {forward:f,side:s,dx,dz,positionBlocked:blocked(player.x,player.z),nextPositionBlocked:blocked(player.x+dx,player.z+dz),yaw};
+      })(),
       elapsed,
       simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
