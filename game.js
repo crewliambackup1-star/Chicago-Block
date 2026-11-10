@@ -281,6 +281,44 @@ function bench(x,z,rotation=0){
 }
 bench(-48,38);bench(-22,54,Math.PI/2);
 ground(-35,82,34,12,M.road,.01);
+// Metal fire escapes and planted beds add distinct neighborhood silhouettes.
+function fireEscape(x,z,levels=3){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  for(let level=0;level<levels;level++){
+    const y=3.4+level*3.35;
+    cube(group,0,y,1.05,5.7,.14,1.55,M.metal,false);
+    cube(group,0,y+.88,1.78,5.7,.11,.12,M.silver,false);
+    for(const side of [-1,1]){
+      cube(group,side*2.78,y+.45,1.12,.11,.9,1.42,M.silver,false);
+      for(let post=0;post<5;post++)cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+    }
+    for(let post=0;post<7;post++)cube(group,-2.55+post*.85,y+.43,1.78,.055,.86,.055,M.silver,false);
+    for(const support of [-2.25,2.25])cube(group,support,y-.62,.45,.12,1.12,.12,M.metal,false);
+  }
+  const ladderX=2.35;
+  for(const side of [-1,1])cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+  for(let rung=0;rung<levels*6;rung++)cube(group,ladderX,1.1+rung*.55,2.0,.5,.055,.055,M.silver,false);
+}
+fireEscape(-45,-18.3,4);
+fireEscape(119,-17.2,3);
+fireEscape(-117,60.8,3);
+
+function courtyardPlanter(x,z,flowerColor=0xd18a69){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  cube(group,0,.42,0,3.5,.84,1.35,M.cream,false);
+  cube(group,0,.87,0,3.35,.13,1.22,M.wood,false);
+  for(let i=0;i<8;i++){
+    const shrub=new THREE.Mesh(new THREE.IcosahedronGeometry(.34+(i%3)*.035,1),M.leaf);
+    shrub.position.set(-1.35+(i%4)*.9,1.18+(i%2)*.08,(i<4?-.28:.28));shrub.castShadow=true;group.add(shrub);
+    if(i%2===0){const flower=new THREE.Mesh(new THREE.SphereGeometry(.12,8,7),mat(flowerColor,.55));flower.position.set(shrub.position.x,1.47,shrub.position.z);group.add(flower);}
+  }
+  return group;
+}
+courtyardPlanter(-55,31,0xd18a69);
+courtyardPlanter(-16,31,0xe5bb69);
+courtyardPlanter(-37,63,0xb9789b);
+
+
 
 // Small street fixtures add neighborhood scale and give sidewalks more visual detail.
 function streetBin(x,z){
@@ -304,6 +342,45 @@ function hydrant(x,z){
 }
 streetBin(55,-28);streetBin(-9,45);streetBin(-58,48);
 hydrant(-92,-43);hydrant(92,-54);hydrant(43,-92);hydrant(-44,92);
+
+// A painted neighborhood mural gives the west-side snapshot a real landmark.
+function createMural(x,z){
+  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=384;
+  const ctx=canvas.getContext('2d'),sky=ctx.createLinearGradient(0,0,0,384);
+  sky.addColorStop(0,'#e5a45f');sky.addColorStop(.52,'#b45f4b');sky.addColorStop(1,'#273b48');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,768,384);
+  ctx.fillStyle='#f4d58d';ctx.beginPath();ctx.arc(575,112,68,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#283b45';
+  const skyline=[[0,210,90,174],[78,166,84,218],[150,195,74,189],[225,145,92,239],[315,194,78,190],[392,170,86,214],[480,216,80,168],[558,186,90,198],[646,220,122,164]];
+  for(const [sx,sy,sw,sh] of skyline)ctx.fillRect(sx,sy,sw,sh);
+  ctx.fillStyle='#e8b45f';for(let i=0;i<18;i++){const sx=(i*43+18)%740,sy=190+(i%4)*37;ctx.fillRect(sx,sy,15,7);}
+  ctx.fillStyle='#f5e8d1';ctx.font='900 52px system-ui,sans-serif';ctx.textAlign='left';ctx.fillText('WEST AVENUE',34,328);
+  ctx.fillStyle='#f4d58d';ctx.fillRect(34,344,700,7);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const material=new THREE.MeshStandardMaterial({map:texture,roughness:.82,side:THREE.DoubleSide});
+  const art=new THREE.Mesh(new THREE.PlaneGeometry(13.5,6.5),material);
+  art.position.set(x,5.1,z);art.rotation.y=Math.PI/2;art.receiveShadow=true;world.add(art);
+}
+createMural(-101.78,-38.5);
+
+function streetSign(x,z,rotation,label,subLabel){
+  const group=new THREE.Group();group.position.set(x,0,z);group.rotation.y=rotation;world.add(group);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.065,.09,4.1,8),M.metal);post.position.y=2.05;post.castShadow=true;group.add(post);
+  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=160;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#1f493f';ctx.fillRect(0,0,768,160);
+  ctx.strokeStyle='#e8dcbf';ctx.lineWidth=9;ctx.strokeRect(8,8,752,144);
+  ctx.fillStyle='#fff4d9';ctx.font='900 48px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(label,384,57);ctx.font='700 27px system-ui,sans-serif';ctx.fillStyle='#e9c47c';ctx.fillText(subLabel,384,113);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(4.2,.88),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));
+  face.position.set(0,3.75,.095);group.add(face);
+  cube(group,0,3.75,0,4.3,.98,.13,M.metal,false);
+  return group;
+}
+streetSign(-73,-9,0,'WEST AVENUE','18TH STREET');
+streetSign(9,-73,Math.PI/2,'NORTH BLOCK','AVENUE');
+streetSign(73,9,Math.PI,'EAST AVENUE','18TH STREET');
+streetSign(-9,73,-Math.PI/2,'SOUTH BLOCK','AVENUE');
 
 // Street lamps with warm bulbs and restrained local lighting for nighttime.
 const nightLights=[];
