@@ -38,6 +38,14 @@ test('V2 adds readable street details and animated vehicle wheels', () => {
   assert.match(game, /ambientLight\.intensity=\(\.72\+daylight\*\.86\)/);
 });
 
+test('mapped road and sidewalk textures are not darkened by duplicate base tints', () => {
+  assert.match(game, /M\.brick\.color\.setHex\(0xffffff\)/);
+  assert.match(game, /M\.road\.color\.setHex\(0xffffff\)/);
+  assert.match(game, /M\.walk\.color\.setHex\(0xffffff\)/);
+  assert.match(game, /M\.dark\.color\.setHex\(0xcabbb2\)/);
+  assert.match(game, /M\.cream\.color\.setHex\(0xf0e4ce\)/);
+});
+
 test('renderer uses the current soft shadow-map setting', () => {
   assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
   assert.doesNotMatch(game, /PCFSoftShadowMap/);
