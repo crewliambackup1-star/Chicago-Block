@@ -47,7 +47,7 @@ test('README documents the V2 features and validation commands', () => {
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
-  assert.match(readme, /delivery activity/);
+  assert.match(readme, /package deliveries/);
   assert.match(readme, /clear, rain, and fog/);
   assert.match(readme, /five collectible neighborhood snapshots/);
   assert.match(readme, /Chromium and WebKit/);
