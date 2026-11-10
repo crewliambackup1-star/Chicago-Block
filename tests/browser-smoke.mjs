@@ -69,11 +69,16 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const walkingStartZ = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().player.z);
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
     assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().keys.w), true, 'the test input hook should hold W');
-    await page.waitForFunction(
-      startZ => window.__CHICAGO_BLOCK_TEST__.getState().player.z < startZ - 0.2,
-      walkingStartZ,
-      { timeout: 8000 }
-    );
+    try {
+      await page.waitForFunction(
+        startZ => window.__CHICAGO_BLOCK_TEST__.getState().player.z < startZ - 0.2,
+        walkingStartZ,
+        { timeout: 8000 }
+      );
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+      throw new Error(`${error.message}; walking diagnostic: ${JSON.stringify(diagnostic)}`);
+    }
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', false));
     const walkingState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(walkingState.player.z < walkingStartZ, 'W should move the player forward in open space');
