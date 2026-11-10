@@ -39,8 +39,8 @@ test('V2 visual polish adds neighborhood landmarks and readable road materials',
   ]) {
     assert.ok(game.includes(feature), 'Missing V2 visual upgrade: ' + feature);
   }
-  assert.match(game, /new THREE\\.HemisphereLight\\([^\\n]+1\\.62\\)/);
-  assert.match(game, /ambientLight\\.intensity=\\(\\.72\\+daylight\\*\\.86\\)/);
+  assert.ok(game.includes('new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62)'));
+  assert.ok(game.includes("ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);"));
 });
 
 test('V2 sedan has detailed rotating wheels while retaining plates and door handles', () => {
