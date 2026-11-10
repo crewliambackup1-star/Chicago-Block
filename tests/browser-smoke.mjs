@@ -49,9 +49,12 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await page.keyboard.press('r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'clear');
 
-    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-91, -40));
-    await page.keyboard.press('f');
-    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).discoveredLandmarks, 1);
+    const snapshotLocations = [[-91, -40], [-5, -92], [92, 44], [-48, 52], [12, 93]];
+    for (const [x, z] of snapshotLocations) {
+      await page.evaluate(([nextX, nextZ]) => window.__CHICAGO_BLOCK_TEST__.teleport(nextX, nextZ), [x, z]);
+      await page.keyboard.press('f');
+    }
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).discoveredLandmarks, 5);
 
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(39, -27));
     await page.keyboard.press('f');
