@@ -122,7 +122,13 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, true);
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
+    const wheelRotationBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.wheelRotations;
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().velocity > 1, null, { timeout: 8000 });
+    await page.waitForFunction(
+      before => window.__CHICAGO_BLOCK_TEST__.getState().car.wheelRotations.some((rotation,index)=>Math.abs(rotation-before[index])>.1),
+      wheelRotationBefore,
+      { timeout: 8000 }
+    );
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', true));
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.heading > before + 0.01,
