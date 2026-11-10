@@ -38,6 +38,8 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await page.locator('#playButton').click();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'on-foot camera mode should be clear without repeating the walking label');
+    assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
