@@ -33,6 +33,11 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    await page.keyboard.down('w');
+    await page.waitForTimeout(250);
+    await page.keyboard.up('w');
+    const walkingState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.ok(walkingState.player.z < initial.player.z, 'W should move the player forward');
 
     await page.keyboard.press('v');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, true);
@@ -92,6 +97,16 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     await page.locator('#playButton').tap();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     assert.equal(await page.locator('#mobile').isVisible(), true, 'mobile control dock should be visible');
+    const beforeMove = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().player.z);
+    const forwardButton = page.locator('[data-key="forward"]');
+    const bounds = await forwardButton.boundingBox();
+    assert.ok(bounds, 'mobile forward button should be visible');
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(250);
+    await page.mouse.up();
+    const afterMove = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().player.z);
+    assert.ok(afterMove < beforeMove, 'holding the mobile forward control should move the player');
     await page.locator('#weatherButton').tap();
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
     await page.locator('#cameraButton').tap();
