@@ -672,8 +672,14 @@ if(new URLSearchParams(location.search).has('automation')){
       started,inCar,firstPerson,weatherMode,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
+      velocity,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       pedestrians:pedestrians.length,traffic:traffic.length
     }),
+    setKey:(key,pressed)=>{
+      const normalized=String(key).toLowerCase();
+      if(!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(normalized))throw new TypeError('Unsupported test key');
+      keys[normalized]=Boolean(pressed);
+    },
     teleport:(x,z)=>{
       if(!Number.isFinite(x)||!Number.isFinite(z))throw new TypeError('Test coordinates must be finite');
       if(inCar)throw new Error('Exit the car before teleporting the player');
