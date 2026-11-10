@@ -293,10 +293,11 @@ const rainLines=new THREE.LineSegments(rainGeometry,new THREE.LineBasicMaterial(
 rainLines.visible=false;rainLines.frustumCulled=false;scene.add(rainLines);
 const puddleGroup=new THREE.Group();
 const puddleMaterial=new THREE.MeshStandardMaterial({color:0x607887,transparent:true,opacity:.52,roughness:.2,metalness:.18,depthWrite:false});
-for(let i=0;i<22;i++){
+const puddlePositions=[[-95,-81],[-54,-84],[-12,-79],[35,-83],[91,-80],[-83,-48],[-79,-12],[-84,31],[-80,73],[-95,1],[-47,2],[-8,-2],[48,1],[92,0],[-93,82],[-51,80],[-4,83],[43,79],[81,40],[82,-43],[0,-82],[0,82]];
+for(let i=0;i<puddlePositions.length;i++){
   const puddle=new THREE.Mesh(new THREE.CircleGeometry(1,20),puddleMaterial);
   puddle.rotation.x=-Math.PI/2;puddle.scale.set(.7+(i%4)*.35,.35+(i%3)*.22,1);
-  puddle.position.set(((i*37)%190)-95,-.035,((i*61)%190)-95);puddleGroup.add(puddle);
+  puddle.position.set(puddlePositions[i][0],-.035,puddlePositions[i][1]);puddleGroup.add(puddle);
 }
 puddleGroup.visible=false;world.add(puddleGroup);
 const touchMap={forward:'w',back:'s',left:'a',right:'d'};
