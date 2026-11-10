@@ -380,6 +380,8 @@ for(const button of document.querySelectorAll('[data-key]')){
 }
 $('interactButton').addEventListener('click',interact);
 $('cameraButton').addEventListener('click',changeCamera);
+$('activityButton').addEventListener('click',handleActivity);
+$('weatherButton').addEventListener('click',cycleWeather);
 const brake=$('brakeButton');
 brake.addEventListener('pointerdown',e=>{e.preventDefault();touch.space=true;});
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
