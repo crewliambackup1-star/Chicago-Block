@@ -241,7 +241,7 @@ function hydrant(x,z){
   block(x,z,.9,.9);
 }
 streetBin(55,-28);streetBin(-9,45);streetBin(-58,48);
-hydrant(-92,-43);hydrant(92,44);hydrant(43,-92);hydrant(-44,92);
+hydrant(-92,-43);hydrant(92,-54);hydrant(43,-92);hydrant(-44,92);
 
 // Street lamps with warm bulbs and restrained local lighting for nighttime.
 const nightLights=[];
@@ -564,6 +564,10 @@ function frame(){
   if(started){
     elapsed+=dt;movePlayer(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
     deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
+    for(let i=0;i<landmarks.length;i++){
+      const marker=landmarks[i].marker;
+      if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
+    }
     if(elapsed%0.22<dt){updateMap();updateZone();}
     if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   }
