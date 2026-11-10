@@ -9,7 +9,7 @@ const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 
 test('page loads the game module and includes essential controls', () => {
   assert.match(html, /<script type="module" src="\.\/game\.js"><\/script>/);
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
   assert.match(html, /UPDATE 2/);
@@ -28,6 +28,11 @@ test('V2 contains procedural materials, facade detail, and dynamic lamps', () =>
   for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker', 'marketSignCanvas', 'function streetBin', 'function hydrant', 'const landmarks', 'updateActivityHud', 'clearInputState']) {
     assert.ok(game.includes(feature), 'Missing V2 visual feature: ' + feature);
   }
+});
+
+test('renderer uses the current soft shadow-map setting', () => {
+  assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
+  assert.doesNotMatch(game, /PCFSoftShadowMap/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
