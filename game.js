@@ -251,7 +251,7 @@ function blocked(x,z,r=.48) {
 scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
 sun.position.set(-85,115,-65);sun.castShadow=true;
-sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?2048:4096),Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?2048:4096));
+sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?1024:2048),Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?1024:2048));
 sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=340;
 sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;
 sun.shadow.camera.updateProjectionMatrix();scene.add(sun);
