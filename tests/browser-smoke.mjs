@@ -6,10 +6,17 @@ import { chromium, webkit } from 'playwright';
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173/';
 await mkdir('artifacts', { recursive: true });
 
+async function sendKey(page, key, type = 'keydown') {
+  await page.evaluate(({ key, type }) => {
+    document.dispatchEvent(new KeyboardEvent(type, { key, bubbles: true, cancelable: true }));
+  }, { key, type });
+}
+
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
+    null,
     { timeout: 60000 }
   );
   assert.equal(await page.locator('#game canvas').count(), 1, '3D renderer canvas should exist');
@@ -33,53 +40,53 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
-    await page.keyboard.down('w');
-    await page.waitForTimeout(250);
-    await page.keyboard.up('w');
+    await sendKey(page, 'w', 'keydown');
+    await page.waitForTimeout(500);
+    await sendKey(page, 'w', 'keyup');
     const walkingState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(walkingState.player.z < initial.player.z, 'W should move the player forward');
 
-    await page.keyboard.press('v');
+    await sendKey(page, 'v');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, true);
 
-    await page.keyboard.press('r');
+    await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await page.keyboard.press('r');
+    await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'fog');
-    await page.keyboard.press('r');
+    await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'clear');
 
     const snapshotLocations = [[-91, -40], [-5, -92], [92, 44], [-48, 52], [12, 93]];
     for (const [x, z] of snapshotLocations) {
       await page.evaluate(([nextX, nextZ]) => window.__CHICAGO_BLOCK_TEST__.teleport(nextX, nextZ), [x, z]);
-      await page.keyboard.press('f');
+      await sendKey(page, 'f');
     }
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).discoveredLandmarks, 5);
 
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(39, -27));
-    await page.keyboard.press('f');
+    await sendKey(page, 'f');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).carryingPackage, true);
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
-    await page.keyboard.press('f');
+    await sendKey(page, 'f');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).deliveriesCompleted, 1);
 
     await page.evaluate(() => {
       const state = window.__CHICAGO_BLOCK_TEST__.getState();
       window.__CHICAGO_BLOCK_TEST__.teleport(state.car.x, state.car.z);
     });
-    await page.keyboard.press('e');
+    await sendKey(page, 'e');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, true);
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
-    await page.keyboard.down('w');
+    await sendKey(page, 'w', 'keydown');
     await page.waitForTimeout(350);
-    await page.keyboard.down('a');
+    await sendKey(page, 'a', 'keydown');
     await page.waitForTimeout(350);
-    await page.keyboard.up('a');
-    await page.keyboard.up('w');
+    await sendKey(page, 'a', 'keyup');
+    await sendKey(page, 'w', 'keyup');
     const drivingState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(drivingState.car.heading > headingBefore + 0.05, 'A should rotate the moving car left');
     assert.notEqual(drivingState.car.z, -14, 'the car should move when W is held');
-    await page.keyboard.press('e');
+    await sendKey(page, 'e');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, false);
 
     await page.screenshot({ path: 'artifacts/v2-chromium-after-play.png' });
