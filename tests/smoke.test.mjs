@@ -31,7 +31,7 @@ test('V2 contains procedural materials, facade detail, and dynamic lamps', () =>
 });
 
 test('V2 adds readable street details and animated vehicle wheels', () => {
-  for (const feature of ['function createMural', 'function streetSign', 'function fireEscape', 'function courtyardPlanter', 'const wheelAssembly=new THREE.Group()', 'spoke.rotation.x=angle', 'g.userData.wheels=wheels', 'wheel.rotation.x-=velocity*dt/.39', 'vehicleWheelCount', 'carWheelRotations']) {
+  for (const feature of ['function createMural', 'function streetSign', 'function fireEscape', 'function courtyardPlanter', 'const wheelAssembly=new THREE.Group()', 'spoke.rotation.x=angle', 'arch.position.set(sx*1.05,.42,sz*1.38)', 'g.userData.wheels=wheels', 'wheel.rotation.x-=velocity*dt/.39', 'vehicleWheelCount', 'carWheelRotations']) {
     assert.ok(game.includes(feature), 'Missing V2 polish feature: ' + feature);
   }
   assert.match(game, /new THREE\.HemisphereLight\([^\n]+1\.62\)/);
