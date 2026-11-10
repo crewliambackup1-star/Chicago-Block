@@ -35,7 +35,7 @@ test('V2 adds readable street details and animated vehicle wheels', () => {
     assert.ok(game.includes(feature), 'Missing V2 polish feature: ' + feature);
   }
   assert.match(game, /new THREE\.HemisphereLight\([^\n]+1\.62\)/);
-  assert.match(game, /ambientLight\.intensity=\(\.72\+daylight\*\.86\)/);
+  assert.match(game, /ambientLight\.intensity=\(1\.28\+daylight\*\.55\)/);
 });
 
 test('mapped road and sidewalk textures are not darkened by duplicate base tints', () => {
