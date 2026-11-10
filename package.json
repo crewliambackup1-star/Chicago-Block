@@ -1,0 +1,10 @@
+{
+  "name": "chicago-block",
+  "version": "1.0.0-alpha.1",
+  "private": true,
+  "description": "A browser-based 3D Chicago-inspired neighborhood game",
+  "scripts": {
+    "check": "node --check game.js",
+    "test": "node --test"
+  }
+}
