@@ -34,7 +34,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
   page.on('pageerror', error => pageErrors.push(error.message));
   try {
     await waitForReady(page);
-    await page.screenshot({ path: 'artifacts/v2-chromium-before-play.png' });
+    await page.screenshot({ path: 'artifacts/v3-chromium-before-play.png' });
     await page.locator('#playButton').click();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
@@ -180,7 +180,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await page.screenshot({ path: 'artifacts/v2-chromium-after-play.png', animations: 'disabled', timeout: 60000 });
+    await page.screenshot({ path: 'artifacts/v3-chromium-after-play.png', animations: 'disabled', timeout: 60000 });
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -245,7 +245,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, false);
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-11, -12));
     await page.waitForTimeout(1400);
-    await page.screenshot({ path: 'artifacts/v2-webkit-mobile.png' });
+    await page.screenshot({ path: 'artifacts/v3-webkit-mobile.png' });
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
     await context.close();
@@ -263,7 +263,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v2-webkit-landscape.png' });
+    await landscapePage.screenshot({ path: 'artifacts/v3-webkit-landscape.png' });
     assert.deepEqual(landscapeErrors, [], 'landscape WebKit page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
