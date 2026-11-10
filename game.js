@@ -234,7 +234,7 @@ function movePlayer(dt){
   const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
   const s=(input('d')||input('arrowright')?1:0)-(input('a')||input('arrowleft')?1:0);
   if(inCar){
-    velocity+=f*13.5*dt;velocity*=Math.pow(input(' ')||touch.space?.07:.992,dt*60);
+    velocity+=f*13.5*dt;velocity*=Math.pow((input(' ')||touch.space)?0.07:0.992,dt*60);
     velocity=THREE.MathUtils.clamp(velocity,-7,19);
     playerCar.rotation.y+=s*Math.min(Math.abs(velocity)/5.5,1)*1.45*dt*Math.sign(velocity||1);
     const nx=playerCar.position.x-Math.sin(playerCar.rotation.y)*velocity*dt;
