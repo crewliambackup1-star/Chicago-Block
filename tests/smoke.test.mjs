@@ -42,7 +42,7 @@ test('car steering maps A/left to left and D/right to right', () => {
   assert.equal(getCarSteeringInput(true, true), 0, 'Opposing simultaneous inputs should cancel');
 });
 
-test('README documents V2 progress, future scope, and automated checks', () => {
+test('README documents the V2 features and validation commands', () => {
   assert.match(readme, /Life on the Streets/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
