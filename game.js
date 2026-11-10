@@ -50,7 +50,7 @@ $('game').appendChild(renderer.domElement);
 
 const mat = (color, roughness=.9) => new THREE.MeshStandardMaterial({color, roughness});
 const M = {
-  grass:mat(0x596d55), road:mat(0x292f33), walk:mat(0x898a84), line:mat(0xd9d6c9),
+  grass:mat(0x687b5d), road:mat(0x394247), walk:mat(0xa09c91), line:mat(0xe6e0d2),
   yellow:mat(0xe2b44c), brick:mat(0x874d40), dark:mat(0x6d4038), cream:mat(0xb7a88f),
   glass:mat(0x243e4b,.25), metal:mat(0x3a4145,.55), wood:mat(0x694a32),
   leaf:mat(0x416a49), skin:mat(0x986d52), blue:mat(0x365b75), green:mat(0x55714e),
@@ -93,15 +93,14 @@ const concreteTexture=makeTexture((ctx,w,h)=>{
 });
 concreteTexture.repeat.set(2,2);
 const asphaltTexture=makeTexture((ctx,w,h)=>{
-  ctx.fillStyle='#292f33';ctx.fillRect(0,0,w,h);
-  for(let i=0;i<4200;i++){
-    const x=(i*47)%w,y=(i*113)%h,v=80+((i*19)%65);
-    ctx.fillStyle=`rgba(${v},${v+2},${v+4},.20)`;ctx.fillRect(x,y,1+(i%2),1+(i%2));
-  }
+  ctx.fillStyle='#363e43';ctx.fillRect(0,0,w,h);
+  const wash=ctx.createLinearGradient(0,0,w,h);wash.addColorStop(0,'rgba(116,124,125,.10)');wash.addColorStop(.5,'rgba(12,19,23,.10)');wash.addColorStop(1,'rgba(151,145,130,.09)');ctx.fillStyle=wash;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<5600;i++){const x=(i*47)%w,y=(i*113)%h,v=92+((i*19)%75);ctx.fillStyle=`rgba(${v},${v+2},${v+4},.19)`;ctx.fillRect(x,y,1+(i%3===0?1:0),1+(i%2));}
+  ctx.strokeStyle='rgba(15,19,21,.22)';ctx.lineWidth=2;for(let i=0;i<12;i++){const x=(i*83+31)%w,y=(i*137+57)%h;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+9+(i%4)*4,y+3+(i%3)*2);ctx.lineTo(x+14+(i%4)*4,y+15+(i%5)*3);ctx.stroke();}
 });
 asphaltTexture.repeat.set(12,3);
 const sidewalkTexture=makeTexture((ctx,w,h)=>{
-  ctx.fillStyle='#898a84';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(45,48,47,.22)';ctx.lineWidth=3;
+  ctx.fillStyle='#a09c91';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(45,48,47,.20)';ctx.lineWidth=3;
   for(let x=0;x<w;x+=128){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
   for(let y=0;y<h;y+=128){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
 });
@@ -124,7 +123,7 @@ function blocked(x,z,r=.48) {
   if(Math.abs(x)>151-r||Math.abs(z)>151-r)return true;
   return colliders.some(c=>x>c.x-c.w/2-r&&x<c.x+c.w/2+r&&z>c.z-c.d/2-r&&z<c.z+c.d/2+r);
 }
-scene.add(new THREE.HemisphereLight(0xd9e7f0,0x46513e,1.25));
+scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
 sun.position.set(-85,115,-65);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=340;
@@ -363,11 +362,14 @@ for(let i=0;i<20;i++){
   pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8});
 }
 function car(color=0x365b78){
-  const g=new THREE.Group(),bodyMat=mat(color,.5);
+  const g=new THREE.Group(),bodyMat=mat(color,.43),wheels=[];
   cube(g,0,.76,0,2.1,.82,4.35,bodyMat);
   cube(g,0,1.38,-.25,1.78,.76,2.38,M.glass);
   cube(g,0,.48,-2.2,1.9,.18,.18,M.silver,false);cube(g,0,.48,2.2,1.9,.18,.18,M.silver,false);
   cube(g,0,.83,-2.22,.92,.24,.08,M.metal,false);
+  cube(g,0,.78,-2.30,1.02,.25,.12,M.trim,false);
+  for(let slat=0;slat<5;slat++)cube(g,-.39+slat*.195,.79,-2.37,.045,.18,.025,M.silver,false);
+  cube(g,0,.48,-2.34,1.05,.16,.12,M.silver,false);cube(g,0,.48,2.34,1.05,.16,.12,M.silver,false);
   for(const sx of [-.72,.72]){
     cube(g,sx,.91,-2.235,.38,.24,.07,M.headlight,false);
     cube(g,sx,.88,2.235,.34,.24,.07,M.tailLight,false);
@@ -376,11 +378,13 @@ function car(color=0x365b78){
     mirror.rotation.z=sx*.08;
   }
   for(const sx of [-1,1])for(const sz of [-1,1]){
-    const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,18),M.tire);wheel.rotation.z=Math.PI/2;wheel.position.set(sx*1.07,.4,sz*1.38);g.add(wheel);
-    const hub=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.255,14),M.silver);hub.rotation.z=Math.PI/2;hub.position.set(sx*1.085,.4,sz*1.38);g.add(hub);
+    const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,24),M.tire);wheel.rotation.z=Math.PI/2;wheel.position.set(sx*1.07,.4,sz*1.38);g.add(wheel);wheels.push(wheel);
+    const hub=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.255,18),M.silver);hub.rotation.z=Math.PI/2;hub.position.set(sx*1.085,.4,sz*1.38);g.add(hub);
+    for(let bolt=0;bolt<6;bolt++){const a=bolt*Math.PI/3,stud=new THREE.Mesh(new THREE.SphereGeometry(.022,6,5),M.trim);stud.position.set(sx*1.235,.4+Math.sin(a)*.135,sz*1.38+Math.cos(a)*.135);g.add(stud);}
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,7,20,Math.PI),M.trim);arch.rotation.set(0,Math.PI/2,Math.PI);arch.position.set(sx*1.05,.42,sz*1.38);g.add(arch);
   }
-  for(const sx of [-1,1])cube(g,sx*1.055,.76,0,.045,.48,1.55,M.trim,false);
-  cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);
+  for(const sx of [-1,1]){cube(g,sx*1.055,.76,0,.045,.48,1.55,M.trim,false);for(const sz of [-.62,.62])cube(g,sx*1.065,.98,sz,.055,.1,.28,M.silver,false);}
+  cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);g.userData.wheels=wheels;
   return g;
 }
 const playerCar=car(0x315e83);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
@@ -594,7 +598,7 @@ function moveTraffic(dt){
     item.t+=item.speed*dt/a.distanceTo(b);
     if(item.t>=1){item.t-=1;item.segment=(item.segment+1)%roadLoop.length;}
     const from=roadLoop[item.segment],to=roadLoop[(item.segment+1)%roadLoop.length];
-    item.g.position.lerpVectors(from,to,item.t);item.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);
+    item.g.position.lerpVectors(from,to,item.t);item.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);for(const wheel of item.g.userData.wheels||[])wheel.rotation.x-=item.speed*dt/.39;
   }
 }
 function movePlayer(dt){
@@ -603,7 +607,7 @@ function movePlayer(dt){
   if(inCar){
     velocity+=f*13.5*dt;velocity*=Math.pow((input(' ')||touch.space)?0.07:0.992,dt*60);
     velocity=THREE.MathUtils.clamp(velocity,-7,19);
-    const steer=carSteeringInput();
+    const steer=carSteeringInput();for(const wheel of playerCar.userData.wheels||[])wheel.rotation.x-=velocity*dt/.39;
     playerCar.rotation.y+=steer*Math.min(Math.abs(velocity)/5.5,1)*1.45*dt*Math.sign(velocity||1);
     const nx=playerCar.position.x-Math.sin(playerCar.rotation.y)*velocity*dt;
     const nz=playerCar.position.z-Math.cos(playerCar.rotation.y)*velocity*dt;
@@ -638,7 +642,7 @@ function updateClock(dt){
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const daylight=Math.max(.16,Math.sin((gameHours-6)/12*Math.PI));
   const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
-  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.38+daylight*1.04)*(weatherMode==='fog'?.84:1);
+  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);
   sun.position.set(-85+daylight*35,25+daylight*95,-65);
   const night=1-daylight;
   skyMaterial.color.setRGB(.2+daylight*.8,.24+daylight*.76,.42+daylight*.58);
@@ -690,7 +694,7 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       elapsed,
       simulationRunning:started&&elapsed>0,
-      pedestrians:pedestrians.length,traffic:traffic.length,
+      pedestrians:pedestrians.length,traffic:traffic.length,vehicleWheelCount:(playerCar.userData.wheels||[]).length,trafficWheelCount:traffic.reduce((sum,item)=>sum+(item.g.userData.wheels||[]).length,0),
       npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
       trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
     }),
