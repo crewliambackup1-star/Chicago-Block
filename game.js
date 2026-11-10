@@ -38,7 +38,7 @@ sunDisc.frustumCulled=false;scene.add(sunDisc);
 
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
 const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches;
-const renderPixelRatio=()=>Math.min(devicePixelRatio||1,isCoarsePointer()?1.5:2);
+const renderPixelRatio=()=>Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});
 renderer.setPixelRatio(renderPixelRatio());
 renderer.setSize(innerWidth, innerHeight);
@@ -251,7 +251,7 @@ function blocked(x,z,r=.48) {
 scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
 sun.position.set(-85,115,-65);sun.castShadow=true;
-sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?1024:2048),Math.min(renderer.capabilities.maxTextureSize,isCoarsePointer()?1024:2048));
+sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,1024),Math.min(renderer.capabilities.maxTextureSize,1024));
 sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=340;
 sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;
 sun.shadow.camera.updateProjectionMatrix();scene.add(sun);
@@ -667,7 +667,7 @@ plateContext.font='bold 42px system-ui, sans-serif';plateContext.fillText('CBK 2
 const plateTexture=new THREE.CanvasTexture(plateCanvas);plateTexture.colorSpace=THREE.SRGBColorSpace;
 const licensePlateMaterial=new THREE.MeshStandardMaterial({map:plateTexture,roughness:.82});
 
-function car(color=0x365b78){
+function car(color=0x365b78,detailedInterior=false){
   const g=new THREE.Group(),bodyMat=new THREE.MeshPhysicalMaterial({color,roughness:.24,metalness:.48,clearcoat:1,clearcoatRoughness:.12,envMapIntensity:1.45}),wheelRigs=[];
   // Rounded, sloped side profiles replace the old rectangular body and cabin blocks.
   const extrudedProfile=(points,depth,material)=>{
@@ -713,17 +713,19 @@ function car(color=0x365b78){
   rearGlass.position.set(0,1.26,1.12);rearGlass.rotation.x=-.42;g.add(rearGlass);
   cube(g,0,1.65,-.16,1.36,.055,1.38,bodyMat,false);
   // Visible cabin details make the sedan read as a finished vehicle from either camera.
-  const cabinMat=new THREE.MeshStandardMaterial({color:0x20272a,roughness:.88});
-  const seatMat=new THREE.MeshStandardMaterial({color:0x343a3b,roughness:.94});
-  cube(g,0,1.02,.02,1.42,.22,1.86,cabinMat,false);
-  cube(g,0,1.12,-.91,1.35,.22,.34,cabinMat,false);
-  for(const sx of [-1,1])for(const sz of [-.48,.55]){
-    cube(g,sx*.43,1.28,sz,.48,.62,.5,seatMat,false);
-    cube(g,sx*.43,1.66,sz+.14,.45,.34,.14,seatMat,false);
+  if(detailedInterior){
+    const cabinMat=new THREE.MeshStandardMaterial({color:0x20272a,roughness:.88});
+    const seatMat=new THREE.MeshStandardMaterial({color:0x343a3b,roughness:.94});
+    cube(g,0,1.02,.02,1.42,.22,1.86,cabinMat,false);
+    cube(g,0,1.12,-.91,1.35,.22,.34,cabinMat,false);
+    for(const sx of [-1,1])for(const sz of [-.48,.55]){
+      cube(g,sx*.43,1.28,sz,.48,.62,.5,seatMat,false);
+      cube(g,sx*.43,1.66,sz+.14,.45,.34,.14,seatMat,false);
+    }
+    const steeringWheel=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,9,28),M.trim);
+    steeringWheel.position.set(.42,1.34,-.87);steeringWheel.rotation.x=.92;steeringWheel.rotation.z=-.14;g.add(steeringWheel);
+    cube(g,0,1.23,-.72,1.22,.14,.28,cabinMat,false);
   }
-  const steeringWheel=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,9,28),M.trim);
-  steeringWheel.position.set(.42,1.34,-.87);steeringWheel.rotation.x=.92;steeringWheel.rotation.z=-.14;g.add(steeringWheel);
-  cube(g,0,1.23,-.72,1.22,.14,.28,cabinMat,false);
   cube(g,0,.48,-2.2,1.9,.18,.18,M.silver,false);cube(g,0,.48,2.2,1.9,.18,.18,M.silver,false);
   cube(g,0,.83,-2.22,.92,.24,.08,M.metal,false);
   for(let slat=0;slat<3;slat++){
@@ -777,7 +779,7 @@ function car(color=0x365b78){
   g.userData.wheelSpokes=wheelSpokeCount;g.userData.wheelArches=4;
   return g;
 }
-const playerCar=car(0x315e83);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
+const playerCar=car(0x315e83,true);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
 function activityBeacon(color=0xf3bd62){
   const group=new THREE.Group();
   const glowColor=new THREE.Color(color);
