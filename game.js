@@ -416,7 +416,7 @@ for(let i=0;i<7;i++){
   traffic.push({g,segment:i%roadLoop.length,t:(i/7)*.88,speed:5.8+(i%3)*.65});
 }
 
-const player={x:-22,z:-14,y:0,heading:0,vertical:0,grounded:true};
+const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue);world.add(avatar);
 let started=false,inCar=false,firstPerson=false,yaw=0,pitch=-.08,velocity=0;
 let gameHours=14+20/60,lastToast=0,dragging=false,lastPointer={x:0,y:0};
