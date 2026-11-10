@@ -23,7 +23,7 @@ const M = {
   red:mat(0x8c5142), tire:mat(0x171a1b), white:mat(0xece8dc)
 };
 const world = new THREE.Group(); scene.add(world);
-const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null);
+const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
 function cube(parent,x,y,z,w,h,d,material,shadow=true) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
   mesh.position.set(x,y,z); mesh.castShadow=shadow; mesh.receiveShadow=true; parent.add(mesh); return mesh;
@@ -60,8 +60,8 @@ function building(x,z,w,d,h,color,side=true){
   const rows=Math.max(2,Math.floor(h/3.3)),cols=Math.max(2,Math.floor(w/4.7));
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     const px=-w/2+(c+.5)*w/cols,py=1.4+r*(h-2.2)/rows;
-    for(const face of [-1,1])cube(g,px,py,face*(d/2+.04),1.1,1.4,.08,M.glass,false);
-    if(side)for(const face of [-1,1])cube(g,face*(w/2+.04),py,-d/2+(c+.5)*d/cols,.08,1.35,1,M.glass,false);
+    for(const face of [-1,1])windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:1.1,sy:1.4,sz:.08});
+    if(side)for(const face of [-1,1])windows.push({x:x+face*(w/2+.04),y:py,z:z-d/2+(c+.5)*d/cols,sx:.08,sy:1.35,sz:1});
   }
   cube(g,0,1.05,d/2+.06,1.1,2.1,.12,M.wood,false);block(x,z,w,d);
 }
@@ -74,6 +74,18 @@ function building(x,z,w,d,h,color,side=true){
  [-35,120,35,30,15,M.brick],[42,120,39,31,15,M.dark],
  [119,120,40,31,17,M.cream]
 ].forEach(args=>building(...args));
+
+const windowMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), M.glass, windows.length);
+const windowTransform = new THREE.Object3D();
+windows.forEach((item,index)=>{
+  windowTransform.position.set(item.x,item.y,item.z);
+  windowTransform.scale.set(item.sx,item.sy,item.sz);
+  windowTransform.updateMatrix();
+  windowMesh.setMatrixAt(index,windowTransform.matrix);
+});
+windowMesh.instanceMatrix.needsUpdate=true;
+windowMesh.castShadow=false;
+world.add(windowMesh);
 
 // Corner market, courtyard, benches and trees.
 const shop=new THREE.Group();shop.position.set(39,0,-38);world.add(shop);
@@ -151,7 +163,7 @@ function updateHud(){
   $('mode').textContent=(inCar?'DRIVING':'ON FOOT')+' · '+(firstPerson?'FIRST':'THIRD')+' PERSON';
   $('speed').textContent=inCar?Math.round(Math.abs(velocity)*2.237)+' MPH':'ON FOOT';
 }
-function changeCamera(){firstPerson=!firstPerson;updateHud();showToast(firstPerson?'First-person view':'Third-person view');}
+function changeCamera(){firstPerson=!firstPerson;updateHud();$('crosshair').style.display=locked&&firstPerson?'block':'none';showToast(firstPerson?'First-person view':'Third-person view');}
 function input(k){return !!(keys[k]||touch[k]);}
 function nearCar(){return Math.hypot(player.x-playerCar.position.x,player.z-playerCar.position.z)<5.2;}
 function interact(){
