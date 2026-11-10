@@ -542,7 +542,7 @@ $('cameraButton').addEventListener('click',changeCamera);
 $('activityButton').addEventListener('click',handleActivity);
 $('weatherButton').addEventListener('click',cycleWeather);
 const brake=$('brakeButton');
-brake.addEventListener('pointerdown',e=>{e.preventDefault();touch.space=true;});
+brake.addEventListener('pointerdown',e=>{e.preventDefault();brake.setPointerCapture?.(e.pointerId);touch.space=true;});
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
 
 let locked=false;
@@ -672,7 +672,7 @@ if(new URLSearchParams(location.search).has('automation')){
       started,inCar,firstPerson,weatherMode,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
-      velocity,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
+      velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       pedestrians:pedestrians.length,traffic:traffic.length
     }),
     setKey:(key,pressed)=>{
