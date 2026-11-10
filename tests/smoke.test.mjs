@@ -46,6 +46,12 @@ test('mapped road and sidewalk textures are not darkened by duplicate base tints
   assert.match(game, /M\.cream\.color\.setHex\(0xf0e4ce\)/);
 });
 
+test('asphalt stays readable under shadowed lighting', () => {
+  assert.match(game, /ctx\.fillStyle='#50595e';ctx\.fillRect\(0,0,w,h\)/);
+  assert.match(game, /rgba\(17,24,28,\.035\)/);
+  assert.match(game, /M\.road\.color\.setHex\(0xffffff\)/);
+});
+
 test('renderer uses the current soft shadow-map setting', () => {
   assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
   assert.doesNotMatch(game, /PCFSoftShadowMap/);
