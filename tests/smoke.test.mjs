@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 2/);
+  assert.match(html, /UPDATE 3/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -67,9 +67,17 @@ test('V2 sedan has detailed rotating wheels while retaining plates and door hand
   }
 });
 
-test('renderer uses the current soft shadow-map setting', () => {
-  assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
-  assert.doesNotMatch(game, /PCFSoftShadowMap/);
+test('V3 renderer uses soft shadows, reflection environment, and adaptive detail', () => {
+  assert.match(game, /PCFSoftShadowMap/);
+  assert.match(game, /scene\.environment=environmentTexture/);
+  assert.match(game, /new THREE\.MeshPhysicalMaterial/);
+  assert.match(game, /bumpMap=brickHeight/);
+  assert.match(game, /roughnessMap=asphaltHeight/);
+  assert.match(game, /renderPixelRatio/);
+  assert.match(game, /function manhole/);
+  assert.match(game, /function stormDrain/);
+  assert.match(game, /windowSillMesh/);
+  assert.match(game, /visualVersion='v3-realism'/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
