@@ -9,7 +9,7 @@ const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 
 test('page loads the game module and includes essential controls', () => {
   assert.match(html, /<script type="module" src="\.\/game\.js"><\/script>/);
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
   assert.match(html, /UPDATE 2/);
