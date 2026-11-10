@@ -38,6 +38,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await page.locator('#playButton').click();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    await page.waitForFunction(() => document.querySelector('#mode')?.textContent === 'THIRD PERSON');
     assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'on-foot camera mode should be clear without repeating the walking label');
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
     assert.equal(initial.pedestrians, 20);
@@ -179,6 +180,9 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     await waitForReady(page);
     await page.locator('#playButton').tap();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
+    await page.waitForFunction(() => document.querySelector('#mode')?.textContent === 'THIRD PERSON');
+    assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'mobile on-foot mode should use the concise HUD label');
+    assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'mobile HUD should identify walking');
     assert.equal(await page.locator('#mobile').isVisible(), true, 'mobile control dock should be visible');
     const brandBox = await page.locator('#brand').boundingBox();
     const statsBox = await page.locator('#stats').boundingBox();
