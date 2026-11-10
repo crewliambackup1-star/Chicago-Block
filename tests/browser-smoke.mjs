@@ -48,6 +48,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
+    assert.equal(initial.car.details.plates, 2, 'the sedan should have front and rear plates');
+    assert.equal(initial.car.details.doorHandles, 4, 'the sedan should have four door handles');
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
     await page.waitForFunction(
       () => window.__CHICAGO_BLOCK_TEST__.getState().simulationRunning === true,
@@ -168,6 +171,12 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       if (document.pointerLockElement) document.exitPointerLock();
     });
     await page.waitForFunction(() => document.pointerLockElement === null, null, { timeout: 3000 });
+    await page.evaluate(() => {
+      const test = window.__CHICAGO_BLOCK_TEST__;
+      test.teleport(0,-45);
+      test.setYaw(0);
+    });
+    await page.waitForTimeout(1100);
     await page.screenshot({ path: 'artifacts/v2-chromium-after-play.png', animations: 'disabled', timeout: 60000 });
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {

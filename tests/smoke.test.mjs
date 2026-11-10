@@ -25,7 +25,7 @@ test('V1 gameplay systems remain present after the V2 visual pass', () => {
 });
 
 test('V2 contains procedural materials, facade detail, and dynamic lamps', () => {
-  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker', 'marketSignCanvas', 'function streetBin', 'function hydrant', 'wheelRigs', 'wheelRotations', 'M.headlight.emissiveIntensity', 'const landmarks', 'updateActivityHud', 'clearInputState']) {
+  for (const feature of ['brickTexture', 'concreteTexture', 'asphaltTexture', 'sidewalkTexture', 'windowFrameMesh', 'windowLightMesh', 'nightLights', 'toneMappingExposure', 'rainLines', 'puddleGroup', 'function cycleWeather', 'function handleActivity', 'deliveryMarker', 'marketSignCanvas', 'function streetBin', 'function hydrant', 'function streetSign', 'streetSigns', 'licensePlateMaterial', 'doorHandle', 'wheelRigs', 'wheelRotations', 'M.headlight.emissiveIntensity', 'const landmarks', 'updateActivityHud', 'clearInputState']) {
     assert.ok(game.includes(feature), 'Missing V2 visual feature: ' + feature);
   }
 });

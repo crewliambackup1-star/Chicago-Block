@@ -10,7 +10,8 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 - A procedural sky with clouds, a day/night cycle, stars, and a moving sun.
 - Rooftop HVAC units and a wooden water tank, plus storefront signage, street bins, and hydrants.
 - More detailed pedestrians with animated arms and legs.
-- A more detailed blue sedan with wheel hubs, mirrors, and front/rear lights.
+- A more detailed blue sedan with a front grille, door handles, custom front/rear plates, wheel hubs, mirrors, and front/rear lights.
+- Four readable street-name signs along the sidewalk corners.
 - Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
 - Improved shadows, brighter material/lighting balance, clearer double-yellow center lines, dashed lane dividers, and crosswalk markings.
 - Animated wheel rotation on the player sedan and traffic cars, with headlights and taillights that brighten naturally at night.
