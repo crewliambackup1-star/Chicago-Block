@@ -669,7 +669,7 @@ function frame(){
   renderer.render(scene,camera);
 }
 frame();
-if(new URLSearchParams(location.search).has('automation')){
+if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSearchParams(location.search).has('automation')){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
