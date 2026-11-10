@@ -1,36 +1,47 @@
-# CHICAGO BLOCK — Life on the Streets (V2 development)
+# Chicago Block — Life on the Streets (V2)
 
 A browser-based 3D neighborhood exploration game built with Three.js. The setting is an original, fictional Chicago-inspired district, not a precise recreation of any real residential property.
 
-## V2 development progress
+## What's new in V2
 
-### Visual foundation pass
+### A more detailed neighborhood
 - Procedural asphalt, sidewalk, brick, and concrete surface textures.
-- More detailed building facades with exterior trim, floor bands, corner columns, and framed windows.
-- Instanced illuminated window accents to add depth without a separate draw call for every window.
-- Improved directional shadow resolution and tone-mapping exposure.
-- Detailed sedan body accents, wheel hubs, mirrors, and front/rear lights.
+- More detailed building facades with exterior trim, floor bands, corner columns, framed windows, and illuminated window accents.
+- A procedural sky with clouds, a day/night cycle, stars, and a moving sun.
+- Rooftop HVAC units and a wooden water tank, plus storefront signage, street bins, and hydrants.
+- More detailed pedestrians with animated arms and legs.
+- A more detailed blue sedan with wheel hubs, mirrors, and front/rear lights.
 - Streetlamp bulbs and local lights that respond to the in-game day/night cycle.
-- A repeatable package-delivery activity from the corner market to the courtyard.
-- Five collectible neighborhood snapshots at distinct landmarks, with live HUD and minimap progress.
-- Detailed corner-market signage, a storefront entrance, street bins, and hydrants for more environmental variety.
-- Switchable clear, rain, and fog modes; rain includes animated rainfall and road-side puddle accents.
+- Improved shadows, tone mapping, and rendering settings.
 
-### Driving controls
-- Corrected car steering mapping: A / Left Arrow steers left; D / Right Arrow steers right.
-- Press F near a cyan beacon to save a neighborhood snapshot, or near the gold marker to collect and deliver a package; press R to cycle clear, rain, and fog weather.
-- Steering mapping is isolated in controls.js so it can be tested without launching WebGL.
+### Things to do
+- Find five collectible neighborhood snapshots at distinct landmarks. Cyan beacons appear on the minimap; press F nearby to collect each one.
+- Complete repeatable package deliveries from the corner market to the courtyard. Follow the gold marker and press F near each stop.
+- Explore in clear, rain, and fog weather. Press R to cycle; rain adds animated rainfall and wet-road puddles.
+- Advance the displayed time by four hours with N, or let the clock progress naturally.
+- Switch between first-person and third-person camera views with V.
 
-### Preserved V1 gameplay
-- Third-person character and first-person camera option.
-- Walking, sprinting, jumping, building collision, and keyboard/mobile controls.
-- 3-by-3 fictional street grid, sidewalks, crosswalks, market, courtyard, trees, benches, and minimap.
-- 20 pedestrians, 7 traffic vehicles, a drivable blue sedan, and a changing day/night clock.
+### Driving and controls
+- Corrected steering: A / Left Arrow steers left; D / Right Arrow steers right.
+- Walk up to the blue sedan and press E to enter; press E again to exit.
+- While driving, W / Up Arrow accelerates, S / Down Arrow reverses or slows, A / Left Arrow turns left, D / Right Arrow turns right, and Space brakes.
 
-## V2 validation status
-- Browser smoke tests launch Chromium and WebKit, enter the neighborhood, verify movement and camera/weather controls, complete a snapshot and delivery, exercise vehicle steering, and check the mobile control layout.
-- GitHub Actions runs syntax, source-level, and browser tests on pushes and pull requests.
-- Automated browser checks are still not a substitute for a final hands-on Safari review on the target device.
+### The neighborhood you can explore
+- A 3-by-3 fictional street grid with roads, sidewalks, crosswalks, a market, courtyard, trees, benches, and a minimap.
+- 20 pedestrians, 7 traffic vehicles, and a drivable blue sedan.
+- Walking, sprinting, jumping, building collision, keyboard controls, and mobile touch controls.
+
+## Browser support and validation
+
+The automated test suite runs syntax and source-level checks, then launches Chromium and WebKit to exercise:
+- WebGL scene loading and runtime error checks.
+- Player movement, pedestrian and traffic movement, both camera views, and the in-game clock.
+- Clear, rain, and fog transitions.
+- All five snapshot collectibles and a complete delivery.
+- Vehicle acceleration and both steering directions.
+- Mobile portrait and landscape layouts, HUD spacing, touch movement, activity, weather, and brake controls.
+
+These automated runs cover Chromium and the WebKit engine, but they are not a hands-on test on every physical Safari device. The public build should still be checked on your device after deployment.
 
 ## Run locally
 
@@ -46,19 +57,19 @@ Then open http://localhost:8080. An internet connection is required because Thre
 
 | Action | Keyboard | Mobile |
 |---|---|---|
-| Move / drive | WASD or arrow keys | Direction pad |
+| Move | WASD or arrow keys | Direction pad |
 | Sprint | Shift | — |
 | Jump | Space (on foot) | — |
 | Enter / exit car | E | Interact button |
 | First / third person | V | Camera button |
 | Look around | Mouse | Drag on the game view |
+| Accelerate / reverse | W / S or Up / Down | Direction pad while in car |
+| Steering | A / D or Left / Right | Direction pad while in car |
 | Brake | Space (while driving) | Brake button |
-| Delivery and snapshot activity | F | Activity button |
+| Snapshot / delivery activity | F | Activity button |
 | Cycle weather | R | Weather button |
 | Advance displayed time | N | — |
 | Release mouse capture | Esc | — |
-
-To enter the blue sedan, walk close to it and press E (or tap Interact). Use A / Left Arrow to steer left and D / Right Arrow to steer right. Press E again to exit.
 
 ## Automated checks
 
@@ -70,4 +81,4 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-GitHub Actions runs syntax and smoke tests on pushes and pull requests. The steering helper has a direct automated unit test. Automated checks do not replace a real Safari/WebGL playtest; camera behavior, visuals, touch input, frame rate, and driving still need target-device testing before V2 can be called complete.
+GitHub Actions runs these checks on pushes and pull requests. Browser tests use a local-only automation interface; it is not exposed on the published game site.
