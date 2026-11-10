@@ -53,6 +53,8 @@ Then open http://localhost:8080. An internet connection is required because Thre
 | First / third person | V | Camera button |
 | Look around | Mouse | Drag on the game view |
 | Brake | Space (while driving) | Brake button |
+| Delivery activity | F | Delivery button |
+| Cycle weather | R | Weather button |
 | Advance displayed time | N | — |
 | Release mouse capture | Esc | — |
 
