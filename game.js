@@ -107,6 +107,9 @@ const sidewalkTexture=makeTexture((ctx,w,h)=>{
 sidewalkTexture.repeat.set(5,2);
 M.brick.map=brickTexture;M.dark.map=concreteTexture;M.cream.map=concreteTexture;
 M.road.map=asphaltTexture;M.walk.map=sidewalkTexture;
+// Texture maps already contain their intended surface colors. Keep material tints near-white so they do not multiply the maps into near-black surfaces.
+M.brick.color.setHex(0xffffff);M.dark.color.setHex(0xcabbb2);M.cream.color.setHex(0xf0e4ce);
+M.road.color.setHex(0xffffff);M.walk.color.setHex(0xffffff);
 M.brick.needsUpdate=M.dark.needsUpdate=M.cream.needsUpdate=M.road.needsUpdate=M.walk.needsUpdate=true;
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
