@@ -687,7 +687,7 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
-      velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
+      velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       elapsed,
       simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
@@ -698,6 +698,10 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       const normalized=String(key).toLowerCase();
       if(!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(normalized))throw new TypeError('Unsupported test key');
       keys[normalized]=Boolean(pressed);
+    },
+    setYaw:(angle)=>{
+      if(!Number.isFinite(angle))throw new TypeError('Test yaw must be finite');
+      yaw=angle;
     },
     teleport:(x,z)=>{
       if(!Number.isFinite(x)||!Number.isFinite(z))throw new TypeError('Test coordinates must be finite');
