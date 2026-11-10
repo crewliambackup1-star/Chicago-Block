@@ -10,7 +10,7 @@ const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-p
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.autoUpdate = true;
 renderer.toneMappingExposure = 1.06;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
