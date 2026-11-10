@@ -51,6 +51,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
     assert.equal(initial.car.details.plates, 2, 'the sedan should have front and rear plates');
     assert.equal(initial.car.details.doorHandles, 4, 'the sedan should have four door handles');
+    assert.equal(initial.car.details.wheelSpokes, 20, 'the sedan should have five visible spokes on each wheel');
+    assert.equal(initial.car.details.wheelArches, 4, 'the sedan should have four wheel arches');
+    assert.deepEqual(initial.visualDetails, { fireEscapes: 3, courtyardPlanters: 3, murals: 1 }, 'the neighborhood should include its new architectural and landscaping details');
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
     await page.waitForFunction(
       () => window.__CHICAGO_BLOCK_TEST__.getState().simulationRunning === true,

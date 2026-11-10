@@ -93,21 +93,39 @@ const concreteTexture=makeTexture((ctx,w,h)=>{
 });
 concreteTexture.repeat.set(2,2);
 const asphaltTexture=makeTexture((ctx,w,h)=>{
-  ctx.fillStyle='#3b4145';ctx.fillRect(0,0,w,h);
-  for(let i=0;i<4200;i++){
-    const x=(i*47)%w,y=(i*113)%h,v=80+((i*19)%65);
-    ctx.fillStyle=`rgba(${v},${v+2},${v+4},.20)`;ctx.fillRect(x,y,1+(i%2),1+(i%2));
+  // A lighter, varied charcoal base keeps road detail readable under the scene lighting.
+  ctx.fillStyle='#50595e';ctx.fillRect(0,0,w,h);
+  const wash=ctx.createLinearGradient(0,0,w,h);
+  wash.addColorStop(0,'rgba(164,169,168,.12)');
+  wash.addColorStop(.5,'rgba(17,24,28,.035)');
+  wash.addColorStop(1,'rgba(187,177,157,.12)');
+  ctx.fillStyle=wash;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<6200;i++){
+    const x=(i*47)%w,y=(i*113)%h,v=112+((i*19)%78);
+    ctx.fillStyle=`rgba(${v},${v+2},${v+4},.23)`;
+    ctx.fillRect(x,y,1+(i%3===0?1:0),1+(i%2));
+  }
+  ctx.strokeStyle='rgba(15,19,21,.16)';ctx.lineWidth=2;
+  for(let i=0;i<16;i++){
+    const x=(i*83+31)%w,y=(i*137+57)%h;
+    ctx.beginPath();ctx.moveTo(x,y);
+    ctx.lineTo(x+9+(i%4)*4,y+3+(i%3)*2);
+    ctx.lineTo(x+14+(i%4)*4,y+15+(i%5)*3);ctx.stroke();
   }
 });
 asphaltTexture.repeat.set(12,3);
 const sidewalkTexture=makeTexture((ctx,w,h)=>{
-  ctx.fillStyle='#a7a79f';ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(45,48,47,.22)';ctx.lineWidth=3;
+  ctx.fillStyle='#a09c91';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(45,48,47,.20)';ctx.lineWidth=3;
   for(let x=0;x<w;x+=128){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
   for(let y=0;y<h;y+=128){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
 });
 sidewalkTexture.repeat.set(5,2);
 M.brick.map=brickTexture;M.dark.map=concreteTexture;M.cream.map=concreteTexture;
 M.road.map=asphaltTexture;M.walk.map=sidewalkTexture;
+// The texture canvases already contain their intended surface colors; avoid multiplying them by darker material tints.
+M.brick.color.setHex(0xffffff);M.dark.color.setHex(0xcabbb2);M.cream.color.setHex(0xf0e4ce);
+M.road.color.setHex(0xffffff);M.walk.color.setHex(0xffffff);
 M.brick.needsUpdate=M.dark.needsUpdate=M.cream.needsUpdate=M.road.needsUpdate=M.walk.needsUpdate=true;
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
@@ -124,7 +142,7 @@ function blocked(x,z,r=.48) {
   if(Math.abs(x)>151-r||Math.abs(z)>151-r)return true;
   return colliders.some(c=>x>c.x-c.w/2-r&&x<c.x+c.w/2+r&&z>c.z-c.d/2-r&&z<c.z+c.d/2+r);
 }
-scene.add(new THREE.HemisphereLight(0xd9e7f0,0x46513e,1.25));
+scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
 sun.position.set(-85,115,-65);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=340;
@@ -345,6 +363,74 @@ streetSign(94,-80,'MARKET STREET',-Math.PI/2);
 streetSign(-80,-94,'NORTH AVENUE',0);
 streetSign(80,94,'COURTYARD WAY',Math.PI);
 
+// Extra street-level architecture and landscaping make the block read less like a procedural test map.
+const visualDetailCounts={fireEscapes:0,courtyardPlanters:0,murals:0};
+function fireEscape(x,z,levels=3){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  for(let level=0;level<levels;level++){
+    const y=3.4+level*3.35;
+    cube(group,0,y,1.05,5.7,.14,1.55,M.metal,false);
+    cube(group,0,y+.88,1.78,5.7,.11,.12,M.silver,false);
+    for(const side of [-1,1]){
+      cube(group,side*2.78,y+.45,1.12,.11,.9,1.42,M.silver,false);
+      for(let post=0;post<5;post++)cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+    }
+    for(let post=0;post<7;post++)cube(group,-2.55+post*.85,y+.43,1.78,.055,.86,.055,M.silver,false);
+    for(const support of [-2.25,2.25])cube(group,support,y-.62,.45,.12,1.12,.12,M.metal,false);
+  }
+  const ladderX=2.35;
+  for(const side of [-1,1])cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+  for(let rung=0;rung<levels*6;rung++)cube(group,ladderX,1.1+rung*.55,2.0,.5,.055,.055,M.silver,false);
+  visualDetailCounts.fireEscapes++;
+  return group;
+}
+fireEscape(-45,-18.3,4);
+fireEscape(119,-17.2,3);
+fireEscape(-117,60.8,3);
+
+function courtyardPlanter(x,z,flowerColor=0xd18a69){
+  const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  cube(group,0,.42,0,3.5,.84,1.35,M.cream,false);
+  cube(group,0,.87,0,3.35,.13,1.22,M.wood,false);
+  for(let i=0;i<8;i++){
+    const shrub=new THREE.Mesh(new THREE.IcosahedronGeometry(.34+(i%3)*.035,1),M.leaf);
+    shrub.position.set(-1.35+(i%4)*.9,1.18+(i%2)*.08,(i<4?-.28:.28));
+    shrub.castShadow=true;group.add(shrub);
+    if(i%2===0){
+      const flower=new THREE.Mesh(new THREE.SphereGeometry(.12,8,7),mat(flowerColor,.55));
+      flower.position.set(shrub.position.x,1.47,shrub.position.z);group.add(flower);
+    }
+  }
+  visualDetailCounts.courtyardPlanters++;
+  return group;
+}
+courtyardPlanter(-55,31,0xd18a69);
+courtyardPlanter(-16,31,0xe5bb69);
+courtyardPlanter(-37,63,0xb9789b);
+
+function createMural(x,z){
+  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=384;
+  const ctx=canvas.getContext('2d'),sky=ctx.createLinearGradient(0,0,0,384);
+  sky.addColorStop(0,'#e5a45f');sky.addColorStop(.52,'#b45f4b');sky.addColorStop(1,'#273b48');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,768,384);
+  ctx.fillStyle='#f4d58d';ctx.beginPath();ctx.arc(575,112,68,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#283b45';
+  const skyline=[[0,210,90,174],[78,166,84,218],[150,195,74,189],[225,145,92,239],[315,194,78,190],[392,170,86,214],[480,216,80,168],[558,186,90,198],[646,220,122,164]];
+  for(const [sx,sy,sw,sh] of skyline)ctx.fillRect(sx,sy,sw,sh);
+  ctx.fillStyle='#e8b45f';
+  for(let i=0;i<18;i++){const sx=(i*43+18)%740,sy=190+(i%4)*37;ctx.fillRect(sx,sy,15,7);}
+  ctx.fillStyle='#f5e8d1';ctx.font='900 52px system-ui,sans-serif';ctx.textAlign='left';
+  ctx.fillText('WEST AVENUE',34,328);
+  ctx.fillStyle='#f4d58d';ctx.fillRect(34,344,700,7);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+  const muralMaterial=new THREE.MeshStandardMaterial({map:texture,roughness:.82,side:THREE.DoubleSide});
+  const art=new THREE.Mesh(new THREE.PlaneGeometry(13.5,6.5),muralMaterial);
+  art.position.set(x,5.1,z);art.rotation.y=Math.PI/2;art.receiveShadow=true;world.add(art);
+  visualDetailCounts.murals++;
+  return art;
+}
+createMural(-101.78,-38.5);
+
 // Street lamps with warm bulbs and restrained local lighting for nighttime.
 const nightLights=[];
 for(const z of [-95,-69,-14,14,69,95])for(const x of [-95,95]){
@@ -431,10 +517,22 @@ function car(color=0x365b78){
     const mirror=cube(g,sx*1.12,1.24,-1.08,.2,.16,.3,M.metal,false);
     mirror.rotation.z=sx*.08;
   }
+  let wheelSpokeCount=0;
   for(const sx of [-1,1])for(const sz of [-1,1]){
     const rig=new THREE.Group();rig.position.set(sx*1.07,.4,sz*1.38);g.add(rig);wheelRigs.push(rig);
-    const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,18),M.tire);wheel.rotation.z=Math.PI/2;rig.add(wheel);
-    const hub=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.255,14),M.silver);hub.rotation.z=Math.PI/2;rig.add(hub);
+    const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.24,24),M.tire);tire.rotation.z=Math.PI/2;rig.add(tire);
+    const hub=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.255,18),M.silver);hub.rotation.z=Math.PI/2;rig.add(hub);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(.205,.028,8,22),M.trim);
+    rim.rotation.y=Math.PI/2;rim.position.x=sx*.135;rig.add(rim);
+    for(let spokeIndex=0;spokeIndex<5;spokeIndex++){
+      const angle=spokeIndex*Math.PI*2/5;
+      const spoke=cube(rig,sx*.145,Math.sin(angle)*.105,Math.cos(angle)*.105,.035,.17,.035,M.silver,false);
+      spoke.rotation.x=angle;wheelSpokeCount++;
+    }
+    const centerCap=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.27,14),M.trim);
+    centerCap.rotation.z=Math.PI/2;rig.add(centerCap);
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,7,20,Math.PI),M.trim);
+    arch.rotation.set(0,Math.PI/2,Math.PI);arch.position.set(sx*1.05,.42,sz*1.38);g.add(arch);
   }
   for(const sx of [-1,1])cube(g,sx*1.055,.76,0,.045,.48,1.55,M.trim,false);
   for(const sx of [-1,1])for(const z of [-.58,.48]){
@@ -443,6 +541,7 @@ function car(color=0x365b78){
   cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);
   g.userData.wheels=wheelRigs;
   g.userData.plates=2;g.userData.doorHandles=4;
+  g.userData.wheelSpokes=wheelSpokeCount;g.userData.wheelArches=4;
   return g;
 }
 const playerCar=car(0x315e83);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
@@ -704,7 +803,7 @@ function updateClock(dt){
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const daylight=Math.max(.16,Math.sin((gameHours-6)/12*Math.PI));
   const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
-  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.98)*(weatherMode==='fog'?.88:1);
+  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);
   sun.position.set(-85+daylight*35,25+daylight*95,-65);
   const night=1-daylight;
   M.headlight.emissiveIntensity=.3+night*2.35;M.tailLight.emissiveIntensity=.55+night*1.25;
@@ -753,8 +852,9 @@ if(automationMode){
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
-      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles}},
+      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelArches:playerCar.userData.wheelArches}},
       streetSigns:streetSigns.length,
+      visualDetails:{...visualDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);

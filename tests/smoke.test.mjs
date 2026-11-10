@@ -30,6 +30,29 @@ test('V2 contains procedural materials, facade detail, and dynamic lamps', () =>
   }
 });
 
+test('V2 visual polish adds neighborhood landmarks and readable road materials', () => {
+  for (const feature of [
+    'function fireEscape', 'function courtyardPlanter', 'function createMural',
+    'fireEscape(-45,-18.3,4)', 'courtyardPlanter(-55,31', 'createMural(-101.78,-38.5)',
+    'visualDetailCounts', '6200;i++', 'M.road.color.setHex(0xffffff)',
+    'M.walk.color.setHex(0xffffff)', 'M.brick.color.setHex(0xffffff)'
+  ]) {
+    assert.ok(game.includes(feature), 'Missing V2 visual upgrade: ' + feature);
+  }
+  assert.match(game, /new THREE\\.HemisphereLight\\([^\\n]+1\\.62\\)/);
+  assert.match(game, /ambientLight\\.intensity=\\(\\.72\\+daylight\\*\\.86\\)/);
+});
+
+test('V2 sedan has detailed rotating wheels while retaining plates and door handles', () => {
+  for (const feature of [
+    'wheelSpokeCount=0', 'new THREE.TorusGeometry(.205,.028,8,22)',
+    'spoke.rotation.x=angle', 'g.userData.wheelSpokes=wheelSpokeCount',
+    'g.userData.wheelArches=4', 'g.userData.plates=2;g.userData.doorHandles=4'
+  ]) {
+    assert.ok(game.includes(feature), 'Missing sedan detail: ' + feature);
+  }
+});
+
 test('renderer uses the current soft shadow-map setting', () => {
   assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
   assert.doesNotMatch(game, /PCFSoftShadowMap/);
