@@ -170,6 +170,8 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, true);
     await page.locator('#activityButton').tap();
     assert.equal(await page.locator('#objectiveText').count(), 1);
+    await page.locator('#cameraButton').tap();
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, false);
     await page.screenshot({ path: 'artifacts/v2-webkit-mobile.png' });
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
