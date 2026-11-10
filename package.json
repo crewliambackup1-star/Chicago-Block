@@ -1,9 +1,9 @@
 {
   "name": "chicago-block",
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "A polished browser-based 3D Chicago-inspired neighborhood exploration game",
+  "description": "A 3D Chicago-inspired neighborhood exploration game with driving, deliveries, weather, and collectible landmarks",
   "scripts": {
     "check": "node --check game.js && node --check controls.js",
     "test": "node --test",
