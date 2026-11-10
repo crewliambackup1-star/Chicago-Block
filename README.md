@@ -18,7 +18,7 @@ A browser-based 3D neighborhood exploration game built with Three.js. The settin
 
 ### Driving controls
 - Corrected car steering mapping: A / Left Arrow steers left; D / Right Arrow steers right.
-- Press F near the gold marker to collect and deliver a package; press R to cycle clear, rain, and fog weather.
+- Press F near a cyan beacon to save a neighborhood snapshot, or near the gold marker to collect and deliver a package; press R to cycle clear, rain, and fog weather.
 - Steering mapping is isolated in controls.js so it can be tested without launching WebGL.
 
 ### Preserved V1 gameplay
@@ -65,6 +65,7 @@ To enter the blue sedan, walk close to it and press E (or tap Interact). Use A /
 ```bash
 npm run check
 npm test
+npm run test:browser
 ```
 
 GitHub Actions runs syntax and smoke tests on pushes and pull requests. The steering helper has a direct automated unit test. Automated checks do not replace a real Safari/WebGL playtest; camera behavior, visuals, touch input, frame rate, and driving still need target-device testing before V2 can be called complete.
