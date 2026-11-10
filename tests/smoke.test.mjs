@@ -52,6 +52,13 @@ test('asphalt stays readable under shadowed lighting', () => {
   assert.match(game, /M\.road\.color\.setHex\(0xffffff\)/);
 });
 
+test('dusk and night lighting stays readable across the neighborhood', () => {
+  assert.match(game, /ambientLight\.intensity=\(1\.28\+daylight\*\.55\)/);
+  assert.match(game, /new THREE\.PointLight\(0xffc77b,0,32,2\)/);
+  assert.match(game, /item\.glow\.intensity=night\*2\.6/);
+  assert.match(game, /\.29\+daylight\*\.27/);
+});
+
 test('renderer uses the current soft shadow-map setting', () => {
   assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
   assert.doesNotMatch(game, /PCFSoftShadowMap/);
