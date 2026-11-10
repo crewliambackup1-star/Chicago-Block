@@ -519,7 +519,7 @@ function movePlayer(dt){
     player.vertical-=15*dt;player.y+=player.vertical*dt;
     if(player.y<=0){player.y=0;player.vertical=0;player.grounded=true;}
   }
-  avatar.position.set(player.x,player.y,player.z);avatar.visible=!firstPerson&&!inCar;updateHud();updateActivityHud();
+  avatar.position.set(player.x,player.y,player.z);avatar.visible=!firstPerson&&!inCar;updateHud();
 }
 function updateCamera(dt){
   const focus=new THREE.Vector3(player.x,player.y+(inCar?1.45:1.55),player.z);
