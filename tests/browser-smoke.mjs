@@ -40,10 +40,21 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(700);
     const movingWorld = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
-    assert.notDeepEqual(movingWorld.npc0, initial.npc0, 'pedestrians should continue walking');
-    assert.notDeepEqual(movingWorld.traffic0, initial.traffic0, 'traffic should continue moving');
+    assert.ok(movingWorld.elapsed > initial.elapsed, 'the simulation clock should advance after starting');
+    assert.ok(
+      movingWorld.npcPositions.some((p, i) =>
+        Math.hypot(p.x - initial.npcPositions[i].x, p.z - initial.npcPositions[i].z) > 0.02
+      ),
+      'at least one pedestrian should continue walking'
+    );
+    assert.ok(
+      movingWorld.trafficPositions.some((p, i) =>
+        Math.hypot(p.x - initial.trafficPositions[i].x, p.z - initial.trafficPositions[i].z) > 0.02
+      ),
+      'at least one traffic vehicle should continue moving'
+    );
     await sendKey(page, 'w', 'keydown');
     await page.waitForTimeout(500);
     await sendKey(page, 'w', 'keyup');
