@@ -689,6 +689,7 @@ if((location.hostname==='localhost'||location.hostname==='127.0.0.1')&&new URLSe
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y},
       velocity,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       elapsed,
+      simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
       npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
       trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
