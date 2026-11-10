@@ -65,6 +65,8 @@ To enter the blue sedan, walk close to it and press E (or tap Interact). Use A /
 ```bash
 npm run check
 npm test
+npm install --no-save playwright
+npx playwright install chromium webkit
 npm run test:browser
 ```
 
