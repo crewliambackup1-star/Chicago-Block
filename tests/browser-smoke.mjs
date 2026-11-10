@@ -62,11 +62,17 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     );
     const movingWorld = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     assert.ok(movingWorld.elapsed > initial.elapsed, 'the simulation clock should advance after starting');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(0, -82));
+    const walkingStartZ = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().player.z);
     await sendKey(page, 'w', 'keydown');
-    await page.waitForTimeout(500);
+    await page.waitForFunction(
+      startZ => window.__CHICAGO_BLOCK_TEST__.getState().player.z < startZ - 0.2,
+      walkingStartZ,
+      { timeout: 8000 }
+    );
     await sendKey(page, 'w', 'keyup');
     const walkingState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
-    assert.ok(walkingState.player.z < initial.player.z, 'W should move the player forward');
+    assert.ok(walkingState.player.z < walkingStartZ, 'W should move the player forward in open space');
 
     await sendKey(page, 'v');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, true);
