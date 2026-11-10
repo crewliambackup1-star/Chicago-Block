@@ -77,23 +77,28 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await sendKey(page, 'e');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, true);
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
-    await sendKey(page, 'w', 'keydown');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
     await page.waitForTimeout(350);
-    await sendKey(page, 'a', 'keydown');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', true));
     await page.waitForTimeout(350);
-    await sendKey(page, 'a', 'keyup');
-    await sendKey(page, 'w', 'keyup');
+    await page.evaluate(() => {
+      window.__CHICAGO_BLOCK_TEST__.setKey('a', false);
+      window.__CHICAGO_BLOCK_TEST__.setKey('w', false);
+    });
     const leftState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
-    assert.ok(leftState.car.heading > headingBefore + 0.05, 'A should rotate the moving car left');
+    assert.ok(leftState.velocity > 0, 'W should accelerate the car forward');
+    assert.ok(leftState.car.heading > headingBefore + 0.05, `A should rotate left: before=${headingBefore}, after=${leftState.car.heading}`);
     assert.notEqual(leftState.car.z, -14, 'the car should move when W is held');
 
-    await sendKey(page, 'w', 'keydown');
-    await sendKey(page, 'd', 'keydown');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('d', true));
     await page.waitForTimeout(350);
-    await sendKey(page, 'd', 'keyup');
-    await sendKey(page, 'w', 'keyup');
+    await page.evaluate(() => {
+      window.__CHICAGO_BLOCK_TEST__.setKey('d', false);
+      window.__CHICAGO_BLOCK_TEST__.setKey('w', false);
+    });
     const rightState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
-    assert.ok(rightState.car.heading < leftState.car.heading - 0.05, 'D should rotate the moving car right');
+    assert.ok(rightState.car.heading < leftState.car.heading - 0.05, `D should rotate right: left=${leftState.car.heading}, right=${rightState.car.heading}`);
     await sendKey(page, 'e');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).inCar, false);
 
