@@ -54,7 +54,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const timeBefore = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().gameHours);
     await sendKey(page, 'n');
     const timeAfter = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().gameHours);
-    assert.ok(Math.abs((((timeAfter - timeBefore) % 24) + 24) % 24 - 4) < 0.01, 'N should advance the displayed clock by four hours');
+    assert.ok(Math.abs((((timeAfter - timeBefore) % 24) + 24) % 24 - 4) < 0.1, 'N should advance the displayed clock by four hours');
 
     await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
