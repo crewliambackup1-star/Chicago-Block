@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CHICAGO BLOCK — Open World</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111b22;color:#f4f5f6;font-family:system-ui,-apple-system,Segoe UI,sans-serif}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}.glass{background:#101820c9;border:1px solid #ffffff25;border-radius:12px;backdrop-filter:blur(10px);padding:10px 14px}
+#brand{position:absolute;top:14px;left:14px;font-weight:900;letter-spacing:.18em;font-size:12px}#brand small{display:block;color:#e7b45c;font-size:9px;margin-top:3px;letter-spacing:.2em}
+#stats{position:absolute;top:14px;right:14px;text-align:right;color:#c2cbd1;font-size:11px;line-height:1.7}#stats b{font-size:14px;color:#fff}
+#task{position:absolute;bottom:15px;left:14px;max-width:290px;font-size:12px;line-height:1.5}
+#help{position:absolute;bottom:15px;right:14px;font-size:10px;line-height:1.7;color:#c2cbd1}
+#start{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 65% 35%,#42545a,#14232c 55%,#081117);z-index:4}
+#card{width:min(510px,calc(100% - 30px));padding:28px;background:#071018eF;border:1px solid #ffffff30;border-radius:18px}
+#card h1{font-size:clamp(40px,9vw,66px);line-height:.9;letter-spacing:-.06em;margin:14px 0 10px}#card p{font-size:13px;color:#c1cbd2;line-height:1.6}
+button{border:0;border-radius:9px;padding:13px 18px;background:#e7b45c;font-weight:900;letter-spacing:.08em;cursor:pointer}
+#mobile{display:none;position:fixed;bottom:12px;left:12px;right:12px;justify-content:space-between;pointer-events:none}
+.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px;pointer-events:auto}.pad button,.acts button{padding:0;background:#101820c9;color:white;border:1px solid #ffffff50;touch-action:none}
+.acts{display:flex;flex-direction:column;gap:5px;pointer-events:auto}.acts button{font-size:9px;padding:0 9px}
+@media(max-width:700px){#mobile{display:flex}#help{display:none}#task{bottom:112px;max-width:230px}#stats{top:10px;right:10px}#brand{top:10px;left:10px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="start"><div id="card"><div style="color:#e7b45c;font-size:10px;letter-spacing:.24em;font-weight:900">OPEN-WORLD PROTOTYPE · V1</div><h1>CHICAGO<span style="color:#e7b45c">.</span></h1><p>Explore a fictional Chicago South Side-inspired neighborhood. Walk the courtyard, drive a sedan, switch camera perspectives, and discover the block.</p><button id="play">ENTER THE BLOCK</button><p style="font-size:10px;color:#8d9aa3">WASD / arrows: move · Shift: sprint · E: enter/exit car · V: switch camera · Mouse: look · Space: brake</p></div></div>
+<div id="hud"><div id="brand" class="glass">CHICAGO BLOCK<small>AN OPEN-WORLD SLICE</small></div><div id="stats" class="glass"><b id="clock">14:20</b><br><span id="mode">ON FOOT · THIRD PERSON</span><br><span id="speed">0 MPH</span></div><div id="task" class="glass">Explore the courtyard. Find the parked sedan and press E to drive.</div><div id="help" class="glass"><b>WASD</b> Move / drive<br><b>SHIFT</b> Sprint<br><b>E</b> Enter / exit car<br><b>V</b> First / third person<br><b>SPACE</b> Brake · <b>N</b> Time</div></div>
+<div id="mobile"><div class="pad"><span></span><button data-key="w">▲</button><span></span><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div><div class="acts"><button id="interact">INTERACT</button><button id="camera">CAMERA</button><button id="brake">BRAKE</button></div></div>
+<script type="module">
+import * as THREE from 'three';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9aafba);scene.fog=new THREE.Fog(0x9aafba,95,230);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,500);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;document.body.prepend(renderer.domElement);
+const mat=(c,r=.85)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+const brick=mat(0x884a3b),darkBrick=mat(0x65382f),trim=mat(0xc8b89e),glass=mat(0x263d49,.22),asphalt=mat(0x292f34),concrete=mat(0x858783),grass=mat(0x486344),wood=mat(0x64452f),metal=mat(0x353b40,.45),white=mat(0xe7e5dd),green=mat(0x477653),skin=mat(0x986747),blue=mat(0x365b78);
+function cube(parent,x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function ground(x,z,w,d,m){const o=new THREE.Mesh(new THREE.PlaneGeometry(w,d),m);o.rotation.x=-Math.PI/2;o.position.set(x,0,z);o.receiveShadow=true;scene.add(o);return o}
+scene.add(new THREE.HemisphereLight(0xdce8f1,0x455044,1.2));const sun=new THREE.DirectionalLight(0xffe1bd,2.1);sun.position.set(-60,90,-45);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);scene.add(sun);
+ground(0,-0,240,220,mat(0x64705d));ground(0,0,174,140,concrete);ground(0,-76,220,18,asphalt);ground(0,76,220,18,asphalt);ground(-91,0,18,140,asphalt);ground(91,0,18,140,asphalt);
+for(let x=-100;x<=100;x+=13){cube(scene,x,.03,-76,5,.025,.2,white);cube(scene,x,.03,76,5,.025,.2,white)}
+for(let z=-60;z<=60;z+=13){cube(scene,-91,.03,z,.2,.025,5,white);cube(scene,91,.03,z,.2,.025,5,white)}
+const obstacles=[];
+function apartment(x,z,w,d){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cube(g,0,8,0,w,16,d,brick);cube(g,0,.65,0,w+.3,1.3,d+.3,trim);cube(g,0,16.25,0,w+.7,.5,d+.7,darkBrick);for(let f=0;f<4;f++)for(let i=0;i<Math.floor(w/5);i++){let xx=-w/2+3+i*5;for(let face of [-1,1]){cube(g,xx,2.8+f*3.4,face*(d/2+.05),1.45,1.8,.08,glass);cube(g,xx,1.85+f*3.4,face*(d/2+.1),1.65,.12,.14,trim)}}obstacles.push({x,z,w,d})}
+apartment(0,-39,72,17);apartment(0,39,72,17);apartment(-39,0,17,62);apartment(39,0,17,62);
+ground(0,0,58,52,grass);ground(0,0,5,52,concrete);ground(0,0,58,5,concrete);
+function tree(x,z){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);const t=new THREE.Mesh(new THREE.CylinderGeometry(.2,.3,3.5,8),wood);t.position.y=1.75;g.add(t);for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.IcosahedronGeometry(1.6-i*.25,1),green);c.position.set((Math.random()-.5)*.4,3.3+i*.65,0);c.castShadow=true;g.add(c)}}
+[[-24,-20],[24,-20],[-24,20],[24,20],[-9,-24],[10,24]].forEach(p=>tree(...p));
+function bench(x,z){cube(scene,x,.65,z,2.3,.16,.6,wood);cube(scene,x,1.05,z-.24,2.3,.75,.12,wood)}bench(-12,-9);bench(12,9);
+ground(-18,.0,15,25,mat(0x526a78));cube(scene,-18,2.5,-13,.18,5,.18,metal);cube(scene,-18,4.5,-12,2,1.2,.12,white);cube(scene,-18,2.5,13,.18,5,.18,metal);cube(scene,-18,4.5,12,2,1.2,.12,white);
+const shop=new THREE.Group();shop.position.set(58,0,-9);scene.add(shop);cube(shop,0,4,0,18,8,1,brick);cube(shop,-8.5,4,0,1,8,15,brick);cube(shop,8.5,4,0,1,8,15,brick);cube(shop,-5.7,4,7,6.6,8,1,brick);cube(shop,5.7,4,7,6.6,8,1,brick);cube(shop,0,7.25,7,5,1.5,1,brick);cube(shop,0,8.2,0,19,.45,17,darkBrick);cube(shop,0,6.8,7.7,7.4,.7,.1,mat(0x9b4033));cube(shop,-4,1.1,-3,1,2.1,3,wood);cube(shop,-4,1.1,1,1,2.1,3,wood);cube(shop,3,1.1,3.8,5,1.3,1.2,wood);cube(shop,6,2.1,-3,1.5,4.1,2.2,white);
+obstacles.push({x:58,z:-9,w:18,d:1},{x:49,z:-9,w:1,d:15},{x:67,z:-9,w:1,d:15});
+const car=new THREE.Group();scene.add(car);car.position.set(25,0,58);cube(car,0,.8,0,2.1,.85,4.4,blue);cube(car,0,1.45,-.25,1.75,.8,2.2,glass);for(let x of [-1,1])for(let z of [-1.4,1.4]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.22,16),mat(0x17191b));w.rotation.z=Math.PI/2;w.position.set(x*1.05,.42,z);car.add(w)}
+const people=[];for(let i=0;i<12;i++){const g=new THREE.Group();g.position.set(-22+(i%6)*8,0,-14+Math.floor(i/6)*28);scene.add(g);const body=cube(g,0,1,0,.55,1.1,.32,[blue,green,brick][i%3]);const head=new THREE.Mesh(new THREE.SphereGeometry(.22,10,8),skin);head.position.y=1.72;g.add(head);people.push({g,x:g.position.x,z:g.position.z,p:i*.8})}
+const keys={};let started=false,inCar=false,first=false,yaw=0,pitch=-.08,clockTime=14.3,velocity=0,locked=false;
+const player={x:0,z:56,heading:Math.PI};function blocked(x,z){return obstacles.some(o=>Math.abs(x-o.x)<o.w/2+1&&Math.abs(z-o.z)<o.d/2+1)}
+function nearest(){return Math.hypot(player.x-car.position.x,player.z-car.position.z)<5}
+function interact(){if(nearest()){inCar=!inCar;if(inCar){player.x=car.position.x;player.z=car.position.z;player.heading=car.rotation.y;velocity=0}else{player.x+=3;player.z+=1;velocity=0}document.querySelector('#mode').textContent=inCar?'DRIVING · THIRD PERSON':'ON FOOT · THIRD PERSON';document.querySelector('#task').textContent=inCar?'Cruise the neighborhood. Press E to leave the sedan.':'Explore the courtyard. Find the parked sedan and press E to drive.'}else document.querySelector('#task').textContent='Walk up to the blue sedan and press E to drive.'}
+function changeCamera(){first=!first;document.querySelector('#mode').textContent=(inCar?'DRIVING':'ON FOOT')+' · '+(first?'FIRST':'THIRD')+' PERSON'}
+function update(dt,t){if(inCar){let gas=(keys.w||keys.ArrowUp?1:0)-(keys.s||keys.ArrowDown?1:0),steer=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0);velocity+=gas*15*dt;velocity*=Math.pow(keys[' ']?.04:.988,dt*60);velocity=THREE.MathUtils.clamp(velocity,-8,22);car.rotation.y+=steer*Math.min(Math.abs(velocity)/7,1)*1.5*dt*Math.sign(velocity||1);let nx=car.position.x+Math.sin(car.rotation.y)*velocity*dt,nz=car.position.z+Math.cos(car.rotation.y)*velocity*dt;if(!blocked(nx,nz)){car.position.x=nx;car.position.z=nz}else velocity*=-.2;player.x=car.position.x;player.z=car.position.z;player.heading=car.rotation.y}else{let f=(keys.w||keys.ArrowUp?1:0)-(keys.s||keys.ArrowDown?1:0),s=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0);if(f||s){let h=player.heading+yaw,l=Math.hypot(f,s),v=(keys.Shift?8:5)*dt,nx=player.x+(Math.sin(h)*f+Math.cos(h)*s)/l*v,nz=player.z+(Math.cos(h)*f-Math.sin(h)*s)/l*v;if(!blocked(nx,player.z))player.x=THREE.MathUtils.clamp(nx,-86,86);if(!blocked(player.x,nz))player.z=THREE.MathUtils.clamp(nz,-72,72)}}
+people.forEach(p=>{p.g.position.x=p.x+Math.sin(t*.45+p.p)*2.2;p.g.position.z=p.z+Math.cos(t*.45+p.p)*1.5});
+const target=new THREE.Vector3(player.x,first?(inCar?1.3:1.65):(inCar?2:1.6),player.z);if(first){camera.position.copy(target);camera.rotation.order='YXZ';camera.rotation.y=player.heading+yaw;camera.rotation.x=pitch}else{const h=player.heading+yaw,dist=inCar?9:6.5,desired=new THREE.Vector3(player.x-Math.sin(h)*dist,target.y+(inCar?3.5:2.8),player.z-Math.cos(h)*dist);camera.position.lerp(desired,1-Math.pow(.001,dt));camera.lookAt(target)}document.querySelector('#speed').textContent=inCar?Math.round(Math.abs(velocity)*2.237)+' MPH':'WALKING';clockTime=(clockTime+dt*.025)%24;document.querySelector('#clock').textContent=String(Math.floor(clockTime)).padStart(2,'0')+':'+String(Math.floor(clockTime%1*60)).padStart(2,'0')}
+renderer.domElement.addEventListener('click',()=>{if(started&&innerWidth>700)renderer.domElement.requestPointerLock?.()});document.addEventListener('pointerlockchange',()=>locked=document.pointerLockElement===renderer.domElement);document.addEventListener('mousemove',e=>{if(locked){yaw-=e.movementX*.0025;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.002,-.8,.45)}});
+document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.repeat)return;if(e.key.toLowerCase()==='e')interact();if(e.key.toLowerCase()==='v')changeCamera();if(e.key.toLowerCase()==='n'){clockTime=(clockTime+6)%24;document.querySelector('#clock').textContent=String(Math.floor(clockTime)).padStart(2,'0')+':00'}});document.addEventListener('keyup',e=>keys[e.key]=false);
+document.querySelector('#play').onclick=()=>{started=true;document.querySelector('#start').style.display='none';if(innerWidth>700)renderer.domElement.requestPointerLock?.()};document.querySelector('#interact').onclick=interact;document.querySelector('#camera').onclick=changeCamera;document.querySelector('#brake').onpointerdown=()=>keys[' ']=true;document.querySelector('#brake').onpointerup=()=>keys[' ']=false;
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointerleave=()=>keys[k]=false});
+const timer=new THREE.Clock();function loop(){requestAnimationFrame(loop);const dt=Math.min(timer.getDelta(),.04),t=timer.elapsedTime;if(started)update(dt,t);renderer.render(scene,camera)}loop();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7))});
+</script></body></html>
