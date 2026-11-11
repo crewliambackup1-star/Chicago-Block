@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.1/);
+  assert.match(html, /UPDATE 4\.2/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -101,7 +101,7 @@ test('V4.2 records the people and vehicle version', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
-  assert.match(game, /v4-1-architecture-environment/);
+  assert.match(game, /v4-2-people-vehicles/);
 });
 
 test('V4.2 retains optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
