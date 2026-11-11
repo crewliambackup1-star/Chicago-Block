@@ -97,11 +97,11 @@ test('README documents V4 scope, preserved gameplay and validation commands', ()
   assert.match(readme, /all five collectibles/);
   assert.match(readme, /Chromium and WebKit/);
 });
-test('V4.0 records the renderer foundation version', () => {
+test('V4.1 records the architecture and environment version', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
-  assert.match(game, /v4-rendering-foundation/);
+  assert.match(game, /v4-1-architecture-environment/);
 });
 
 test('V4.1 uses optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
