@@ -75,21 +75,28 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.ok(renderProfile?.reflectionQuality?.wetRoadClearcoat >= 0, 'V4.3 wet-road response should be measurable');
     assert.equal(renderProfile?.shadowsEnabled, false, 'automation shadows should be disabled');
     assert.equal(renderProfile?.pixelRatio, 0.55, 'automation should use its fixed low-resolution scale');
-    assert.equal(initial.visualQuality.pedestrian, 'v4.2-pbr-anatomical', 'pedestrians should use the detailed character rig');
+    assert.equal(initial.visualQuality.pedestrian, 'v4.5-smooth-anatomy', 'pedestrians should use the smoother natural-proportion character rig');
     assert.ok(initial.visualQuality.grassInstances >= 1200, 'desktop lawns should use instanced grass cover');
-    assert.equal(initial.visualQuality.avatar, 'v4.2-pbr-anatomical', 'player model should use the V4.2 anatomical rig');
-    assert.equal(initial.visualQuality.animationRig, 'v4.2-hinged-limbs', 'pedestrians should use articulated gait rigs');
+    assert.equal(initial.visualQuality.avatar, 'v4.5-smooth-anatomy', 'player model should use the V4.5 smooth anatomical rig');
+    assert.equal(initial.visualQuality.headScale, .78, 'player head proportions should use the V4.5 human-scale profile');
+    assert.equal(initial.visualQuality.proportionProfile, 'adult-human-v4.5', 'player model should use the revised proportion profile');
+    assert.equal(initial.visualQuality.animationRig, 'v4.5-articulated-gait', 'pedestrians should retain the articulated V4.5 gait rig');
     assert.equal(initial.visualQuality.pedestrianHairStyles.length, 4, 'pedestrian population should use four hairstyle variants');
-    assert.equal(initial.car.details.visualQuality, 'v4.2-pbr-vehicle', 'player car should use V4.2 vehicle materials');
+    assert.equal(initial.car.details.visualQuality, 'v4.5-sculpted-vehicle', 'player car should use the V4.5 sculpted vehicle model');
     assert.equal(initial.car.details.paintFinish, 'microflake-clearcoat', 'vehicle paint should have the microflake clearcoat finish');
     assert.equal(initial.car.details.glassFinish, 'high-clearcoat-transmission', 'vehicle glass should use improved clearcoat');
     assert.equal(initial.car.details.wheelLugs, 20, 'player car should have five lug nuts on each wheel');
     assert.equal(initial.car.details.interiorType, 'full', 'player car should retain its full cabin detail');
-    assert.ok(initial.trafficVisuals.every(car => car.visualQuality === 'v4.2-pbr-vehicle' && car.interiorType === 'standard'), 'traffic should also use upgraded models and visible cabin silhouettes');
+    assert.ok(initial.trafficVisuals.every(car => car.visualQuality === 'v4.5-sculpted-vehicle' && car.interiorType === 'standard'), 'traffic should use upgraded models and visible cabin silhouettes');
+    assert.deepEqual([...new Set(initial.trafficVisuals.map(car => car.bodyStyle))].sort(), ['compact','sedan','suv','wagon'], 'traffic should include four visibly distinct vehicle proportions');
+    assert.ok(initial.trafficVisuals.every(car => car.silhouette === 'rounded-quadratic-profile' && car.tireProfile === 'rounded-torus'), 'traffic models should use curved body and tyre profiles');
     assert.equal(initial.car.details.plates, 2, 'the sedan should have front and rear plates');
     assert.equal(initial.car.details.doorHandles, 4, 'the sedan should have four door handles');
     assert.equal(initial.car.details.wheelSpokes, 20, 'the sedan should have five visible spokes on each wheel');
     assert.equal(initial.car.details.wheelArches, 4, 'the sedan should have four wheel arches');
+    assert.equal(initial.car.details.bodyStyle, 'sedan', 'the player vehicle should retain its sedan body style');
+    assert.equal(initial.car.details.tireProfile, 'rounded-torus', 'the player sedan should use rounded tyre geometry');
+    assert.equal(initial.car.details.silhouette, 'rounded-quadratic-profile', 'the player sedan should use a smoothed vehicle silhouette');
     assert.deepEqual(initial.visualDetails, { fireEscapes: 3, courtyardPlanters: 3, murals: 1 }, 'the neighborhood should include its new architectural and landscaping details');
     assert.deepEqual(pageErrors, [], 'the game should start without runtime exceptions');
     await page.waitForFunction(
@@ -218,7 +225,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v4-3-chromium-desktop-after-play.png');
+    await captureScreenshot(page, 'artifacts/v4-5-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -293,7 +300,7 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
       test.setYaw(0);
     });
     await page.waitForTimeout(2200);
-    await page.screenshot({ path: 'artifacts/v4-3-chromium-mobile-portrait.png' });
+    await page.screenshot({ path: 'artifacts/v4-5-chromium-mobile-portrait.png' });
     assert.deepEqual(pageErrors, [], 'mobile Chromium page should not throw runtime exceptions');
   } finally {
     await context.close();
@@ -311,7 +318,7 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v4-3-chromium-mobile-landscape.png' });
+    await landscapePage.screenshot({ path: 'artifacts/v4-5-chromium-mobile-landscape.png' });
     assert.deepEqual(landscapeErrors, [], 'landscape mobile Chromium page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
