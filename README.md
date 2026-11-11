@@ -82,3 +82,18 @@ npm run test:browser
 
 ## Asset licensing
 See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for third-party CC0 texture sources.
+
+## V4.4 geographic-data foundation
+
+V4.4 adds reusable infrastructure for a future, data-driven Chicago map while leaving the currently playable district unchanged:
+
+- WGS84 longitude/latitude to local metre projection and inverse conversion around a documented Chicago reference origin.
+- East-positive X / north-negative Z axes, 512-metre tile addressing, bounds and player-centered tile selection.
+- Bounded GeoJSON normalization for street centerlines and building footprints.
+- A normalized tile schema, source manifest and local GeoJSON-to-tile build command.
+- Feature-to-tile partitioning that preserves continuity across tile seams, with a maximum-tiles-per-feature guard.
+- A request-deduplicating tile manager with cancellation, bounded LRU caching, prefetch and diagnostics.
+
+**Status:** this is a data foundation, not a geographically accurate playable map. No raw City of Chicago source export is bundled, no real Chicago geometry is rendered by the game, and the existing fictional Chicago-inspired district remains the playable area. City source reuse terms and attribution must be checked before distributing processed datasets. Large-scale geometry clipping, deduplication, tile compression and scene integration remain later stages.
+
+The source inputs expected by the builder are documented in city-data/README.md. After placing reviewed GeoJSON exports at the documented local paths, run npm run build:city-tiles to produce a local tile pack. Raw source files are intentionally excluded from the repository.

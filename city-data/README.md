@@ -1,0 +1,43 @@
+# V4.4 geographic-data foundation
+
+This folder is the start of the data-driven Chicago map pipeline. It is not yet connected to the live scene and does not change the current fictional Chicago-inspired play area.
+
+## Coordinate model
+
+- Source coordinates: GeoJSON/WGS84 longitude, latitude.
+- Local rendering coordinates: metres around the approximate Chicago Loop origin in `manifest.json`.
+- World X points east; negative Three.js Z points north.
+- Default tiles are 512 metres square and use integer grid coordinates, including negative tile indices.
+- `../geodata.js` contains the projection, inverse projection, tile addressing and GeoJSON feature normalization helpers.
+- `../tile-streaming.js` provides a loader-injected tile manager with in-flight request deduplication, cancellation of no-longer-visible requests, a bounded LRU cache and player-centered prefetch.
+- `../scripts/build-city-tiles.mjs` converts locally downloaded source GeoJSON into 512-metre tile files and a tile manifest. It retains complete features in every intersecting tile so street segments crossing boundaries stay continuous.
+
+The local projection is scaled at the origin latitude so distances remain usable for city-scale rendering. Keep the original longitude/latitude with source records; projected coordinates are a rendering representation, not a replacement for source geodata.
+
+## Initial source layers
+
+1. **Street Center Lines** — current City of Chicago dataset `6imu-meau`, updated April 24, 2024. The portal marks it Public, but its page does not state a clear reuse license; verify terms/attribution before redistribution. Convert line features into tile-local road centerline data first; road widths, intersections and surface styling belong in the rendering stage.
+2. **Building Footprints** — authoritative City dataset `syp8-uezg`, listed in Data.gov as updated June 12, 2025. The similarly named `ssaf-e4ub` entry is a public-created visualization and is not the source of record. Review current City terms/attribution before redistributing processed data. Convert Polygon and MultiPolygon outlines into tile-local footprint rings; building heights and usage should come from validated attributes when available, never guessed from footprint alone.
+
+Review source metadata, attribution and reuse terms for each export before building a distributable tile pack. Preserve dataset identifiers and source dates in the generated tile metadata. Do not commit raw source exports until their size and reuse terms have been reviewed. The MIT-licensed City of Chicago GitHub data repositories are older, edited snapshots that explicitly differ from the current portal data; do not assume they represent the latest geometry.
+
+## Build a local tile pack
+
+Download GeoJSON exports from the dataset pages in `manifest.json` and place them at:
+
+- `city-data/raw/streets.geojson`
+- `city-data/raw/buildings.geojson`
+
+Then run `npm run build:city-tiles`. The script normalizes up to one million features per source file, processes the street and building inputs sequentially, writes normalized tile records to `city-data/tiles/`, and removes only previously generated tile JSON files before rebuilding. It does not download data itself or modify the playable scene.
+
+## Next implementation stages
+
+- Download a small, bounded sample around the initial Chicago area and inspect geometry quality, coordinate systems, duplicate segments, invalid rings and attribute coverage.
+- Normalize street and building features; clip features at tile boundaries so large roads/buildings do not require entire-city geometry in memory.
+- Generate compressed tile files plus a lightweight spatial index and manifest.
+- Connect the tested tile manager to generated tile assets, then tune the visible radius, cache budget and prefetch distance against desktop and mobile hardware.
+- Replace the fictional starter block gradually, validating alignment against real street intersections before expanding the loaded radius.
+
+## Current status
+
+V4.4 currently provides coordinate conversion, tile addressing, source documentation and tests. No real Chicago geometry is rendered yet, and no claim is made that the current playable map is geographically accurate.
