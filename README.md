@@ -1,37 +1,46 @@
-# Chicago Block — V4.0 Photorealism Foundation
+# Chicago Block — V4.1 Architecture & Environment
 
-A browser-based 3D neighborhood game on the path toward high-fidelity, photorealistic visuals. V4.0 establishes a stronger render-quality and performance foundation before the next asset and world-detail stages.
+V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The existing neighborhood footprint, street grid, gameplay, driving, camera, traffic and pedestrian routes remain unchanged.
+
+## V4.1 architecture and environment changes
+- Adds optional CC0 scanned PBR texture maps for worn brick, asphalt and concrete pavement. Each has a procedural material fallback that is available immediately, so failed external requests do not block startup.
+- Uses 1K diffuse, OpenGL normal and roughness maps from Poly Haven through its download host; texture requests are asynchronous and update materials only when maps arrive.
+- Adds a source/license manifest at `assets/ASSET_LICENSES.md`.
+- Gives buildings more varied floor spacing, framed street-level entries, glazed door panels, thresholds, awnings, building-number plaques and more distinct rooflines.
+- Adds selected rooftop penthouses, parapets and vent stacks to break up flat repeated roof silhouettes.
+- Adds instanced dark window reveals and stone lintels for depth around façade openings.
+- Adds instanced expansion joints to divide long sidewalks into concrete slabs.
+- Rebuilds the existing fire escapes with switchback stairs, connected landings, handrails and supports.
 
 ## V4.0 rendering foundation
-- Desktop starts with an ultra-quality profile: up to 2x device pixel ratio, 2048px directional shadow map (when supported), antialiasing, high precision and ACES tone mapping.
-- Touch devices use a separate high-quality profile capped at 1.45x pixel ratio and 1024px shadows to keep thermal and memory pressure manageable.
-- Adaptive resolution watches sustained frame times and adjusts pixel density gradually. It never changes simulation speed, movement, driving or gameplay timing.
-- Directional shadows now follow the player and focus on a tighter nearby area, spending more shadow resolution where it is visible.
-- Browser automation keeps a separate lightweight profile with low resolution, no real-time shadows and reduced render frequency; these settings do not affect normal players.
-- A read-only render diagnostics hook exposes the selected profile, pixel ratio, shadow configuration and adaptive-resolution state for tests.
+- Desktop starts at up to 2x device pixel ratio with a 2048px directional shadow map, when device capabilities permit.
+- Touch devices use a separate high-quality profile capped at 1.45x pixel ratio and a 1024px shadow map.
+- Adaptive resolution adjusts pixel density gradually only after sustained frame-time pressure; it does not alter simulation speed or controls.
+- Directional shadows follow the player, concentrating shadow detail near the active area.
+- Headless automation uses a separate low-resolution, no-shadow profile and reduced draw frequency.
 
-## Performance goals
+## Performance approach
 - Primary target: MacBook Air M3 with 16 GB unified memory.
-- Aim for 60 FPS when scene complexity permits, while maintaining a playable experience in heavier scenes.
-- Preserve quality by reducing pixel density gradually only when frame time shows sustained pressure.
-- Use a separate touch-device profile and retain an automated-test profile.
+- Use instancing for repeated sidewalk seams, window details, grass and foliage to reduce draw calls.
+- Keep PBR textures at 1K for this web-focused pass; preserve procedural fallbacks if network assets fail.
+- Adaptive resolution is a safeguard, not a promise of a fixed FPS. Physical M3 performance still needs manual confirmation.
+
+## Scope
+- No new missions or gameplay systems.
+- No changes to map footprint, driving, movement, camera, traffic paths, pedestrian paths, or controls.
+- No full Chicago map expansion in V4.1. Geographic mapping and streamed city sections remain later roadmap work.
 
 ## V4 roadmap
-- V4.0: render pipeline, quality profiles, adaptive resolution and player-centered shadow coverage.
-- V4.1: realistic environment and architecture assets, material library and building/road detail.
-- V4.2: higher fidelity people, vehicles and animations.
-- V4.3: lighting, reflections and weather atmosphere.
-- V4.4: streamed city sections, geographic data foundation and large-world optimization.
-
-## Scope of V4.0
-- No changes to map layout, movement, vehicle handling, activities, traffic routes, pedestrian routes, controls or camera behavior.
-- V4.0 is a rendering foundation, not a claim that the game is already photorealistic.
-- The setting remains a fictional Chicago-inspired environment while future stages prepare for the larger geographically grounded city.
+- V4.0: adaptive renderer, quality profiles and player-centered shadow coverage.
+- V4.1: architecture, street environment and scanned PBR materials.
+- V4.2: higher-fidelity people, vehicles and animation refinement.
+- V4.3: lighting, reflections, sky and weather atmosphere.
+- V4.4: geographic data and streamed city sections.
 
 ## Validation
-Existing gameplay remains in place, including package delivery, all five collectibles and weather states. Automated coverage uses Chromium and WebKit: desktop Chromium and mobile WebKit.
+`npm run check` validates the main game, controls and rendering module. `npm test` covers source behavior, adaptive renderer profiles and V4.1 environment/asset wiring. Browser automation uses desktop Chromium and mobile WebKit to check startup, render profiles, movement, cameras, weather, driving, activities and mobile controls.
 
-`npm run check` validates the game, controls and rendering modules. `npm test` covers source behavior and adaptive-quality rules. Browser automation covers desktop Chromium and mobile WebKit, including runtime render-profile diagnostics, existing gameplay systems and responsive controls.
+Automated screenshots are saved as GitHub Actions artifacts. Tests use the special local `?automation=1` profile; normal players do not use those reduced test settings.
 
 ## Run locally
 
@@ -39,7 +48,7 @@ Existing gameplay remains in place, including package delivery, all five collect
 python3 -m http.server 8080
 ```
 
-Open http://localhost:8080. Three.js is loaded from jsDelivr, so an internet connection is required.
+Open http://localhost:8080. Three.js is loaded from jsDelivr. Optional CC0 PBR images are loaded from Poly Haven when available; procedural fallbacks remain if those requests fail.
 
 ## Automated checks
 
@@ -51,7 +60,5 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-## Prior releases
-- V3.1 delivered the model and texture refinement.
-- V3 delivered the original realism renderer update.
-- V2 delivered the first major neighborhood gameplay update.
+## Asset licensing
+See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for the individual CC0 source pages and the material maps used.
