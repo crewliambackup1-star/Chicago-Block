@@ -26,7 +26,7 @@ V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The e
 - Adaptive resolution is a safeguard, not a promise of a fixed FPS. Physical M3 performance still needs manual confirmation.
 
 ## Scope
-- Existing package delivery, five collectible landmarks, weather cycle, traffic and pedestrian activity are retained from the previous release.
+- Existing package delivery, all five collectibles, clear/rain/fog weather states, traffic and pedestrian activity are retained from the previous release.
 - No new missions or gameplay systems.
 - No changes to map footprint, driving, movement, camera, traffic paths, pedestrian paths, or controls.
 - No full Chicago map expansion in V4.1. Geographic mapping and streamed city sections remain later roadmap work.
@@ -40,7 +40,7 @@ V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The e
 - V4.4: geographic data and streamed city sections.
 
 ## Validation
-`npm run check` validates the main game, controls and rendering module. `npm test` covers source behavior, adaptive renderer profiles and V4.1 environment/asset wiring. Browser automation uses desktop Chromium and mobile WebKit to check startup, render profiles, movement, cameras, weather, driving, activities and mobile controls.
+`npm run check` validates the main game, controls and rendering module. `npm test` covers source behavior, adaptive renderer profiles and V4.1 environment/asset wiring. Browser automation uses Chromium and WebKit: desktop Chromium and mobile WebKit check startup, render profiles, movement, cameras, weather, driving, activities and mobile controls.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the special local `?automation=1` profile; normal players do not use those reduced test settings.
 
