@@ -12,7 +12,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.3/);
+  assert.match(html, /UPDATE 4\.5 · SMOOTH PEOPLE & VEHICLE MODELS/);
+  assert.match(html, /Smooth People & Vehicle Models \(V4\.5\)/);
+  assert.match(html, /SMOOTH PEOPLE & VEHICLE MODELS · V4\.5/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
