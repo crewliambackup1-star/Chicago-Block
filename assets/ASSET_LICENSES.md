@@ -13,10 +13,11 @@ The browser fetches the 1K JPEG maps from Poly Haven's download host only after 
 Poly Haven license information: https://polyhaven.com/license
 
 ## V4.6 human model
-- Source page: https://www.innerscene.com/tools/library/3d-parts/crossing-step-3d-person-walking-4235c1bb
-- File: `walking-cross-step.glb` (16.1 MB).
+- Source page: https://www.innerscene.com/tools/library/3d-parts/locomotion-collection-maya-3d-person-animated-1499b2fd
+- File: `locomotion-collection-maya-3d-person-animated.glb` (20.3 MB).
 - License: CC0 / public domain, as stated on the source page.
-- Use: textured, clothed static-stride human mesh for nearby pedestrians and the player avatar. The source asset has no armature or animation; the game uses root movement and retains its procedural animated model as a distance/offline fallback.
+- Source: Innerscene adaptation of MakeHuman/MPFB CC0 body, rig and skin assets.
+- Use: skinned, textured adult human model with seven authored locomotion clips: idle, relaxed walk, brisk walk, jog, run, carry walk and sit/stand. The published motion is authored from periodic pose recipes, not motion capture.
 
 ## V4.6 vehicle model
 - Source page: https://www.innerscene.com/tools/library/3d-parts/sedan-car-42109739
