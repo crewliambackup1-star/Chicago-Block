@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "coordinateSystem": "WGS84 longitude/latitude input projected to Chicago-local ground metres",
+  "worldAxes": {
+    "x": "east",
+    "negativeZ": "north",
+    "positiveZ": "south"
+  },
+  "origin": {
+    "latitude": 41.8781,
+    "longitude": -87.6298,
+    "label": "Chicago Loop reference origin (approximate)"
+  },
+  "tileSizeMeters": 512,
+  "tileScheme": "Local square grid; tile index is floor(localCoordinate / tileSizeMeters)",
+  "dataSources": [
+    {
+      "id": "chicago-street-center-lines",
+      "layer": "streets",
+      "name": "Street Center Lines",
+      "publisher": "City of Chicago",
+      "datasetId": "6imu-meau",
+      "portal": "https://data.cityofchicago.org/Transportation/Street-Center-Lines/6imu-meau",
+      "expectedFormat": "GeoJSON",
+      "geometryTypes": [
+        "LineString",
+        "MultiLineString"
+      ],
+      "usageNote": "Use the current City of Chicago dataset page and review its metadata and reuse terms when exporting derived tiles."
+    },
+    {
+      "id": "chicago-building-footprints",
+      "layer": "buildings",
+      "name": "Building Footprints",
+      "publisher": "City of Chicago",
+      "datasetId": "syp8-uezg",
+      "portal": "https://data.cityofchicago.org/",
+      "apiResource": "https://data.cityofchicago.org/api/v3/views/syp8-uezg/query.geojson?accessType=DOWNLOAD",
+      "expectedFormat": "GeoJSON",
+      "geometryTypes": [
+        "Polygon",
+        "MultiPolygon"
+      ],
+      "usageNote": "Verify dataset metadata, attribution and reuse terms before redistributing a processed tile pack."
+    }
+  ],
+  "status": "Foundation only. No source datasets have been downloaded or incorporated into the playable map yet."
+}
