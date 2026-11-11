@@ -35,7 +35,7 @@ async function readSource(filename, label) {
   return {
     features: normalizeGeoJsonFeatureCollection(raw, {
       origin: manifest.origin,
-      maxFeatures: 500000
+      maxFeatures: 1000000
     }),
     retrievedAt: info.mtime.toISOString()
   };
@@ -47,19 +47,22 @@ function getDataset(layer) {
   return source;
 }
 
-const [streetData, buildingData] = await Promise.all([
-  readSource('streets.geojson', 'Street Center Lines'),
-  readSource('buildings.geojson', 'Building Footprints')
-]);
 const tileSizeMeters = manifest.tileSizeMeters;
+const streetData = await readSource('streets.geojson', 'Street Center Lines');
+const streetFeatureCount = streetData.features.length;
 const streetTiles = partitionFeaturesByTile(streetData.features, {
   tileSizeMeters,
   maxTilesPerFeature: 128
 });
+streetData.features = null;
+
+const buildingData = await readSource('buildings.geojson', 'Building Footprints');
+const buildingFeatureCount = buildingData.features.length;
 const buildingTiles = partitionFeaturesByTile(buildingData.features, {
   tileSizeMeters,
   maxTilesPerFeature: 128
 });
+buildingData.features = null;
 const tileKeys = [...new Set([
   ...Object.keys(streetTiles),
   ...Object.keys(buildingTiles)
@@ -131,7 +134,7 @@ await writeFile(
 );
 console.log(
   'Built ' + tiles.length + ' Chicago tiles from ' +
-  streetData.features.length + ' street features and ' +
-  buildingData.features.length + ' building features.'
+  streetFeatureCount + ' street features and ' +
+  buildingFeatureCount + ' building features.'
 );
 console.log('Output: ' + outputRoot);
