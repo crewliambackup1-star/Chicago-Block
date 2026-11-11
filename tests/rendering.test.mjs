@@ -58,7 +58,7 @@ test('adaptive resolution lowers pixel ratio after sustained slow frames', () =>
   }
   assert.ok(controller.pixelRatio < 2);
   assert.equal(calls.at(-2)[0], 'ratio');
-  assert.deepEqual(calls.at(-1), ['size', 1440, 900, false]);
+  assert.deepEqual(calls.at(-1), ['size', 1440, 900, true]);
   assert.match(controller.getSnapshot().lastChangeReason, /frame time/);
 });
 
