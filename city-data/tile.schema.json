@@ -21,7 +21,7 @@
     },
     "tileId": {
       "type": "string",
-      "pattern": "^-?\\\\d+:-?\\\\d+$"
+      "pattern": "^-?\\d+:-?\\d+$"
     },
     "tileX": {
       "type": "integer"
@@ -114,14 +114,9 @@
   "$defs": {
     "point": {
       "type": "array",
-      "prefixItems": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "number"
-        }
-      ],
+      "items": {
+        "type": "number"
+      },
       "minItems": 2,
       "maxItems": 2
     },
@@ -134,42 +129,134 @@
         "geometry"
       ],
       "properties": {
-        "type": {
-          "const": "Feature"
-        },
-        "id": {
-          "type": [
-            "string",
-            "number",
-            "null"
-          ]
-        },
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "properties",
+          "geometry"
+        ],
         "properties": {
-          "type": "object"
-        },
-        "geometry": {
-          "type": "object",
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "properties": {
-            "type": {
-              "enum": [
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ]
-            },
-            "coordinates": {
-              "type": "array"
-            }
+          "type": {
+            "const": "Feature"
           },
-          "additionalProperties": false
-        }
+          "id": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "properties": {
+            "type": "object"
+          },
+          "geometry": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "LineString"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/lineString"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "MultiLineString"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/multiLineString"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "Polygon"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/polygon"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "MultiPolygon"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/multiPolygon"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "additionalProperties": false
+    },
+    "lineString": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "multiLineString": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/lineString"
+      }
+    },
+    "ring": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "polygon": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/ring"
+      }
+    },
+    "multiPolygon": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/polygon"
+      }
     }
   }
 }
