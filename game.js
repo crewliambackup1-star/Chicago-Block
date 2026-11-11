@@ -1315,6 +1315,49 @@ function car(color=0x365b78,detailedInterior=false){
     const steeringWheel=new THREE.Mesh(new THREE.TorusGeometry(.22,.035,9,28),M.trim);
     steeringWheel.position.set(.42,1.34,-.87);steeringWheel.rotation.x=.92;steeringWheel.rotation.z=-.14;g.add(steeringWheel);
     cube(g,0,1.23,-.72,1.22,.14,.28,cabinMat,false);
+    for(let switchIndex=0;switchIndex<3;switchIndex++){
+      const switchCap=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.025,8),M.silver);
+      switchCap.position.set(-.18+switchIndex*.18,1.32,-.72);g.add(switchCap);
+    }
+    cube(g,0,1.1,.02,.34,.12,.72,cabinMat,false);
+  }else{
+    // Traffic cars still have a readable cabin silhouette through their glass.
+    const cabinMat=new THREE.MeshStandardMaterial({color:0x20272a,roughness:.9});
+    const seatMat=new THREE.MeshStandardMaterial({color:0x3c4244,roughness:.92});
+    cube(g,0,1.02,.02,1.36,.18,1.8,cabinMat,false);
+    for(const sx of [-1,1])for(const sz of [-.48,.55]){
+      cube(g,sx*.42,1.27,sz,.43,.48,.44,seatMat,false);
+      cube(g,sx*.42,1.6,sz+.1,.42,.3,.13,seatMat,false);
+    }
+    cube(g,0,1.18,-.82,1.28,.18,.3,cabinMat,false);
+    const wheel=new THREE.Mesh(new THREE.TorusGeometry(.19,.027,7,22),M.trim);
+    wheel.position.set(.39,1.29,-.86);wheel.rotation.x=.92;g.add(wheel);
+  }
+  // Thin raised hood and trunk creases catch grazing sunlight without changing the car silhouette.
+  const panelLineMaterial=new THREE.MeshStandardMaterial({color:0x273136,roughness:.58,metalness:.2});
+  for(const side of [-1,1]){
+    const hoodLine=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side*.48,1.035,-2.02),
+      new THREE.Vector3(side*.54,1.055,-1.78),
+      new THREE.Vector3(side*.58,1.065,-1.48)
+    ]),12,.009,5,false),panelLineMaterial);g.add(hoodLine);
+    const trunkLine=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      new THREE.Vector3(side*.51,1.02,1.42),
+      new THREE.Vector3(side*.55,1.04,1.78),
+      new THREE.Vector3(side*.48,1.04,2.05)
+    ]),12,.008,5,false),panelLineMaterial);g.add(trunkLine);
+    for(const z of [-.48,.55]){
+      const doorSeam=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+        new THREE.Vector3(side*1.058,.75,z-.07),
+        new THREE.Vector3(side*1.062,.94,z),
+        new THREE.Vector3(side*1.052,1.32,z+.08)
+      ]),10,.008,5,false),panelLineMaterial);g.add(doorSeam);
+    }
+    const doorSill=cube(g,side*1.04,.52,.02,.045,.075,1.85,M.silver,false);
+    doorSill.material=bodyMat;
+    const fenderFlare=new THREE.Mesh(new THREE.TorusGeometry(.44,.027,7,24,Math.PI),bodyMat);
+    fenderFlare.rotation.set(0,Math.PI/2,Math.PI);
+    fenderFlare.position.set(side*1.07,.42,-1.38);g.add(fenderFlare);
   }
   cube(g,0,.48,-2.2,1.9,.18,.18,M.silver,false);cube(g,0,.48,2.2,1.9,.18,.18,M.silver,false);
   cube(g,0,.83,-2.22,.92,.24,.08,M.metal,false);
