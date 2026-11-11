@@ -1,8 +1,8 @@
-# Chicago Block — V4.2 People, Vehicles & Animation
+# Chicago Block — V4.3 Lighting, Reflections & Atmosphere
 
-V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work with a visual overhaul of the people and vehicles. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
+V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting, reflection and weather pipeline. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
 
-## V4.2 human model and animation changes
+## V4.2 human model and animation changes (retained)
 - Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
 - Adds garment construction details such as a zipper, chest pockets, pocket flaps, buttons, stitching seams and a layered neckline.
 - Adds four distinct procedural hairstyles: curly, cropped, short twists and tied-back.
@@ -10,7 +10,7 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - Replaces the simple walk swing with a gait cycle that coordinates hip swing, knee lift, elbow bend, foot pitch, torso bob and subtle head movement.
 - Preserves pedestrian speed, destinations, routes and the existing player controls.
 
-## V4.2 vehicle changes
+## V4.2 vehicle changes (retained)
 - Adds shared microflake paint texture, subtle surface relief, higher metalness and a clearer coat finish.
 - Improves window glass clearcoat, reflection and transmission settings.
 - Adds readable cabin silhouettes to traffic cars, with a more detailed cockpit retained for the player car.
@@ -27,8 +27,12 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - Building-number plaques, recessed window reveals, stone lintels, sidewalk expansion joints and connected fire-escape switchback stairs.
 - Asset source and license records in `assets/ASSET_LICENSES.md`.
 
-## V4.0 rendering foundation retained
-- Desktop ultra profile up to 2x device pixel ratio and 2048px directional shadow map, subject to device support.
+## V4.3 lighting and atmosphere
+- Desktop ultra profile up to 2x device pixel ratio and 3072px directional shadow map, subject to device support.
+- A deterministic solar model adds warm sunrise/sunset color, directional moonlight, subtle sky bounce, a soft sun glow and a visible moon at night.
+- A second drifting cloud shell adds layered sky motion without a post-processing pass.
+- Rain changes asphalt clearcoat, roughness, environment response and puddle reflections; fog and rain adjust atmospheric scattering distance and sky color.
+- Adaptive pixel density remains active so higher shadow detail can step down under sustained frame-time pressure.
 - Touch-device profile capped at 1.45x pixel ratio and 1024px shadow map.
 - Adaptive resolution reacts only to sustained frame-time pressure and does not change simulation speed.
 - Directional shadows follow the player to concentrate detail near the active area.
@@ -54,7 +58,7 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - V4.4: geographic data foundation and streamed city sections.
 
 ## Validation
-`npm run check` validates the game, controls and renderer. `npm test` covers source behavior, adaptive-resolution rules, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character, vehicle, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
@@ -72,7 +76,7 @@ Open http://localhost:8080. Three.js loads from jsDelivr. Optional CC0 PBR image
 npm run check
 npm test
 npm install --no-save playwright
-npx playwright install chromium webkit
+npx playwright install chromium
 npm run test:browser
 ```
 

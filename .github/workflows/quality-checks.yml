@@ -2,6 +2,8 @@ name: Quality checks
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 concurrency:
@@ -27,8 +29,8 @@ jobs:
         run: npm test
 
   browser:
-    runs-on: ubuntu-latest
-    timeout-minutes: 8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     needs: test
     steps:
       - name: Check out repository
@@ -39,8 +41,8 @@ jobs:
           node-version: 22
       - name: Install Playwright
         run: npm install --no-save playwright
-      - name: Install Chromium and WebKit
-        run: npx playwright install --with-deps chromium webkit
+      - name: Install Chromium browser binary
+        run: npx playwright install chromium
       - name: Start local test server
         run: |
           python3 -m http.server 4173 > /tmp/chicago-block-server.log 2>&1 &
@@ -51,6 +53,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chicago-block-v4-2-browser-screenshots
+          name: chicago-block-v4-3-browser-screenshots
           path: artifacts/
           if-no-files-found: ignore

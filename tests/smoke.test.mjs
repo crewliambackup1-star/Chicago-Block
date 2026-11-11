@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.2/);
+  assert.match(html, /UPDATE 4\.3/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -40,7 +40,10 @@ test('V2 visual polish adds neighborhood landmarks and readable road materials',
     assert.ok(game.includes(feature), 'Missing V2 visual upgrade: ' + feature);
   }
   assert.ok(game.includes('new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62)'));
-  assert.ok(game.includes("ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);"));
+  assert.ok(game.includes('getAtmosphereState(gameHours,weatherMode)'));
+  assert.ok(game.includes('cloudDome.rotation.y'));
+  assert.ok(game.includes('moonLight.intensity=night*.24'));
+  assert.ok(game.includes("M.road.clearcoat=weatherMode==='rain'?.72:.06"));
 });
 
 test('V2 sedan uses a sloped, beveled body and separate cabin glass', () => {
@@ -76,7 +79,7 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-2-people-vehicles/);
+  assert.match(game, /v4-3-lighting-atmosphere/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -87,21 +90,21 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.2 People, Vehicles & Animation/);
-  assert.match(readme, /rendering foundation/);
+  assert.match(readme, /V4\.3 Lighting, Reflections & Atmosphere/);
+  assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
   assert.match(readme, /package delivery/);
   assert.match(readme, /weather states/);
   assert.match(readme, /all five collectibles/);
-  assert.match(readme, /Chromium and WebKit/);
+  assert.match(readme, /touch-enabled mobile viewport/);
 });
 test('V4.2 records the people and vehicle version', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
-  assert.match(game, /v4-2-people-vehicles/);
+  assert.match(game, /v4-3-lighting-atmosphere/);
 });
 
 test('V4.2 retains optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {

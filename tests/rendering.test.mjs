@@ -4,6 +4,7 @@ import {
   createAdaptiveResolutionController,
   createGraphicsProfile
 } from '../rendering.js';
+import { getAtmosphereState } from '../atmosphere.js';
 
 test('desktop profile starts at high pixel density with a larger shadow map', () => {
   const profile = createGraphicsProfile({
@@ -13,7 +14,7 @@ test('desktop profile starts at high pixel density with a larger shadow map', ()
   });
   assert.equal(profile.name, 'desktop-ultra');
   assert.equal(profile.initialPixelRatio, 2);
-  assert.equal(profile.shadowMapSize, 2048);
+  assert.equal(profile.shadowMapSize, 3072);
   assert.equal(profile.shadowsEnabled, true);
   assert.equal(profile.adaptiveResolution, true);
 });
@@ -79,4 +80,21 @@ test('adaptive controller ignores suspended-tab deltas and disabled updates', ()
   for (let i = 0; i < 120; i++) controller.update(0.5, true);
   for (let i = 0; i < 120; i++) controller.update(0.01, false);
   assert.equal(controller.pixelRatio, 2);
+});
+
+test('V4.3 atmosphere model separates day, golden hour, night and weather', () => {
+  const noon = getAtmosphereState(12, 'clear');
+  const sunset = getAtmosphereState(18, 'clear');
+  const night = getAtmosphereState(0, 'clear');
+  const rain = getAtmosphereState(12, 'rain');
+  const fog = getAtmosphereState(12, 'fog');
+  assert.ok(noon.daylight > 0.99);
+  assert.ok(sunset.goldenHour > 0.5);
+  assert.equal(night.daylight, 0);
+  assert.ok(night.night > 0.99);
+  assert.ok(rain.sunIntensity < noon.sunIntensity);
+  assert.ok(fog.fogFar < rain.fogFar);
+  assert.ok(rain.cloudOpacity > noon.cloudOpacity);
+  assert.ok(noon.environmentIntensity > night.environmentIntensity);
+  assert.equal(getAtmosphereState(-6, 'clear').hour, 18);
 });
