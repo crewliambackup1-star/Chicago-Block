@@ -98,7 +98,7 @@ test('README documents V4 scope, preserved gameplay and validation commands', ()
   assert.match(readme, /package delivery/);
   assert.match(readme, /weather states/);
   assert.match(readme, /all five collectibles/);
-  assert.match(readme, /Chromium and WebKit/);
+  assert.match(readme, /touch-enabled mobile viewport/);
 });
 test('V4.2 records the people and vehicle version', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
