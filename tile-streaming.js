@@ -74,7 +74,10 @@ export function createCityTileManager({
     const controller = new AbortController();
     const entry = { controller, promise: null };
     entry.promise = Promise.resolve()
-      .then(() => loadTile(tileKey, { signal: controller.signal }))
+      .then(() => {
+        if (controller.signal.aborted || disposed) throw makeAbortError();
+        return loadTile(tileKey, { signal: controller.signal });
+      })
       .then(tile => {
         if (controller.signal.aborted || disposed) throw makeAbortError();
         if (tile === undefined || tile === null) throw new Error('Tile loader returned no data for ' + tileKey);
