@@ -269,8 +269,8 @@ const pbrSourceManifest=[
     repeat:[2.4,1.8],normalStrength:.62,roughness:.94
   },
   {
-    id:'asphalt-03',material:M.road,
-    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_03/asphalt_03',
+    id:'asphalt-02',material:M.road,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02',
     repeat:[8,2.2],normalStrength:.42,roughness:.97
   },
   {
