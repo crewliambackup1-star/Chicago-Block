@@ -55,7 +55,7 @@ V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting,
 - V4.1: architecture, scanned PBR materials and street environment.
 - V4.2: human and vehicle models, materials and animations.
 - V4.3: lighting, reflections, sky and weather atmosphere.
-- V4.4: geographic data foundation and streamed city sections.
+- V4.4: geographic data foundation and streamed city sections (foundation in progress on `v4-4-geographic-data-foundation`).
 
 ## Validation
 `npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
@@ -82,3 +82,14 @@ npm run test:browser
 
 ## Asset licensing
 See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for third-party CC0 texture sources.
+
+## V4.4 geographic-data foundation (in progress)
+
+A separate V4.4 development branch now contains the first geographic-data layer:
+- A Chicago-centered WGS84-to-local-metre projection and its inverse.
+- Negative-Z north/east-positive-X world orientation for Three.js.
+- 512-metre tile addressing, bounds and player-centered visible-tile key selection.
+- GeoJSON normalization helpers for street centerlines and building footprint geometries.
+- A source manifest, normalized tile schema and pipeline notes for the City of Chicago datasets.
+
+This is groundwork only. It does not alter the currently playable fictional district or add real Chicago geometry yet. The next stages are source-data inspection, clipping/cleaning, bounded tile generation, and a tested streaming/cache manager. Do not describe the live map as geographically accurate until those stages are integrated and validated.
