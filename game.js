@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { getCarSteeringInput } from './controls.js';
 import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
+import { getAtmosphereState } from './atmosphere.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -34,8 +35,44 @@ const starGeometry=new THREE.BufferGeometry();
 starGeometry.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));
 const starMaterial=new THREE.PointsMaterial({color:0xe4efff,size:1.65,transparent:true,opacity:0,depthWrite:false});
 const stars=new THREE.Points(starGeometry,starMaterial);stars.frustumCulled=false;scene.add(stars);
-const sunDisc=new THREE.Mesh(new THREE.SphereGeometry(7,18,14),new THREE.MeshBasicMaterial({color:0xffe4b3,fog:false}));
+const sunDisc=new THREE.Mesh(new THREE.SphereGeometry(7,24,18),new THREE.MeshBasicMaterial({color:0xffe4b3,fog:false}));
 sunDisc.frustumCulled=false;scene.add(sunDisc);
+
+// Soft atmospheric glow sprites stay inexpensive compared with a full-screen bloom pass.
+function makeGlowTexture(inner,outer){
+  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
+  const context=canvas.getContext('2d');
+  const gradient=context.createRadialGradient(128,128,2,128,128,126);
+  gradient.addColorStop(0,inner);gradient.addColorStop(.18,outer);gradient.addColorStop(1,'rgba(255,255,255,0)');
+  context.fillStyle=gradient;context.fillRect(0,0,256,256);
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
+}
+const sunGlowTexture=makeGlowTexture('rgba(255,247,218,.92)','rgba(255,188,116,.32)');
+const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:sunGlowTexture,color:0xffd6a2,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+sunGlow.scale.set(58,58,1);sunGlow.frustumCulled=false;scene.add(sunGlow);
+const moonDisc=new THREE.Mesh(new THREE.SphereGeometry(4.1,20,16),new THREE.MeshBasicMaterial({color:0xdce8f2,fog:false}));
+moonDisc.frustumCulled=false;scene.add(moonDisc);
+const moonGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlowTexture('rgba(222,237,255,.7)','rgba(143,174,211,.2)'),color:0xb7cbe5,transparent:true,opacity:.22,depthWrite:false,fog:false}));
+moonGlow.scale.set(42,42,1);moonGlow.frustumCulled=false;scene.add(moonGlow);
+
+// A second, translucent cloud shell drifts independently of the sky gradient.
+const cloudCanvas=document.createElement('canvas');cloudCanvas.width=1024;cloudCanvas.height=512;
+const cloudContext=cloudCanvas.getContext('2d');
+for(let i=0;i<138;i++){
+  const x=(Math.sin(i*83.17)*.5+.5)*1024;
+  const y=75+(Math.sin(i*17.71)*.5+.5)*245;
+  const radius=18+(Math.sin(i*7.31)*.5+.5)*54;
+  const cloud=cloudContext.createRadialGradient(x,y,2,x,y,radius);
+  cloud.addColorStop(0,'rgba(255,255,255,.35)');
+  cloud.addColorStop(.42,'rgba(255,255,255,.2)');
+  cloud.addColorStop(1,'rgba(255,255,255,0)');
+  cloudContext.fillStyle=cloud;cloudContext.beginPath();cloudContext.ellipse(x,y,radius,radius*.28,0,0,Math.PI*2);cloudContext.fill();
+}
+const cloudTexture=new THREE.CanvasTexture(cloudCanvas);
+cloudTexture.colorSpace=THREE.SRGBColorSpace;
+const cloudMaterial=new THREE.MeshBasicMaterial({map:cloudTexture,transparent:true,opacity:.24,side:THREE.BackSide,depthWrite:false,fog:false});
+const cloudDome=new THREE.Mesh(new THREE.SphereGeometry(484,40,28),cloudMaterial);
+cloudDome.renderOrder=-999;cloudDome.frustumCulled=false;scene.add(cloudDome);
 
 const automationMode=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
   &&new URLSearchParams(location.search).has('automation');
@@ -476,9 +513,11 @@ function blocked(x,z,r=.48) {
 }
 scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
+const moonLight=new THREE.DirectionalLight(0x9eb6d8,0);moonLight.castShadow=false;scene.add(moonLight);scene.add(moonLight.target);
+const skyBounce=new THREE.DirectionalLight(0xc4d9e8,.12);skyBounce.position.set(30,22,45);skyBounce.castShadow=false;scene.add(skyBounce);
 sun.position.set(-85,115,-65);sun.castShadow=true;
 sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,renderProfile.shadowMapSize||512),Math.min(renderer.capabilities.maxTextureSize,renderProfile.shadowMapSize||512));
-sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=280;
+sun.shadow.bias=-0.00008;sun.shadow.normalBias=.035;sun.shadow.radius=3.5;sun.shadow.camera.near=1;sun.shadow.camera.far=280;
 sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;
 sun.shadow.camera.updateProjectionMatrix();scene.add(sun);scene.add(sun.target);
 const ambientLight=scene.children.find(item=>item.isHemisphereLight);
@@ -1526,10 +1565,10 @@ const rainGeometry=new THREE.BufferGeometry();rainGeometry.setAttribute('positio
 const rainLines=new THREE.LineSegments(rainGeometry,new THREE.LineBasicMaterial({color:0xb6c9da,transparent:true,opacity:.48}));
 rainLines.visible=false;rainLines.frustumCulled=false;scene.add(rainLines);
 const puddleGroup=new THREE.Group();
-const puddleMaterial=new THREE.MeshStandardMaterial({color:0x607887,transparent:true,opacity:.52,roughness:.2,metalness:.18,depthWrite:false});
+const puddleMaterial=new THREE.MeshPhysicalMaterial({color:0x718b9b,transparent:true,opacity:.78,roughness:.075,metalness:.24,clearcoat:1,clearcoatRoughness:.035,envMapIntensity:1.35,depthWrite:false});
 const puddlePositions=[[-95,-81],[-54,-84],[-12,-79],[35,-83],[91,-80],[-83,-48],[-79,-12],[-84,31],[-80,73],[-95,1],[-47,2],[-8,-2],[48,1],[92,0],[-93,82],[-51,80],[-4,83],[43,79],[81,40],[82,-43],[0,-82],[0,82]];
 for(let i=0;i<puddlePositions.length;i++){
-  const puddle=new THREE.Mesh(new THREE.CircleGeometry(1,20),puddleMaterial);
+  const puddle=new THREE.Mesh(new THREE.CircleGeometry(1,32),puddleMaterial);
   puddle.rotation.x=-Math.PI/2;puddle.scale.set(.7+(i%4)*.35,.35+(i%3)*.22,1);
   puddle.position.set(puddlePositions[i][0],-.035,puddlePositions[i][1]);puddleGroup.add(puddle);
 }
@@ -1546,7 +1585,7 @@ function showToast(message){$('toast').textContent=message;$('toast').classList.
 function cycleWeather(){
   const modes=['clear','rain','fog'];weatherMode=modes[(modes.indexOf(weatherMode)+1)%modes.length];
   rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
-  M.road.roughness=weatherMode==='rain'?.34:.96;M.road.metalness=weatherMode==='rain'?.16:0;
+  M.road.roughness=weatherMode==='rain'?.29:.96;M.road.metalness=weatherMode==='rain'?.09:0;M.road.clearcoat=weatherMode==='rain'?.72:.06;M.road.clearcoatRoughness=weatherMode==='rain'?.16:.48;M.road.envMapIntensity=weatherMode==='rain'?.82:.22;
   $('weatherLabel').textContent='· '+weatherMode.toUpperCase();
   showToast('Weather: '+weatherMode.toUpperCase());
 }
@@ -1751,24 +1790,48 @@ function updateCamera(dt){
 function updateClock(dt){
   gameHours=(gameHours+dt*.015)%24;const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
-  const daylight=Math.max(.16,Math.sin((gameHours-6)/12*Math.PI));
-  const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
-  sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);
-  scene.environmentIntensity=.18+daylight*.52;
+  const atmosphere=getAtmosphereState(gameHours,weatherMode);
+  sun.intensity=atmosphere.sunIntensity;sun.color.setHex(atmosphere.sunColor);
+  ambientLight.intensity=atmosphere.ambientIntensity;
+  scene.environmentIntensity=atmosphere.environmentIntensity;
+  renderer.toneMappingExposure=atmosphere.exposure;
   sun.target.position.set(player.x,0,player.z);
-  sun.position.set(player.x-85+daylight*35,25+daylight*95,player.z-65);
+  const sunX=Math.cos(atmosphere.solarAngle),sunZ=Math.sin(atmosphere.solarAngle);
+  sun.position.set(player.x+sunX*105,16+atmosphere.solarElevation*116,player.z+sunZ*92);
   sun.target.updateMatrixWorld();sun.updateMatrixWorld();
-  const night=1-daylight;
-  M.headlight.emissiveIntensity=.3+night*2.35;M.tailLight.emissiveIntensity=.55+night*1.25;
-  skyMaterial.color.setRGB(.2+daylight*.8,.24+daylight*.76,.42+daylight*.58);
-  stars.material.opacity=night*.88;
-  sunDisc.visible=daylight>.28;
-  sunDisc.position.copy(sun.position).normalize().multiplyScalar(475);
-  for(const item of nightLights){item.glow.intensity=night*1.65;item.bulb.material.emissiveIntensity=.25+night*1.8;}
-  scene.fog.near=weatherMode==='fog'?20:weatherMode==='rain'?58:125;
-  scene.fog.far=weatherMode==='fog'?175:weatherMode==='rain'?245:340;
-  const skyLightness=weatherMode==='fog'?.31:weatherMode==='rain'?.24:.19+daylight*.37;
-  scene.fog.color.setHSL(.55,.13,skyLightness);scene.background.copy(scene.fog.color);
+  const night=atmosphere.night;
+  moonLight.intensity=night*.24;
+  moonLight.position.set(player.x-sunX*90,55+night*45,player.z-sunZ*82);
+  moonLight.target.position.set(player.x,0,player.z);
+  moonLight.target.updateMatrixWorld();moonLight.updateMatrixWorld();
+  skyBounce.intensity=.1+atmosphere.daylight*.16;
+  M.headlight.emissiveIntensity=.3+night*2.55;M.tailLight.emissiveIntensity=.55+night*1.45;
+  skyMaterial.color.setRGB(atmosphere.skyColor[0]*1.15,atmosphere.skyColor[1]*1.12,atmosphere.skyColor[2]*1.12);
+  cloudMaterial.opacity=atmosphere.cloudOpacity;
+  cloudMaterial.color.setHex(atmosphere.goldenHour>.18?0xffe0c5:0xffffff);
+  cloudDome.rotation.y+=dt*atmosphere.cloudSpeed;
+  stars.material.opacity=night*.95;
+  const sunDirection=new THREE.Vector3(sunX,atmosphere.solarElevation,sunZ).normalize();
+  sunDisc.visible=atmosphere.solarElevation>.045;
+  sunDisc.position.copy(sunDirection).multiplyScalar(468);
+  sunGlow.visible=sunDisc.visible&&atmosphere.goldenHour>.08;
+  sunGlow.position.copy(sunDisc.position);
+  sunGlow.material.opacity=.12+atmosphere.goldenHour*.24;
+  sunGlow.material.color.setHex(atmosphere.sunColor);
+  moonDisc.visible=night>.76;
+  moonDisc.position.copy(sunDirection).negate().multiplyScalar(466);
+  moonGlow.visible=moonDisc.visible;moonGlow.position.copy(moonDisc.position);
+  for(const item of nightLights){item.glow.intensity=night*1.9;item.bulb.material.emissiveIntensity=.25+night*2.1;}
+  scene.fog.near=atmosphere.fogNear;scene.fog.far=atmosphere.fogFar;
+  scene.fog.color.setRGB(atmosphere.skyColor[0],atmosphere.skyColor[1],atmosphere.skyColor[2]);
+  scene.background.copy(scene.fog.color);
+  M.road.roughness=weatherMode==='rain'?.29:.96;
+  M.road.metalness=weatherMode==='rain'?.09:0;
+  M.road.clearcoat=weatherMode==='rain'?.72:.06;
+  M.road.clearcoatRoughness=weatherMode==='rain'?.16:.48;
+  M.road.envMapIntensity=weatherMode==='rain'?.82:.22;
+  puddleMaterial.envMapIntensity=.65+atmosphere.daylight*.95;
+  puddleMaterial.opacity=weatherMode==='rain'?.86:.78;
 }
 function updateMap(){
   const ctx=$('minimap').getContext('2d');ctx.clearRect(0,0,248,248);ctx.fillStyle='#596d55';ctx.fillRect(0,0,248,248);
@@ -1805,6 +1868,8 @@ frame();
 Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
   getState:()=>({
     ...adaptiveResolution.getSnapshot(),
+    atmosphere:getAtmosphereState(gameHours,weatherMode),
+    reflectionQuality:{wetRoadClearcoat:M.road.clearcoat,wetRoadEnvironment:M.road.envMapIntensity,puddleEnvironment:puddleMaterial.envMapIntensity},
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
     qualityProfile:renderProfile.name,
@@ -1814,7 +1879,7 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
 if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
-      started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
+      started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails}},
       streetSigns:streetSigns.length,
@@ -1863,4 +1928,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-2-people-vehicles';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere';
