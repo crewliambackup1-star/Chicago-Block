@@ -60,6 +60,11 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
     assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
+    const renderProfile = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__?.getState());
+    assert.equal(renderProfile?.qualityProfile, 'desktop-ultra', 'desktop should use the ultra graphics profile');
+    assert.equal(renderProfile?.shadowMapSize, 2048, 'desktop should use the higher-resolution shadow map');
+    assert.equal(renderProfile?.shadowsEnabled, true, 'desktop shadows should stay enabled');
+    assert.ok(renderProfile?.pixelRatio >= 1, 'desktop render ratio should be at least native resolution');
     assert.equal(initial.visualQuality.avatar, 'v3.1-anatomical-textured', 'the player model should use the V3.1 detailed character rig');
     assert.equal(initial.visualQuality.pedestrian, 'v3.1-anatomical-textured', 'pedestrians should use the detailed character rig');
     assert.ok(initial.visualQuality.grassInstances >= 1200, 'desktop lawns should use instanced grass cover');
@@ -209,6 +214,9 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
   page.on('pageerror', error => pageErrors.push(error.message));
   try {
     await waitForReady(page);
+    const mobileRenderProfile = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__?.getState());
+    assert.equal(mobileRenderProfile?.qualityProfile, 'mobile-high', 'touch devices should use the mobile quality profile');
+    assert.ok(mobileRenderProfile?.pixelRatio <= 1.45, 'touch rendering should remain within its pixel-ratio budget');
     await page.locator('#playButton').tap();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     await page.waitForFunction(() =>
