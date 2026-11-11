@@ -12,7 +12,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.3/);
+  assert.match(html, /UPDATE 4\.5 · SMOOTH PEOPLE & VEHICLE MODELS/);
+  assert.match(html, /Smooth People & Vehicle Models \(V4\.5\)/);
+  assert.match(html, /SMOOTH PEOPLE & VEHICLE MODELS · V4\.5/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -49,7 +51,7 @@ test('V2 visual polish adds neighborhood landmarks and readable road materials',
 test('V2 sedan uses a sloped, beveled body and separate cabin glass', () => {
   for (const feature of [
     'new THREE.ExtrudeGeometry(profile',
-    'bevelEnabled:true,bevelSegments:3',
+    'bevelEnabled:true,bevelSegments:5',
     'extrudedProfile([',
     'const addSideWindow=',
     'new THREE.PlaneGeometry(1.5,.5)',
@@ -90,7 +92,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.3 Lighting, Reflections & Atmosphere/);
+  assert.match(readme, /V4\.5 Smooth People & Vehicle Models/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -100,7 +102,7 @@ test('README documents V4 scope, preserved gameplay and validation commands', ()
   assert.match(readme, /all five collectibles/);
   assert.match(readme, /touch-enabled mobile viewport/);
 });
-test('V4.2 records the people and vehicle version', () => {
+test('Current renderer retains the V4.3 atmosphere pipeline', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
@@ -126,10 +128,11 @@ test('V4.2 retains varied architecture, deep windows, rooftop and sidewalk detai
   assert.match(readme, /switchback stairs/);
   assert.match(readme, /building-number plaques/);
 });
-test('V4.2 human models use tapered anatomy, varied hairstyles and articulated gait rigs', () => {
+test('V4.5 human models use smoother natural proportions and articulated gait rigs', () => {
   for (const feature of [
-    'new THREE.LatheGeometry([', 'g.userData.visualQuality=\'v4.2-pbr-anatomical\'',
-    'g.userData.hairStyle=', 'g.userData.animationRig=\'v4.2-hinged-limbs\'',
+    'new THREE.LatheGeometry([', 'g.userData.visualQuality=\'v4.5-smooth-anatomy\'',
+    'const headPivot=new THREE.Group()', 'headPivot.scale.setScalar(.78)', 'g.userData.head=headPivot',
+    'g.userData.headScale=.78', 'g.userData.hairStyle=', 'g.userData.animationRig=\'v4.5-articulated-gait\'',
     'const elbowPivot=new THREE.Group()', 'const shinPivot=new THREE.Group()',
     'const liftLeft=Math.max(0,Math.sin(phase))*.58',
     'p.g.userData.torso.position.y=1.18+Math.abs(Math.sin(phase*2))*.018'
@@ -138,14 +141,17 @@ test('V4.2 human models use tapered anatomy, varied hairstyles and articulated g
   assert.match(readme, /gait cycle/);
 });
 
-test('V4.2 vehicles use microflake paint, improved glass and detailed wheel hardware', () => {
+test('V4.5 vehicles use rounded silhouettes, soft wheel geometry and distinct traffic body styles', () => {
   for (const feature of [
     'const vehiclePaintTexture=makeTexture', 'vehiclePaintHeight',
     'roughness:.22,metalness:.56', 'windowMaterial.clearcoatRoughness=.045',
     'const panelLineMaterial=', 'const lugMaterial=', 'g.userData.wheelLugs=wheelLugCount',
-    'g.userData.visualQuality=\'v4.2-pbr-vehicle\'',
+    'g.userData.visualQuality=\'v4.5-sculpted-vehicle\'', 'profile.quadraticCurveTo(',
+    'new THREE.TorusGeometry(.285,.105,16,48)', 'roofShape.quadraticCurveTo(', 'vehicleStyle===\'suv\'',
+    'vehicleStyle===\'wagon\'', 'vehicleStyle===\'compact\'', 'g.userData.tireProfile=\'rounded-torus\'',
     'g.userData.paintFinish=\'microflake-clearcoat\'', 'g.userData.interiorType=detailedInterior?'
   ]) assert.ok(game.includes(feature), 'Missing V4.2 vehicle feature: ' + feature);
   assert.match(readme, /wheel lug nuts/);
   assert.match(readme, /traffic cars/);
+  assert.match(readme, /four distinct traffic body-size variants/);
 });

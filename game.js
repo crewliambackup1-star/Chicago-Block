@@ -1104,15 +1104,15 @@ function person(material,appearance=0){
   const detailMat=new THREE.MeshStandardMaterial({color:0x25282a,roughness:.72});
   // A tapered lathed torso replaces the single sphere, giving the chest, waist and abdomen a clearer silhouette.
   const torsoProfile=new THREE.LatheGeometry([
-    new THREE.Vector2(.19,-.45),new THREE.Vector2(.235,-.37),new THREE.Vector2(.27,-.2),
-    new THREE.Vector2(.285,.02),new THREE.Vector2(.355,.22),new THREE.Vector2(.36,.34),
-    new THREE.Vector2(.29,.43),new THREE.Vector2(.18,.47)
-  ],36);
+    new THREE.Vector2(.16,-.46),new THREE.Vector2(.19,-.39),new THREE.Vector2(.225,-.22),
+    new THREE.Vector2(.245,.02),new THREE.Vector2(.29,.22),new THREE.Vector2(.30,.34),
+    new THREE.Vector2(.25,.43),new THREE.Vector2(.16,.47)
+  ],56);
   const torso=new THREE.Mesh(torsoProfile,clothing);
-  torso.position.set(0,1.18,0);torso.scale.set(1,1,.76);torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
+  torso.position.set(0,1.18,0);torso.scale.set(.96,1,.78);torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
   for(const side of [-1,1]){
-    const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.17,24,18),clothing);
-    shoulder.position.set(side*.29,1.4,0);shoulder.scale.set(1,.94,.95);shoulder.castShadow=true;shoulder.receiveShadow=true;g.add(shoulder);
+    const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.125,28,20),clothing);
+    shoulder.position.set(side*.25,1.4,0);shoulder.scale.set(1,.94,.95);shoulder.castShadow=true;shoulder.receiveShadow=true;g.add(shoulder);
   }
   const hem=new THREE.Mesh(new THREE.TorusGeometry(.245,.014,7,32),new THREE.MeshStandardMaterial({color:material.color,roughness:.9}));
   hem.position.set(0,.83,0);hem.rotation.x=Math.PI/2;hem.scale.set(1,.78,1);g.add(hem);
@@ -1134,35 +1134,37 @@ function person(material,appearance=0){
   const hoodieSeam=new THREE.Mesh(new THREE.TorusGeometry(.18,.012,5,32,Math.PI),stitchMat);
   hoodieSeam.position.set(0,1.48,-.11);hoodieSeam.rotation.x=Math.PI/2;g.add(hoodieSeam);
   const neck=new THREE.Mesh(new THREE.CylinderGeometry(.095,.12,.2,18),skin);neck.position.y=1.59;neck.castShadow=true;g.add(neck);
+  const headPivot=new THREE.Group();headPivot.position.y=1.78;headPivot.scale.setScalar(.78);
+  const headDetail=new THREE.Group();headDetail.position.y=-1.78;headPivot.add(headDetail);g.add(headPivot);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.215,32,26),skin);
-  head.position.set(0,1.82,.018);head.scale.set(.9,1.12,.91);head.castShadow=true;head.receiveShadow=true;g.add(head);
+  head.position.set(0,1.82,.018);head.scale.set(.9,1.12,.91);head.castShadow=true;head.receiveShadow=true;headDetail.add(head);
   const jaw=new THREE.Mesh(new THREE.SphereGeometry(.145,24,18),skin);
-  jaw.position.set(0,1.69,.07);jaw.scale.set(.82,.7,.82);jaw.castShadow=true;g.add(jaw);
+  jaw.position.set(0,1.69,.07);jaw.scale.set(.82,.7,.82);jaw.castShadow=true;headDetail.add(jaw);
   for(const side of [-1,1]){
     const cheek=new THREE.Mesh(new THREE.SphereGeometry(.082,16,12),skin);
-    cheek.position.set(side*.105,1.735,.145);cheek.scale.set(1,.75,.7);g.add(cheek);
+    cheek.position.set(side*.105,1.735,.145);cheek.scale.set(1,.75,.7);headDetail.add(cheek);
     const ear=new THREE.Mesh(new THREE.SphereGeometry(.052,16,12),skin);
-    ear.position.set(side*.198,1.8,.012);ear.scale.set(.72,1.2,.72);g.add(ear);
+    ear.position.set(side*.198,1.8,.012);ear.scale.set(.72,1.2,.72);headDetail.add(ear);
     const earInner=new THREE.Mesh(new THREE.SphereGeometry(.022,10,8),detailMat);
-    earInner.position.set(side*.213,1.8,.037);earInner.scale.set(.7,1,.65);g.add(earInner);
+    earInner.position.set(side*.213,1.8,.037);earInner.scale.set(.7,1,.65);headDetail.add(earInner);
   }
   // Four distinct procedural hair silhouettes create more believable pedestrian variety.
   const hairStyle=appearance%4;
   const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.222,32,24,0,Math.PI*2,0,Math.PI*.59),hairMat);
-  hairCap.position.set(0,1.89,-.005);hairCap.scale.set(.99,1.1,1);hairCap.castShadow=true;g.add(hairCap);
+  hairCap.position.set(0,1.89,-.005);hairCap.scale.set(.99,1.1,1);hairCap.castShadow=true;headDetail.add(hairCap);
   if(hairStyle===0){
     const curlGeometry=new THREE.SphereGeometry(.044,12,9);
     for(let i=0;i<19;i++){
       const angle=(i/19)*Math.PI*2,ring=i%2===0?0.16:0.125;
       const curl=new THREE.Mesh(curlGeometry,hairMat);
       curl.position.set(Math.cos(angle)*ring,1.957+(i%3)*.018,Math.sin(angle)*ring-.008);
-      curl.scale.set(.92,.78,1);g.add(curl);
+      curl.scale.set(.92,.78,1);headDetail.add(curl);
     }
   }else if(hairStyle===1){
     // Close-cropped cut with small temple fades.
     for(const side of [-1,1]){
       const fade=new THREE.Mesh(new THREE.SphereGeometry(.112,18,14),hairMat);
-      fade.position.set(side*.16,1.82,.005);fade.scale.set(.56,.84,.82);g.add(fade);
+      fade.position.set(side*.16,1.82,.005);fade.scale.set(.56,.84,.82);headDetail.add(fade);
     }
   }else if(hairStyle===2){
     // Short layered twists, kept close to the head for a distinct silhouette.
@@ -1171,52 +1173,52 @@ function person(material,appearance=0){
       const angle=i*2.399963,ring=.12+(i%3)*.018;
       const twist=new THREE.Mesh(twistGeometry,hairMat);
       twist.position.set(Math.cos(angle)*ring,1.94+(i%4)*.012,Math.sin(angle)*ring-.015);
-      twist.rotation.z=Math.cos(angle)*.45;twist.rotation.x=Math.sin(angle)*.35;g.add(twist);
+      twist.rotation.z=Math.cos(angle)*.45;twist.rotation.x=Math.sin(angle)*.35;headDetail.add(twist);
     }
   }else{
     const bun=new THREE.Mesh(new THREE.SphereGeometry(.11,18,14),hairMat);
-    bun.position.set(0,1.91,-.19);bun.scale.set(.9,.88,1.05);bun.castShadow=true;g.add(bun);
+    bun.position.set(0,1.91,-.19);bun.scale.set(.9,.88,1.05);bun.castShadow=true;headDetail.add(bun);
     for(let lock=0;lock<8;lock++){
       const angle=lock*Math.PI/4;
       const strand=new THREE.Mesh(new THREE.CapsuleGeometry(.023,.11,3,8),hairMat);
       strand.position.set(Math.cos(angle)*.14,1.94+Math.sin(angle)*.055,-.08);
-      strand.rotation.z=-Math.cos(angle)*.55;g.add(strand);
+      strand.rotation.z=-Math.cos(angle)*.55;headDetail.add(strand);
     }
   }
   for(const side of [-1,1]){
     const eyeWhite=new THREE.Mesh(new THREE.SphereGeometry(.031,14,10),new THREE.MeshStandardMaterial({color:0xe7e0d5,roughness:.45}));
-    eyeWhite.position.set(side*.075,1.827,.197);eyeWhite.scale.set(1,.72,.48);g.add(eyeWhite);
+    eyeWhite.position.set(side*.075,1.827,.197);eyeWhite.scale.set(1,.72,.48);headDetail.add(eyeWhite);
     const iris=new THREE.Mesh(new THREE.SphereGeometry(.015,12,9),new THREE.MeshStandardMaterial({color:0x34251e,roughness:.32}));
-    iris.position.set(side*.075,1.827,.212);g.add(iris);
+    iris.position.set(side*.075,1.827,.212);headDetail.add(iris);
     const pupil=new THREE.Mesh(new THREE.SphereGeometry(.007,8,6),new THREE.MeshBasicMaterial({color:0x100e0c}));
-    pupil.position.set(side*.075,1.827,.219);g.add(pupil);
+    pupil.position.set(side*.075,1.827,.219);headDetail.add(pupil);
     const brow=new THREE.Mesh(new THREE.CapsuleGeometry(.012,.07,3,8),hairMat);
-    brow.position.set(side*.075,1.874,.195);brow.rotation.z=side*.08;g.add(brow);
+    brow.position.set(side*.075,1.874,.195);brow.rotation.z=side*.08;headDetail.add(brow);
     const lid=new THREE.Mesh(new THREE.TorusGeometry(.031,.006,5,14,Math.PI),skin);
-    lid.position.set(side*.075,1.829,.213);lid.rotation.z=Math.PI;g.add(lid);
+    lid.position.set(side*.075,1.829,.213);lid.rotation.z=Math.PI;headDetail.add(lid);
   }
   const noseBridge=new THREE.Mesh(new THREE.CylinderGeometry(.018,.032,.12,10),skin);
-  noseBridge.position.set(0,1.765,.205);noseBridge.rotation.x=-.12;g.add(noseBridge);
+  noseBridge.position.set(0,1.765,.205);noseBridge.rotation.x=-.12;headDetail.add(noseBridge);
   const noseTip=new THREE.Mesh(new THREE.SphereGeometry(.037,14,10),skin);
-  noseTip.position.set(0,1.744,.232);noseTip.scale.set(1,.72,.82);g.add(noseTip);
+  noseTip.position.set(0,1.744,.232);noseTip.scale.set(1,.72,.82);headDetail.add(noseTip);
   const nostrilMat=new THREE.MeshStandardMaterial({color:0x4d3329,roughness:.9});
   for(const side of [-1,1]){
     const nostril=new THREE.Mesh(new THREE.SphereGeometry(.009,8,6),nostrilMat);
-    nostril.position.set(side*.023,1.728,.249);nostril.scale.set(1,.55,.5);g.add(nostril);
+    nostril.position.set(side*.023,1.728,.249);nostril.scale.set(1,.55,.5);headDetail.add(nostril);
   }
   const mouthCurve=new THREE.CatmullRomCurve3([
     new THREE.Vector3(-.046,1.688,.208),new THREE.Vector3(0,1.681,.218),new THREE.Vector3(.046,1.688,.208)
   ]);
-  g.add(new THREE.Mesh(new THREE.TubeGeometry(mouthCurve,8,.006,5,false),detailMat));
+  headDetail.add(new THREE.Mesh(new THREE.TubeGeometry(mouthCurve,8,.006,5,false),detailMat));
   const arms=[],legs=[];
   for(const side of [-1,1]){
-    const arm=new THREE.Group();arm.position.set(side*.32,1.39,0);arm.rotation.z=-side*.08;g.add(arm);
-    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.33,8,18),clothing);
+    const arm=new THREE.Group();arm.position.set(side*.285,1.39,0);arm.rotation.z=-side*.08;g.add(arm);
+    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.34,10,20),clothing);
     upper.position.set(side*.018,-.22,0);upper.rotation.z=-side*.035;upper.castShadow=true;upper.receiveShadow=true;arm.add(upper);
     const elbowPivot=new THREE.Group();elbowPivot.position.set(side*.035,-.43,.005);arm.add(elbowPivot);
-    const elbow=new THREE.Mesh(new THREE.SphereGeometry(.076,16,12),skin);
+    const elbow=new THREE.Mesh(new THREE.SphereGeometry(.067,18,14),skin);
     elbow.position.y=-.015;elbow.scale.set(.98,1.04,.95);elbowPivot.add(elbow);
-    const forearm=new THREE.Mesh(new THREE.CapsuleGeometry(.071,.28,8,16),skin);
+    const forearm=new THREE.Mesh(new THREE.CapsuleGeometry(.062,.29,10,18),skin);
     forearm.position.set(side*.018,-.17,.006);forearm.castShadow=true;forearm.receiveShadow=true;elbowPivot.add(forearm);
     const cuff=new THREE.Mesh(new THREE.TorusGeometry(.074,.012,7,20),clothing);
     cuff.position.set(side*.02,-.33,.006);cuff.rotation.x=Math.PI/2;elbowPivot.add(cuff);
@@ -1231,17 +1233,17 @@ function person(material,appearance=0){
     arm.userData.elbow=elbowPivot;arms.push(arm);
 
     const leg=new THREE.Group();leg.position.set(side*.145,.66,0);g.add(leg);
-    const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.116,.36,8,18),pantsMat);
+    const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.36,10,20),pantsMat);
     thigh.position.y=-.155;thigh.castShadow=true;thigh.receiveShadow=true;leg.add(thigh);
-    const knee=new THREE.Mesh(new THREE.SphereGeometry(.108,18,14),pantsMat);knee.position.y=-.345;leg.add(knee);
+    const knee=new THREE.Mesh(new THREE.SphereGeometry(.095,20,16),pantsMat);knee.position.y=-.345;leg.add(knee);
     const shinPivot=new THREE.Group();shinPivot.position.set(0,-.355,0);leg.add(shinPivot);
-    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.31,8,18),pantsMat);
+    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(.083,.32,10,20),pantsMat);
     lower.position.y=-.17;lower.castShadow=true;lower.receiveShadow=true;shinPivot.add(lower);
     const shoe=new THREE.Mesh(new THREE.SphereGeometry(.14,20,14),shoeMat);
     shoe.position.set(0,-.365,.105);shoe.scale.set(1,.55,1.68);shoe.castShadow=true;shinPivot.add(shoe);
-    const sole=new THREE.Mesh(new THREE.BoxGeometry(.275,.045,.43),new THREE.MeshStandardMaterial({color:0x191a19,roughness:.96}));
-    sole.position.set(0,-.425,.105);shinPivot.add(sole);
-    const tongue=new THREE.Mesh(new THREE.BoxGeometry(.115,.12,.045),shoeMat);
+    const sole=new THREE.Mesh(new THREE.SphereGeometry(.14,24,16),new THREE.MeshStandardMaterial({color:0x191a19,roughness:.96}));
+    sole.position.set(0,-.425,.105);sole.scale.set(1,.18,1.58);shinPivot.add(sole);
+    const tongue=new THREE.Mesh(new THREE.CapsuleGeometry(.045,.07,4,10),shoeMat);
     tongue.position.set(0,-.32,.225);shinPivot.add(tongue);
     for(let lace=0;lace<3;lace++){
       const laceLine=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,.11,5),M.white);
@@ -1259,10 +1261,11 @@ function person(material,appearance=0){
     const dot=new THREE.Mesh(new THREE.SphereGeometry(.012,7,6),detailMat);
     dot.position.set(0,1.39-button*.085,.218);g.add(dot);
   }
-  g.userData.legs=legs;g.userData.arms=arms;g.userData.torso=torso;g.userData.head=head;
-  g.userData.visualQuality='v4.2-pbr-anatomical';
+  g.userData.legs=legs;g.userData.arms=arms;g.userData.torso=torso;g.userData.head=headPivot;
+  g.userData.visualQuality='v4.5-smooth-anatomy';
+  g.userData.headScale=.78;g.userData.proportionProfile='adult-human-v4.5';
   g.userData.hairStyle=['curly','cropped','twist','tied-back'][hairStyle];
-  g.userData.animationRig='v4.2-hinged-limbs';
+  g.userData.animationRig='v4.5-articulated-gait';
   return g;
 }
 const routes=[
@@ -1292,7 +1295,7 @@ plateContext.font='bold 42px system-ui, sans-serif';plateContext.fillText('CBK 2
 const plateTexture=new THREE.CanvasTexture(plateCanvas);plateTexture.colorSpace=THREE.SRGBColorSpace;
 const licensePlateMaterial=new THREE.MeshStandardMaterial({map:plateTexture,roughness:.82});
 
-function car(color=0x365b78,detailedInterior=false){
+function car(color=0x365b78,detailedInterior=false,vehicleStyle='sedan'){
   const g=new THREE.Group(),bodyMat=new THREE.MeshPhysicalMaterial({
     color,map:vehiclePaintTexture,bumpMap:vehiclePaintHeight,bumpScale:.008,
     roughnessMap:vehiclePaintHeight,roughness:.22,metalness:.56,
@@ -1300,11 +1303,28 @@ function car(color=0x365b78,detailedInterior=false){
   }),wheelRigs=[];
   // Rounded, sloped side profiles replace the old rectangular body and cabin blocks.
   const extrudedProfile=(points,depth,material)=>{
-    const profile=new THREE.Shape();
-    points.forEach(([x,y],index)=>index===0?profile.moveTo(x,y):profile.lineTo(x,y));
+    // Rounded quadratic corners replace the angular silhouette without changing the car's footprint.
+    const profile=new THREE.Shape(),cornerRadius=.12;
+    const corners=points.map((point,index)=>{
+      const previous=points[(index+points.length-1)%points.length],next=points[(index+1)%points.length];
+      const incomingLength=Math.hypot(previous[0]-point[0],previous[1]-point[1]);
+      const outgoingLength=Math.hypot(next[0]-point[0],next[1]-point[1]);
+      const incoming=Math.min(.24,cornerRadius/Math.max(incomingLength,.001));
+      const outgoing=Math.min(.24,cornerRadius/Math.max(outgoingLength,.001));
+      return {
+        entry:[point[0]+(previous[0]-point[0])*incoming,point[1]+(previous[1]-point[1])*incoming],
+        exit:[point[0]+(next[0]-point[0])*outgoing,point[1]+(next[1]-point[1])*outgoing]
+      };
+    });
+    profile.moveTo(corners[0].entry[0],corners[0].entry[1]);
+    for(let index=0;index<points.length;index++){
+      const point=points[index],corner=corners[index];
+      profile.lineTo(corner.entry[0],corner.entry[1]);
+      profile.quadraticCurveTo(point[0],point[1],corner.exit[0],corner.exit[1]);
+    }
     profile.closePath();
     const geometry=new THREE.ExtrudeGeometry(profile,{
-      depth,steps:1,bevelEnabled:true,bevelSegments:3,bevelSize:.035,bevelThickness:.035,curveSegments:8
+      depth,steps:1,bevelEnabled:true,bevelSegments:5,bevelSize:.045,bevelThickness:.05,curveSegments:12
     });
     geometry.translate(0,0,-depth/2);
     geometry.rotateY(Math.PI/2);
@@ -1340,7 +1360,13 @@ function car(color=0x365b78,detailedInterior=false){
   windshield.position.set(0,1.27,-1.17);windshield.rotation.x=.42;g.add(windshield);
   const rearGlass=new THREE.Mesh(new THREE.PlaneGeometry(1.5,.44),windowMaterial);
   rearGlass.position.set(0,1.26,1.12);rearGlass.rotation.x=-.42;g.add(rearGlass);
-  cube(g,0,1.65,-.16,1.36,.055,1.38,bodyMat,false);
+  const roofShape=new THREE.Shape();
+  roofShape.moveTo(-.51,-.66);roofShape.lineTo(.51,-.66);roofShape.quadraticCurveTo(.67,-.66,.67,-.5);
+  roofShape.lineTo(.67,.5);roofShape.quadraticCurveTo(.67,.66,.51,.66);roofShape.lineTo(-.51,.66);
+  roofShape.quadraticCurveTo(-.67,.66,-.67,.5);roofShape.lineTo(-.67,-.5);roofShape.quadraticCurveTo(-.67,-.66,-.51,-.66);
+  const roofGeometry=new THREE.ExtrudeGeometry(roofShape,{depth:.055,steps:1,bevelEnabled:true,bevelSegments:5,bevelSize:.025,bevelThickness:.025,curveSegments:12});
+  roofGeometry.rotateX(-Math.PI/2);
+  const roofPanel=new THREE.Mesh(roofGeometry,bodyMat);roofPanel.position.set(0,1.61,-.16);roofPanel.castShadow=true;roofPanel.receiveShadow=true;g.add(roofPanel);
   // Visible cabin details make the sedan read as a finished vehicle from either camera.
   if(detailedInterior){
     const cabinMat=new THREE.MeshStandardMaterial({color:0x20272a,roughness:.88});
@@ -1428,7 +1454,7 @@ function car(color=0x365b78,detailedInterior=false){
   let wheelSpokeCount=0,wheelLugCount=0;
   for(const sx of [-1,1])for(const sz of [-1,1]){
     const rig=new THREE.Group();rig.position.set(sx*1.07,.4,sz*1.38);g.add(rig);wheelRigs.push(rig);
-    const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.27,40),M.tire);tire.rotation.z=Math.PI/2;rig.add(tire);
+    const tire=new THREE.Mesh(new THREE.TorusGeometry(.285,.105,16,48),M.tire);tire.rotation.y=Math.PI/2;rig.add(tire);
     const sidewall=new THREE.Mesh(new THREE.TorusGeometry(.345,.035,8,36),new THREE.MeshStandardMaterial({color:0x252829,roughness:.92}));
     sidewall.rotation.y=Math.PI/2;sidewall.position.x=sx*.14;rig.add(sidewall);
     const brakeDisc=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.255,32),new THREE.MeshStandardMaterial({color:0x737b7e,roughness:.5,metalness:.82}));
@@ -1438,8 +1464,8 @@ function car(color=0x365b78,detailedInterior=false){
     rim.rotation.y=Math.PI/2;rim.position.x=sx*.135;rig.add(rim);
     for(let spokeIndex=0;spokeIndex<5;spokeIndex++){
       const angle=spokeIndex*Math.PI*2/5;
-      const spoke=cube(rig,sx*.145,Math.sin(angle)*.105,Math.cos(angle)*.105,.035,.17,.035,M.silver,false);
-      spoke.rotation.x=angle;wheelSpokeCount++;
+      const spoke=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.13,4,10),M.silver);
+      spoke.position.set(sx*.145,Math.sin(angle)*.105,Math.cos(angle)*.105);spoke.rotation.x=angle;rig.add(spoke);wheelSpokeCount++;
     }
     const centerCap=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.27,14),M.trim);
     centerCap.rotation.z=Math.PI/2;rig.add(centerCap);
@@ -1507,14 +1533,18 @@ function car(color=0x365b78,detailedInterior=false){
     wiper.position.set(sx*.34,1.12,-1.18);wiper.rotation.z=Math.PI/2-.2;g.add(wiper);
   }
   cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);
+  if(vehicleStyle==='suv')g.scale.set(1.035,1.14,1.045);
+  else if(vehicleStyle==='wagon')g.scale.set(1.015,.98,1.11);
+  else if(vehicleStyle==='compact')g.scale.set(.94,.96,.91);
+  g.userData.bodyStyle=vehicleStyle;g.userData.silhouette='rounded-quadratic-profile';g.userData.tireProfile='rounded-torus';
   g.userData.wheels=wheelRigs;
   g.userData.plates=2;g.userData.doorHandles=4;
   g.userData.wheelSpokes=wheelSpokeCount;g.userData.wheelLugs=wheelLugCount;g.userData.wheelArches=4;
-  g.userData.visualQuality='v4.2-pbr-vehicle';
+  g.userData.visualQuality='v4.5-sculpted-vehicle';
   g.userData.paintFinish='microflake-clearcoat';
   g.userData.glassFinish='high-clearcoat-transmission';
   g.userData.interiorType=detailedInterior?'full':'standard';
-  g.userData.panelSeams=8;g.userData.headlightDetails=4;
+  g.userData.panelSeams=8;g.userData.headlightDetails=4;g.userData.smoothProfileRadius=.12;
   return g;
 }
 const playerCar=car(0x315e83,true);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
@@ -1545,8 +1575,9 @@ const landmarks=landmarkSpots.map(spot=>{
   return {...spot,marker,discovered:false};
 });
 const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-82,-75]].map(p=>new THREE.Vector3(p[0],0,p[1]));
+const trafficStyles=['sedan','suv','wagon','compact','suv','sedan','wagon'];
 for(let i=0;i<7;i++){
-  const g=car([0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92][i]);world.add(g);
+  const g=car([0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92][i],false,trafficStyles[i]);world.add(g);
   traffic.push({g,segment:i%roadLoop.length,t:(i/7)*.88,speed:5.8+(i%3)*.65});
 }
 
@@ -1881,15 +1912,15 @@ if(automationMode){
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
-      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails}},
+      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails,bodyStyle:playerCar.userData.bodyStyle,silhouette:playerCar.userData.silhouette,tireProfile:playerCar.userData.tireProfile,smoothProfileRadius:playerCar.userData.smoothProfileRadius}},
       streetSigns:streetSigns.length,
       visualDetails:{...visualDetailCounts},
       visualQuality:{
-        avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,
+        avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,headScale:avatar.userData.headScale,proportionProfile:avatar.userData.proportionProfile,
         avatarHairStyle:avatar.userData.hairStyle,pedestrianHairStyles:[...new Set(pedestrians.map(p=>p.g.userData.hairStyle))],
         animationRig:pedestrians[0]?.g.userData.animationRig,grassInstances:world.userData.grassInstances
       },
-      trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs})),
+      trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs,bodyStyle:item.g.userData.bodyStyle,silhouette:item.g.userData.silhouette,tireProfile:item.g.userData.tireProfile})),
       architecturalDetails:{...architecturalDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{

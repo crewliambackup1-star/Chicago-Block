@@ -54,6 +54,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chicago-block-v4-3-browser-screenshots
+          name: chicago-block-v4-5-browser-screenshots
           path: artifacts/
           if-no-files-found: ignore

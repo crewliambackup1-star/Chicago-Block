@@ -1,6 +1,13 @@
-# Chicago Block — V4.3 Lighting, Reflections & Atmosphere
+# Chicago Block — V4.5 Smooth People & Vehicle Models
 
-V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting, reflection and weather pipeline. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
+V4.5 replaces angular people and repeated traffic silhouettes with smaller, more naturally proportioned character heads and shoulders, rounded anatomical and footwear geometry, smoother curved vehicle bodies, rounded roof and tyre profiles, and four distinct traffic body-size variants. Pedestrian gait, traffic routes, driving physics, controls and camera behavior remain unchanged. The V4.3 lighting, reflections and weather pipeline and V4.4 geographic-data foundation are retained.
+
+## V4.5 people and vehicle model refinement
+- Character head assemblies are proportionally reduced around a pivot, preserving the existing head animation while bringing head-to-body scale closer to natural adult proportions.
+- Shoulder span, torso width, arm and leg profiles, shoes and soles are refined with smoother, less block-like shapes.
+- Vehicle side profiles use rounded quadratic corners and deeper multi-segment bevels; the roof panel, tyres and wheel spokes use softer curved geometry.
+- Four distinct traffic body-size variants include sedan, SUV, wagon and compact silhouettes while preserving all seven traffic routes and the player sedan's handling dimensions.
+- Character and vehicle material finishes, interior silhouettes, wheel hardware, lighting and adaptive rendering remain active.
 
 ## V4.2 human model and animation changes (retained)
 - Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
@@ -56,9 +63,10 @@ V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting,
 - V4.2: human and vehicle models, materials and animations.
 - V4.3: lighting, reflections, sky and weather atmosphere.
 - V4.4: geographic data foundation and streamed city sections.
+- V4.5: smooth, naturally proportioned people and varied vehicle models.
 
 ## Validation
-`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character, vehicle, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
