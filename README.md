@@ -24,7 +24,7 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - Scanned PBR materials keep their procedural material fallback, so external asset requests never block startup.
 - Optional CC0 scanned 1K PBR maps for worn brick, grey asphalt and concrete pavement, with procedural fallbacks that never block startup.
 - Varied building floor spacing, framed entries, rooftop penthouses and vent stacks.
-- Recessed window reveals, stone lintels, sidewalk expansion joints and connected fire-escape switchback stairs.
+- Building-number plaques, recessed window reveals, stone lintels, sidewalk expansion joints and connected fire-escape switchback stairs.
 - Asset source and license records in `assets/ASSET_LICENSES.md`.
 
 ## V4.0 rendering foundation retained
@@ -54,7 +54,7 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - V4.4: geographic data foundation and streamed city sections.
 
 ## Validation
-`npm run check` validates the game, controls and renderer. `npm test` covers source behavior, adaptive-resolution rules, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
+`npm run check` validates the game, controls and renderer. `npm test` covers source behavior, adaptive-resolution rules, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
