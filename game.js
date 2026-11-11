@@ -722,6 +722,40 @@ windows.forEach((item,index)=>{
 });
 windowSillMesh.instanceMatrix.needsUpdate=true;windowSillMesh.castShadow=false;world.add(windowSillMesh);
 
+// Deep window reveals and varied stone lintels add shadow lines around each opening.
+const windowRevealMaterial=new THREE.MeshStandardMaterial({color:0x182024,roughness:.91,metalness:0});
+const windowRecessMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),windowRevealMaterial,windows.length);
+let recessIndex=0;
+for(const item of windows){
+  const front=item.face==='z',sign=item.faceSign;
+  if(front){
+    windowTransform.position.set(item.x,item.y,item.z-sign*.085);
+    windowTransform.scale.set(item.sx*.88,item.sy*.88,.035);
+  }else{
+    windowTransform.position.set(item.x-sign*.085,item.y,item.z);
+    windowTransform.scale.set(.035,item.sy*.88,item.sz*.88);
+  }
+  windowTransform.updateMatrix();windowRecessMesh.setMatrixAt(recessIndex++,windowTransform.matrix);
+}
+windowRecessMesh.instanceMatrix.needsUpdate=true;windowRecessMesh.castShadow=false;world.add(windowRecessMesh);
+architecturalDetailCounts.windowRecesses=recessIndex;
+
+const lintelItems=windows.filter((item,index)=>index%3===0);
+const windowLintelMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),M.limestone,lintelItems.length);
+lintelItems.forEach((item,index)=>{
+  const front=item.face==='z',sign=item.faceSign;
+  if(front){
+    windowTransform.position.set(item.x,item.y+item.sy/2+.085,item.z+sign*.065);
+    windowTransform.scale.set(item.sx+.22,.14,.17);
+  }else{
+    windowTransform.position.set(item.x+sign*.065,item.y+item.sy/2+.085,item.z);
+    windowTransform.scale.set(.17,.14,item.sz+.22);
+  }
+  windowTransform.updateMatrix();windowLintelMesh.setMatrixAt(index,windowTransform.matrix);
+});
+windowLintelMesh.instanceMatrix.needsUpdate=true;windowLintelMesh.castShadow=false;world.add(windowLintelMesh);
+architecturalDetailCounts.windowLintels=lintelItems.length;
+
 // Corner market, courtyard, benches and trees.
 const shop=new THREE.Group();shop.position.set(39,0,-38);world.add(shop);
 cube(shop,0,4.7,0,27,9.4,12,M.dark);cube(shop,0,9.55,0,27.6,.5,12.6,M.brick);
@@ -1545,7 +1579,8 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     ...adaptiveResolution.getSnapshot(),
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
-    qualityProfile:renderProfile.name
+    qualityProfile:renderProfile.name,
+    externalPbrStatus:{...externalPbrStatus}
   })
 }),configurable:false});
 if(automationMode){
@@ -1557,6 +1592,7 @@ if(automationMode){
       streetSigns:streetSigns.length,
       visualDetails:{...visualDetailCounts},
       visualQuality:{avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,grassInstances:world.userData.grassInstances},
+      architecturalDetails:{...architecturalDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
@@ -1594,4 +1630,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-rendering-foundation';
+document.documentElement.dataset.visualVersion='v4-1-architecture-environment';
