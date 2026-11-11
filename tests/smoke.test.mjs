@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 3\.1/);
+  assert.match(html, /UPDATE 4\.0/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -77,7 +77,7 @@ test('V3 renderer uses soft shadows, reflection environment, and adaptive detail
   assert.match(game, /function manhole/);
   assert.match(game, /function stormDrain/);
   assert.match(game, /windowSillMesh/);
-  assert.match(game, /v3\.1-model-textures/);
+  assert.match(game, /v4-rendering-foundation/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -88,8 +88,8 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents the V3 graphics scope and validation commands', () => {
-  assert.match(readme, /V3\.1 Model & Texture Overhaul/);
-  assert.match(readme, /graphics-only refinement/);
+  assert.match(readme, /V4\.0 Photorealism Foundation/);
+  assert.match(readme, /rendering foundation/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
