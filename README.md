@@ -1,48 +1,62 @@
-# Chicago Block — V4.1 Architecture & Environment
+# Chicago Block — V4.2 People, Vehicles & Animation
 
-V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The existing neighborhood footprint, street grid, gameplay, driving, camera, traffic and pedestrian routes remain unchanged.
+V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work with a visual overhaul of the people and vehicles. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
 
-## V4.1 architecture and environment changes
-- Adds optional CC0 scanned PBR texture maps for worn brick, asphalt and concrete pavement. Each has a procedural material fallback that is available immediately, so failed external requests do not block startup.
-- Uses 1K diffuse, OpenGL normal and roughness maps from Poly Haven through its download host; texture requests are asynchronous and update materials only when maps arrive.
-- Adds a source/license manifest at `assets/ASSET_LICENSES.md`.
-- Gives buildings more varied floor spacing, framed street-level entries, glazed door panels, thresholds, awnings, building-number plaques and more distinct rooflines.
-- Adds selected rooftop penthouses, parapets and vent stacks to break up flat repeated roof silhouettes.
-- Adds instanced dark window reveals and stone lintels for depth around façade openings.
-- Adds instanced expansion joints to divide long sidewalks into concrete slabs.
-- Rebuilds the existing fire escapes with switchback stairs, connected landings, handrails and supports.
+## V4.2 human model and animation changes
+- Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
+- Adds garment construction details such as a zipper, chest pockets, pocket flaps, buttons, stitching seams and a layered neckline.
+- Adds four distinct procedural hairstyles: curly, cropped, short twists and tied-back.
+- Reworks arms and legs into articulated shoulder/elbow and hip/knee/shin/foot groups, with more natural hands, fingers, shoes and soles.
+- Replaces the simple walk swing with a gait cycle that coordinates hip swing, knee lift, elbow bend, foot pitch, torso bob and subtle head movement.
+- Preserves pedestrian speed, destinations, routes and the existing player controls.
 
-## V4.0 rendering foundation
-- Desktop starts at up to 2x device pixel ratio with a 2048px directional shadow map, when device capabilities permit.
-- Touch devices use a separate high-quality profile capped at 1.45x pixel ratio and a 1024px shadow map.
-- Adaptive resolution adjusts pixel density gradually only after sustained frame-time pressure; it does not alter simulation speed or controls.
-- Directional shadows follow the player, concentrating shadow detail near the active area.
-- Headless automation uses a separate low-resolution, no-shadow profile and reduced draw frequency.
+## V4.2 vehicle changes
+- Adds shared microflake paint texture, subtle surface relief, higher metalness and a clearer coat finish.
+- Improves window glass clearcoat, reflection and transmission settings.
+- Adds readable cabin silhouettes to traffic cars, with a more detailed cockpit retained for the player car.
+- Adds hood, trunk and door panel lines, sill details and refined fender forms.
+- Refines headlights and tail lamps with separate lens geometry, LED-style strips and improved mirror glass.
+- Adds wheel lug nuts, brake calipers, rotor hardware and improved wheel detailing.
+- Preserves vehicle dimensions, steering, wheel rotation, acceleration, braking and traffic routes.
 
-## Performance approach
+## V4.1 architecture and environment retained
+- building-number plaques, recessed window reveals, stone lintels, sidewalk joints and switchback fire escapes remain in the environment.
+- Scanned PBR materials keep their procedural material fallback, so external asset requests never block startup.
+- Optional CC0 scanned 1K PBR maps for worn brick, grey asphalt and concrete pavement, with procedural fallbacks that never block startup.
+- Varied building floor spacing, framed entries, rooftop penthouses and vent stacks.
+- Building-number plaques, recessed window reveals, stone lintels, sidewalk expansion joints and connected fire-escape switchback stairs.
+- Asset source and license records in `assets/ASSET_LICENSES.md`.
+
+## V4.0 rendering foundation retained
+- Desktop ultra profile up to 2x device pixel ratio and 2048px directional shadow map, subject to device support.
+- Touch-device profile capped at 1.45x pixel ratio and 1024px shadow map.
+- Adaptive resolution reacts only to sustained frame-time pressure and does not change simulation speed.
+- Directional shadows follow the player to concentrate detail near the active area.
+- Headless automation uses a separate low-resolution, no-shadow profile.
+
+## Performance target
 - Primary target: MacBook Air M3 with 16 GB unified memory.
-- Use instancing for repeated sidewalk seams, window details, grass and foliage to reduce draw calls.
-- Keep PBR textures at 1K for this web-focused pass; preserve procedural fallbacks if network assets fail.
-- Adaptive resolution is a safeguard, not a promise of a fixed FPS. Physical M3 performance still needs manual confirmation.
+- Instancing remains in use for repeated environment details.
+- Character rigs add more geometry, but the number of pedestrians and traffic vehicles remains unchanged.
+- Adaptive resolution is a safeguard, not a guaranteed FPS. Physical M3 performance still needs a manual check after deployment.
 
 ## Scope
-- Existing package delivery, all five collectibles, clear/rain/fog weather states, traffic and pedestrian activity are retained from the previous release.
-- No new missions or gameplay systems.
-- No changes to map footprint, driving, movement, camera, traffic paths, pedestrian paths, or controls.
-- No full Chicago map expansion in V4.1. Geographic mapping and streamed city sections remain later roadmap work.
-- The current playable district is fictional and Chicago-inspired; it is not a one-to-one reconstruction of real homes or private residential properties.
+- No new missions, objectives or gameplay systems.
+- No changes to the current map footprint, routes, driving physics, movement, controls or camera.
+- Existing package delivery, all five collectibles and the clear/rain/fog weather states are retained.
+- The playable district remains fictional and Chicago-inspired; geographically grounded expansion is later roadmap work.
 
 ## V4 roadmap
-- V4.0: adaptive renderer, quality profiles and player-centered shadow coverage.
-- V4.1: architecture, street environment and scanned PBR materials.
-- V4.2: higher-fidelity people, vehicles and animation refinement.
+- V4.0: adaptive renderer and player-centered shadow coverage.
+- V4.1: architecture, scanned PBR materials and street environment.
+- V4.2: human and vehicle models, materials and animations.
 - V4.3: lighting, reflections, sky and weather atmosphere.
-- V4.4: geographic data and streamed city sections.
+- V4.4: geographic data foundation and streamed city sections.
 
 ## Validation
-`npm run check` validates the main game, controls and rendering module. `npm test` covers source behavior, adaptive renderer profiles and V4.1 environment/asset wiring. Browser automation uses Chromium and WebKit: desktop Chromium and mobile WebKit check startup, render profiles, movement, cameras, weather, driving, activities and mobile controls.
+`npm run check` validates the game, controls and renderer. `npm test` covers source behavior, adaptive-resolution rules, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
 
-Automated screenshots are saved as GitHub Actions artifacts. Tests use the special local `?automation=1` profile; normal players do not use those reduced test settings.
+Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
 ## Run locally
 
@@ -50,7 +64,7 @@ Automated screenshots are saved as GitHub Actions artifacts. Tests use the speci
 python3 -m http.server 8080
 ```
 
-Open http://localhost:8080. Three.js is loaded from jsDelivr. Optional CC0 PBR images are loaded from Poly Haven when available; procedural fallbacks remain if those requests fail.
+Open http://localhost:8080. Three.js loads from jsDelivr. Optional CC0 PBR images load from Poly Haven when available; procedural fallbacks remain if those requests fail.
 
 ## Automated checks
 
@@ -63,4 +77,4 @@ npm run test:browser
 ```
 
 ## Asset licensing
-See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for the individual CC0 source pages and the material maps used.
+See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for third-party CC0 texture sources.
