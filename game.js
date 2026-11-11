@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { getCarSteeringInput } from './controls.js';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -40,17 +41,23 @@ const automationMode=(location.hostname==='localhost'||location.hostname==='127.
   &&new URLSearchParams(location.search).has('automation');
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
 const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches;
-const renderPixelRatio=()=>automationMode?.55:Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
+const renderProfile=createGraphicsProfile({
+  automationMode,
+  isCoarsePointer:isCoarsePointer(),
+  devicePixelRatio:devicePixelRatio||1,
+  maxTextureSize:4096
+});
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});
-renderer.setPixelRatio(renderPixelRatio());
+renderer.setPixelRatio(renderProfile.initialPixelRatio);
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = !automationMode;
+renderer.shadowMap.enabled = renderProfile.shadowsEnabled;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate = true;
-renderer.toneMappingExposure = 1.08;
+renderer.toneMappingExposure = 1.04;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.info.autoReset = true;
+const adaptiveResolution=createAdaptiveResolutionController(renderer,renderProfile);
 $('game').appendChild(renderer.domElement);
 
 // A soft, hand-built equirectangular environment gives glass and vehicle paint something
@@ -391,10 +398,10 @@ function blocked(x,z,r=.48) {
 scene.add(new THREE.HemisphereLight(0xd9e7f0,0x59614f,1.62));
 const sun=new THREE.DirectionalLight(0xffe1bc,2.15);
 sun.position.set(-85,115,-65);sun.castShadow=true;
-sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,1024),Math.min(renderer.capabilities.maxTextureSize,1024));
-sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=340;
-sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;
-sun.shadow.camera.updateProjectionMatrix();scene.add(sun);
+sun.shadow.mapSize.set(Math.min(renderer.capabilities.maxTextureSize,renderProfile.shadowMapSize||512),Math.min(renderer.capabilities.maxTextureSize,renderProfile.shadowMapSize||512));
+sun.shadow.bias=-0.00008;sun.shadow.normalBias=.025;sun.shadow.camera.near=1;sun.shadow.camera.far=280;
+sun.shadow.camera.left=-100;sun.shadow.camera.right=100;sun.shadow.camera.top=100;sun.shadow.camera.bottom=-100;
+sun.shadow.camera.updateProjectionMatrix();scene.add(sun);scene.add(sun.target);
 const ambientLight=scene.children.find(item=>item.isHemisphereLight);
 
 // Three-by-three fictional street grid.
@@ -1361,7 +1368,9 @@ function updateClock(dt){
   const weatherDim=weatherMode==='clear'?1:weatherMode==='rain'?.78:.66;
   sun.intensity=(.18+daylight*2.12)*weatherDim;ambientLight.intensity=(.72+daylight*.86)*(weatherMode==='fog'?.9:1);
   scene.environmentIntensity=.18+daylight*.52;
-  sun.position.set(-85+daylight*35,25+daylight*95,-65);
+  sun.target.position.set(player.x,0,player.z);
+  sun.position.set(player.x-85+daylight*35,25+daylight*95,player.z-65);
+  sun.target.updateMatrixWorld();sun.updateMatrixWorld();
   const night=1-daylight;
   M.headlight.emissiveIntensity=.3+night*2.35;M.tailLight.emissiveIntensity=.55+night*1.25;
   skyMaterial.color.setRGB(.2+daylight*.8,.24+daylight*.76,.42+daylight*.58);
@@ -1401,10 +1410,19 @@ function frame(){
     if(elapsed%0.22<dt){updateMap();updateZone();}
     if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   }
-  // CI uses a software renderer: simulate every frame but draw every third frame in test mode.
-  if(!automationMode||++automationRenderCounter%3===0)renderer.render(scene,camera);
+  adaptiveResolution.update(dt,started&&!document.hidden);
+  // CI's software renderer draws less often; normal players render every frame.
+  if(++automationRenderCounter%renderProfile.renderEveryNthFrame===0)renderer.render(scene,camera);
 }
 frame();
+Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
+  getState:()=>({
+    ...adaptiveResolution.getSnapshot(),
+    shadowsEnabled:renderer.shadowMap.enabled,
+    shadowMapSize:renderProfile.shadowMapSize,
+    qualityProfile:renderProfile.name
+  })
+}),configurable:false});
 if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
@@ -1448,7 +1466,7 @@ if(automationMode){
 updateActivityHud();
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(renderPixelRatio());
+  adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v3.1-model-textures';
+document.documentElement.dataset.visualVersion='v4-rendering-foundation';
