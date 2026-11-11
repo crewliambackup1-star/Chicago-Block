@@ -16,10 +16,10 @@ The local projection is scaled at the origin latitude so distances remain usable
 
 ## Initial source layers
 
-1. **Street Center Lines** — City of Chicago dataset `6imu-meau`. The current data portal page is linked in `manifest.json`. Convert line features into tile-local road centerline data first; road widths, intersections and surface styling belong in the rendering stage.
-2. **Building Footprints** — City of Chicago Building Footprints GeoJSON resource `syp8-uezg`. Convert Polygon and MultiPolygon outlines into tile-local footprint rings; building heights and usage should come from validated attributes when available, never guessed from footprint alone.
+1. **Street Center Lines** — current City of Chicago dataset `6imu-meau`, updated April 24, 2024. The portal marks it Public, but its page does not state a clear reuse license; verify terms/attribution before redistribution. Convert line features into tile-local road centerline data first; road widths, intersections and surface styling belong in the rendering stage.
+2. **Building Footprints** — authoritative City dataset `syp8-uezg`, listed in Data.gov as updated June 12, 2025. The similarly named `ssaf-e4ub` entry is a public-created visualization and is not the source of record. Review current City terms/attribution before redistributing processed data. Convert Polygon and MultiPolygon outlines into tile-local footprint rings; building heights and usage should come from validated attributes when available, never guessed from footprint alone.
 
-Review source metadata, attribution and reuse terms for each export before building a distributable tile pack. Preserve dataset identifiers and source dates in the generated tile metadata. Do not commit raw source exports until their size and reuse terms have been reviewed.
+Review source metadata, attribution and reuse terms for each export before building a distributable tile pack. Preserve dataset identifiers and source dates in the generated tile metadata. Do not commit raw source exports until their size and reuse terms have been reviewed. The MIT-licensed City of Chicago GitHub data repositories are older, edited snapshots that explicitly differ from the current portal data; do not assume they represent the latest geometry.
 
 ## Build a local tile pack
 
@@ -28,7 +28,7 @@ Download GeoJSON exports from the dataset pages in `manifest.json` and place the
 - `city-data/raw/streets.geojson`
 - `city-data/raw/buildings.geojson`
 
-Then run `npm run build:city-tiles`. The script writes normalized tile records to `city-data/tiles/` and removes only previously generated tile JSON files before rebuilding. It does not download data itself or modify the playable scene.
+Then run `npm run build:city-tiles`. The script normalizes up to one million features per source file, processes the street and building inputs sequentially, writes normalized tile records to `city-data/tiles/`, and removes only previously generated tile JSON files before rebuilding. It does not download data itself or modify the playable scene.
 
 ## Next implementation stages
 
