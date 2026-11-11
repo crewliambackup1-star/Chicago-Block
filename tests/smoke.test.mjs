@@ -6,15 +6,17 @@ import { getCarSteeringInput } from '../controls.js';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
 const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+const licenses = readFileSync(new URL('../assets/ASSET_LICENSES.md', import.meta.url), 'utf8');
+const modelAssetsJs = readFileSync(new URL('../model-assets.js', import.meta.url), 'utf8');
 
 test('page loads the game module and includes essential controls', () => {
   assert.match(html, /<script type="module" src="\.\/game\.js"><\/script>/);
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.5 · SMOOTH PEOPLE & VEHICLE MODELS/);
-  assert.match(html, /Smooth People & Vehicle Models \(V4\.5\)/);
-  assert.match(html, /SMOOTH PEOPLE & VEHICLE MODELS · V4\.5/);
+  assert.match(html, /UPDATE 4\.6 · REALISTIC 3D PEOPLE & VEHICLES/);
+  assert.match(html, /Realistic 3D Model Overhaul \(V4\.6\)/);
+  assert.match(html, /REALISTIC 3D PEOPLE & VEHICLES · V4\.6/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -92,7 +94,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.5 Smooth People & Vehicle Models/);
+  assert.match(readme, /V4\.6 Realistic 3D Model Overhaul/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -154,4 +156,17 @@ test('V4.5 vehicles use rounded silhouettes, soft wheel geometry and distinct tr
   assert.match(readme, /wheel lug nuts/);
   assert.match(readme, /traffic cars/);
   assert.match(readme, /four distinct traffic body-size variants/);
+});
+
+test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fallbacks', async () => {
+  const { V46_MODEL_ASSET_URLS } = await import('../model-assets.js');
+  assert.match(V46_MODEL_ASSET_URLS.pedestrian, /walking-cross-step\\.glb$/);
+  assert.match(V46_MODEL_ASSET_URLS.vehicle, /sedan-original\\.glb$/);
+  for (const feature of [
+    'loadModelAssets','new THREE.LOD()','installHumanAssets','installVehicleAsset',
+    'updateVehicleAssetLods','procedural-fallback','automation-fallback',
+    'v4.6-cc0-realistic-human-glb','v4.6-cc0-realistic-vehicle-glb'
+  ]) assert.ok(game.includes(feature)||modelAssetsJs.includes(feature),'Missing V4.6 feature: '+feature);
+  assert.match(readme,/static stride-pose mesh/);
+  assert.match(licenses,/CC0/);
 });
