@@ -1635,6 +1635,7 @@ function installHumanAssets(template,cloneSkinnedModel){
   pedestrians.forEach((pedestrian,index)=>{
     const low=pedestrian.g,position=low.position.clone();
     const prepared=prepareHumanAsset(template,index,cloneSkinnedModel);
+    prepared.mixer.timeScale=pedestrian.speed/1.3;
     const lod=new THREE.LOD();
     lod.addLevel(prepared.model,0);lod.addLevel(low,27+(index%3)*4);
     low.position.set(0,0,0);
