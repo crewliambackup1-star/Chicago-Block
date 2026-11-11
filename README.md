@@ -58,7 +58,7 @@ V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting,
 - V4.4: geographic data foundation and streamed city sections.
 
 ## Validation
-`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character, vehicle, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
@@ -76,7 +76,7 @@ Open http://localhost:8080. Three.js loads from jsDelivr. Optional CC0 PBR image
 npm run check
 npm test
 npm install --no-save playwright
-npx playwright install chromium webkit
+npx playwright install chromium
 npm run test:browser
 ```
 
