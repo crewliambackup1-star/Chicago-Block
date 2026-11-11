@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 3/);
+  assert.match(html, /UPDATE 3\.1/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -77,7 +77,7 @@ test('V3 renderer uses soft shadows, reflection environment, and adaptive detail
   assert.match(game, /function manhole/);
   assert.match(game, /function stormDrain/);
   assert.match(game, /windowSillMesh/);
-  assert.match(game, /visualVersion='v3-realism'/);
+  assert.match(game, /v3\.1-model-textures/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -88,8 +88,8 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents the V3 graphics scope and validation commands', () => {
-  assert.match(readme, /Realism Update \(V3\)/);
-  assert.match(readme, /graphics-only overhaul/);
+  assert.match(readme, /V3\.1 Model & Texture Overhaul/);
+  assert.match(readme, /graphics-only refinement/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
@@ -97,4 +97,15 @@ test('README documents the V3 graphics scope and validation commands', () => {
   assert.match(readme, /weather states/);
   assert.match(readme, /all five collectibles/);
   assert.match(readme, /Chromium and WebKit/);
+});
+test('V3.1 adds textured clothing and skin, refined human models, facades, vehicles and landscaping', () => {
+  for (const feature of [
+    'const fabricTexture=makeTexture', 'const skinTexture=makeTexture',
+    'function person(material,appearance=0)', 'v3.1-anatomical-textured',
+    'M.siding=mat', 'M.stucco=mat', 'const sidingHeight=',
+    'function addGrassCover()', 'new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.105,1)',
+    'Panel gaps', 'projector-style lamps', 'v3.1-model-textures'
+  ]) {
+    assert.ok(game.includes(feature), 'Missing V3.1 visual feature: ' + feature);
+  }
 });
