@@ -26,6 +26,7 @@ V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The e
 - Adaptive resolution is a safeguard, not a promise of a fixed FPS. Physical M3 performance still needs manual confirmation.
 
 ## Scope
+- Existing package delivery, five collectible landmarks, weather cycle, traffic and pedestrian activity are retained from the previous release.
 - No new missions or gameplay systems.
 - No changes to map footprint, driving, movement, camera, traffic paths, pedestrian paths, or controls.
 - No full Chicago map expansion in V4.1. Geographic mapping and streamed city sections remain later roadmap work.
