@@ -80,7 +80,7 @@ test('tile manager validates identifiers, limits, and disposed state', async () 
   assert.throws(() => createCityTileManager({ loadTile: async () => ({}), maxCacheEntries: 0 }), RangeError);
   const manager = createCityTileManager({ loadTile: async key => ({ key }) });
   assert.throws(() => manager.get('../0:0'), TypeError);
-  await assert.rejects(manager.request('bad-key'), TypeError);
+  assert.throws(() => manager.request('bad-key'), TypeError);
   manager.dispose();
   await assert.rejects(manager.request('0:0'), /disposed/);
 });
