@@ -46,7 +46,7 @@ export function createGraphicsProfile({
     initialPixelRatio: maximumPixelRatio,
     minimumPixelRatio: Math.min(1.25, maximumPixelRatio),
     maximumPixelRatio,
-    shadowMapSize: Math.min(maxTextureSize, 2048),
+    shadowMapSize: Math.min(maxTextureSize, 3072),
     shadowsEnabled: true,
     adaptiveResolution: true,
     renderEveryNthFrame: 1
