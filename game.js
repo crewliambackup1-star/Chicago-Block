@@ -1045,14 +1045,37 @@ function person(material,appearance=0){
   const hairMat=new THREE.MeshStandardMaterial({color:hairColors[appearance%hairColors.length],roughness:.88});
   const shoeMat=new THREE.MeshStandardMaterial({color:appearance%3===0?0x181b1d:0x36322d,roughness:.76});
   const detailMat=new THREE.MeshStandardMaterial({color:0x25282a,roughness:.72});
-  const torso=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),clothing);
-  torso.position.set(0,1.15,0);torso.scale.set(.345,.48,.225);torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
+  // A tapered lathed torso replaces the single sphere, giving the chest, waist and abdomen a clearer silhouette.
+  const torsoProfile=new THREE.LatheGeometry([
+    new THREE.Vector2(.19,-.45),new THREE.Vector2(.235,-.37),new THREE.Vector2(.27,-.2),
+    new THREE.Vector2(.285,.02),new THREE.Vector2(.355,.22),new THREE.Vector2(.36,.34),
+    new THREE.Vector2(.29,.43),new THREE.Vector2(.18,.47)
+  ],36);
+  const torso=new THREE.Mesh(torsoProfile,clothing);
+  torso.position.set(0,1.18,0);torso.scale.set(1,1,.76);torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
   for(const side of [-1,1]){
-    const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.17,20,16),clothing);
-    shoulder.position.set(side*.285,1.4,0);shoulder.scale.set(1,.9,1);shoulder.castShadow=true;g.add(shoulder);
+    const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.17,24,18),clothing);
+    shoulder.position.set(side*.29,1.4,0);shoulder.scale.set(1,.94,.95);shoulder.castShadow=true;shoulder.receiveShadow=true;g.add(shoulder);
   }
-  const hem=new THREE.Mesh(new THREE.TorusGeometry(.245,.014,7,28),new THREE.MeshStandardMaterial({color:material.color,roughness:.9}));
+  const hem=new THREE.Mesh(new THREE.TorusGeometry(.245,.014,7,32),new THREE.MeshStandardMaterial({color:material.color,roughness:.9}));
   hem.position.set(0,.83,0);hem.rotation.x=Math.PI/2;hem.scale.set(1,.78,1);g.add(hem);
+  // Visible garment stitching, zipper and utility pockets give the top its own construction.
+  const stitchMat=new THREE.MeshStandardMaterial({color:0xb8b2a4,roughness:.86});
+  const garmentDetail=new THREE.MeshStandardMaterial({color:0x2a3034,roughness:.82});
+  const zipper=new THREE.Mesh(new THREE.CylinderGeometry(.009,.009,.53,7),M.silver);
+  zipper.position.set(0,1.22,.218);g.add(zipper);
+  for(const side of [-1,1]){
+    const pocket=new THREE.Mesh(new THREE.BoxGeometry(.135,.15,.025),clothing);
+    pocket.position.set(side*.19,1.22,.211);g.add(pocket);
+    const pocketFlap=new THREE.Mesh(new THREE.BoxGeometry(.145,.045,.03),stitchMat);
+    pocketFlap.position.set(side*.19,1.30,.222);g.add(pocketFlap);
+    const seam=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.36,5),stitchMat);
+    seam.position.set(side*.27,1.13,.18);g.add(seam);
+    const button=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),garmentDetail);
+    button.position.set(side*.19,1.27,.237);g.add(button);
+  }
+  const hoodieSeam=new THREE.Mesh(new THREE.TorusGeometry(.18,.012,5,32,Math.PI),stitchMat);
+  hoodieSeam.position.set(0,1.48,-.11);hoodieSeam.rotation.x=Math.PI/2;g.add(hoodieSeam);
   const neck=new THREE.Mesh(new THREE.CylinderGeometry(.095,.12,.2,18),skin);neck.position.y=1.59;neck.castShadow=true;g.add(neck);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.215,32,26),skin);
   head.position.set(0,1.82,.018);head.scale.set(.9,1.12,.91);head.castShadow=true;head.receiveShadow=true;g.add(head);
@@ -1066,15 +1089,42 @@ function person(material,appearance=0){
     const earInner=new THREE.Mesh(new THREE.SphereGeometry(.022,10,8),detailMat);
     earInner.position.set(side*.213,1.8,.037);earInner.scale.set(.7,1,.65);g.add(earInner);
   }
-  // Natural hairline and separated curls/locks break up the old smooth helmet silhouette.
-  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.222,28,20,0,Math.PI*2,0,Math.PI*.59),hairMat);
+  // Four distinct procedural hair silhouettes create more believable pedestrian variety.
+  const hairStyle=appearance%4;
+  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.222,32,24,0,Math.PI*2,0,Math.PI*.59),hairMat);
   hairCap.position.set(0,1.89,-.005);hairCap.scale.set(.99,1.1,1);hairCap.castShadow=true;g.add(hairCap);
-  const curlGeometry=new THREE.SphereGeometry(.047,10,8);
-  for(let i=0;i<17;i++){
-    const angle=(i/17)*Math.PI*2,ring=i%2===0?0.155:0.12;
-    const curl=new THREE.Mesh(curlGeometry,hairMat);
-    curl.position.set(Math.cos(angle)*ring,1.965+(i%3)*.012,Math.sin(angle)*ring-.005);
-    curl.scale.set(.9,.72,1);g.add(curl);
+  if(hairStyle===0){
+    const curlGeometry=new THREE.SphereGeometry(.044,12,9);
+    for(let i=0;i<19;i++){
+      const angle=(i/19)*Math.PI*2,ring=i%2===0?0.16:0.125;
+      const curl=new THREE.Mesh(curlGeometry,hairMat);
+      curl.position.set(Math.cos(angle)*ring,1.957+(i%3)*.018,Math.sin(angle)*ring-.008);
+      curl.scale.set(.92,.78,1);g.add(curl);
+    }
+  }else if(hairStyle===1){
+    // Close-cropped cut with small temple fades.
+    for(const side of [-1,1]){
+      const fade=new THREE.Mesh(new THREE.SphereGeometry(.112,18,14),hairMat);
+      fade.position.set(side*.16,1.82,.005);fade.scale.set(.56,.84,.82);g.add(fade);
+    }
+  }else if(hairStyle===2){
+    // Short layered twists, kept close to the head for a distinct silhouette.
+    const twistGeometry=new THREE.CapsuleGeometry(.035,.095,4,9);
+    for(let i=0;i<13;i++){
+      const angle=i*2.399963,ring=.12+(i%3)*.018;
+      const twist=new THREE.Mesh(twistGeometry,hairMat);
+      twist.position.set(Math.cos(angle)*ring,1.94+(i%4)*.012,Math.sin(angle)*ring-.015);
+      twist.rotation.z=Math.cos(angle)*.45;twist.rotation.x=Math.sin(angle)*.35;g.add(twist);
+    }
+  }else{
+    const bun=new THREE.Mesh(new THREE.SphereGeometry(.11,18,14),hairMat);
+    bun.position.set(0,1.91,-.19);bun.scale.set(.9,.88,1.05);bun.castShadow=true;g.add(bun);
+    for(let lock=0;lock<8;lock++){
+      const angle=lock*Math.PI/4;
+      const strand=new THREE.Mesh(new THREE.CapsuleGeometry(.023,.11,3,8),hairMat);
+      strand.position.set(Math.cos(angle)*.14,1.94+Math.sin(angle)*.055,-.08);
+      strand.rotation.z=-Math.cos(angle)*.55;g.add(strand);
+    }
   }
   for(const side of [-1,1]){
     const eyeWhite=new THREE.Mesh(new THREE.SphereGeometry(.031,14,10),new THREE.MeshStandardMaterial({color:0xe7e0d5,roughness:.45}));
@@ -1104,31 +1154,43 @@ function person(material,appearance=0){
   const arms=[],legs=[];
   for(const side of [-1,1]){
     const arm=new THREE.Group();arm.position.set(side*.32,1.39,0);arm.rotation.z=-side*.08;g.add(arm);
-    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.31,7,16),clothing);
-    upper.position.set(side*.018,-.22,0);upper.rotation.z=-side*.035;upper.castShadow=true;arm.add(upper);
-    const cuff=new THREE.Mesh(new THREE.TorusGeometry(.083,.012,6,16),clothing);
-    cuff.position.set(side*.025,-.44,0);cuff.rotation.x=Math.PI/2;arm.add(cuff);
-    const forearm=new THREE.Mesh(new THREE.CapsuleGeometry(.072,.27,7,14),skin);
-    forearm.position.set(side*.035,-.61,.005);forearm.castShadow=true;arm.add(forearm);
-    const hand=new THREE.Mesh(new THREE.SphereGeometry(.074,16,12),skin);
-    hand.position.set(side*.045,-.81,.018);hand.scale.set(.78,1.12,.65);arm.add(hand);
+    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.33,8,18),clothing);
+    upper.position.set(side*.018,-.22,0);upper.rotation.z=-side*.035;upper.castShadow=true;upper.receiveShadow=true;arm.add(upper);
+    const elbowPivot=new THREE.Group();elbowPivot.position.set(side*.035,-.43,.005);arm.add(elbowPivot);
+    const elbow=new THREE.Mesh(new THREE.SphereGeometry(.076,16,12),skin);
+    elbow.position.y=-.015;elbow.scale.set(.98,1.04,.95);elbowPivot.add(elbow);
+    const forearm=new THREE.Mesh(new THREE.CapsuleGeometry(.071,.28,8,16),skin);
+    forearm.position.set(side*.018,-.17,.006);forearm.castShadow=true;forearm.receiveShadow=true;elbowPivot.add(forearm);
+    const cuff=new THREE.Mesh(new THREE.TorusGeometry(.074,.012,7,20),clothing);
+    cuff.position.set(side*.02,-.33,.006);cuff.rotation.x=Math.PI/2;elbowPivot.add(cuff);
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.074,18,14),skin);
+    hand.position.set(side*.025,-.39,.025);hand.scale.set(.8,1.12,.68);elbowPivot.add(hand);
     for(let finger=0;finger<4;finger++){
-      const digit=new THREE.Mesh(new THREE.CapsuleGeometry(.014,.065,3,7),skin);
-      digit.position.set(side*.045-.035+finger*.023,-.885,.038);digit.rotation.z=-.08;arm.add(digit);
+      const digit=new THREE.Mesh(new THREE.CapsuleGeometry(.014,.07,4,8),skin);
+      digit.position.set(side*.025-.037+finger*.024,-.465,.05);digit.rotation.z=-.08;elbowPivot.add(digit);
     }
-    const thumb=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.052,3,7),skin);
-    thumb.position.set(side*.045+side*.075,-.82,.05);thumb.rotation.z=side*.62;arm.add(thumb);
-    arms.push(arm);
-    const leg=new THREE.Group();leg.position.set(side*.145,.64,0);g.add(leg);
-    const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.115,.34,7,14),pantsMat);
-    thigh.position.y=-.15;thigh.castShadow=true;leg.add(thigh);
-    const knee=new THREE.Mesh(new THREE.SphereGeometry(.106,14,10),pantsMat);knee.position.y=-.34;leg.add(knee);
-    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(.092,.28,7,14),pantsMat);
-    lower.position.y=-.43;lower.castShadow=true;leg.add(lower);
-    const shoe=new THREE.Mesh(new THREE.SphereGeometry(.135,18,12),shoeMat);
-    shoe.position.set(0,-.7,.09);shoe.scale.set(1,.55,1.62);shoe.castShadow=true;leg.add(shoe);
-    const sole=new THREE.Mesh(new THREE.BoxGeometry(.265,.04,.4),new THREE.MeshStandardMaterial({color:0x191a19,roughness:.96}));
-    sole.position.set(0,-.77,.09);leg.add(sole);legs.push(leg);
+    const thumb=new THREE.Mesh(new THREE.CapsuleGeometry(.018,.055,4,8),skin);
+    thumb.position.set(side*.025+side*.078,-.41,.055);thumb.rotation.z=side*.62;elbowPivot.add(thumb);
+    arm.userData.elbow=elbowPivot;arms.push(arm);
+
+    const leg=new THREE.Group();leg.position.set(side*.145,.66,0);g.add(leg);
+    const thigh=new THREE.Mesh(new THREE.CapsuleGeometry(.116,.36,8,18),pantsMat);
+    thigh.position.y=-.155;thigh.castShadow=true;thigh.receiveShadow=true;leg.add(thigh);
+    const knee=new THREE.Mesh(new THREE.SphereGeometry(.108,18,14),pantsMat);knee.position.y=-.345;leg.add(knee);
+    const shinPivot=new THREE.Group();shinPivot.position.set(0,-.355,0);leg.add(shinPivot);
+    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(.09,.31,8,18),pantsMat);
+    lower.position.y=-.17;lower.castShadow=true;lower.receiveShadow=true;shinPivot.add(lower);
+    const shoe=new THREE.Mesh(new THREE.SphereGeometry(.14,20,14),shoeMat);
+    shoe.position.set(0,-.365,.105);shoe.scale.set(1,.55,1.68);shoe.castShadow=true;shinPivot.add(shoe);
+    const sole=new THREE.Mesh(new THREE.BoxGeometry(.275,.045,.43),new THREE.MeshStandardMaterial({color:0x191a19,roughness:.96}));
+    sole.position.set(0,-.425,.105);shinPivot.add(sole);
+    const tongue=new THREE.Mesh(new THREE.BoxGeometry(.115,.12,.045),shoeMat);
+    tongue.position.set(0,-.32,.225);shinPivot.add(tongue);
+    for(let lace=0;lace<3;lace++){
+      const laceLine=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,.11,5),M.white);
+      laceLine.position.set(0,-.30+lace*.025,.245);laceLine.rotation.z=Math.PI/2;shinPivot.add(laceLine);
+    }
+    leg.userData.shin=shinPivot;leg.userData.thigh=thigh;legs.push(leg);
   }
   // Collar, placket and small buttons make the clothing read as stitched garments.
   const collarMat=clothing.clone();collarMat.color.multiplyScalar(.78);
@@ -1140,8 +1202,10 @@ function person(material,appearance=0){
     const dot=new THREE.Mesh(new THREE.SphereGeometry(.012,7,6),detailMat);
     dot.position.set(0,1.39-button*.085,.218);g.add(dot);
   }
-  g.userData.legs=legs;g.userData.arms=arms;
-  g.userData.visualQuality='v3.1-anatomical-textured';
+  g.userData.legs=legs;g.userData.arms=arms;g.userData.torso=torso;g.userData.head=head;
+  g.userData.visualQuality='v4.2-pbr-anatomical';
+  g.userData.hairStyle=['curly','cropped','twist','tied-back'][hairStyle];
+  g.userData.animationRig='v4.2-hinged-limbs';
   return g;
 }
 const routes=[
