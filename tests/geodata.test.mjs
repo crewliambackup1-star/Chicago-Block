@@ -139,7 +139,7 @@ test('feature partitioning handles negative tiles and bounds very large geometry
     geometry: { type: 'LineString', coordinates: [[-513, -1], [-511, -1]] }
   };
   const tiles = partitionFeaturesByTile([negativeRoad]);
-  assert.deepEqual(Object.keys(tiles).sort(), ['-2:-1', '-1:-1']);
+  assert.deepEqual(Object.keys(tiles), ['-2:-1', '-1:-1']);
   const oversized = {
     type: 'Feature',
     properties: {},
