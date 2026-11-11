@@ -165,8 +165,10 @@ test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fall
   for (const feature of [
     'loadModelAssets','new THREE.LOD()','installHumanAssets','installVehicleAsset',
     'updateVehicleAssetLods','procedural-fallback','automation-fallback',
-    'v4.6-cc0-realistic-human-glb','v4.6-cc0-realistic-vehicle-glb'
+    'v4.6-cc0-rigged-animated-human-glb','v4.6-cc0-realistic-vehicle-glb'
   ]) assert.ok(game.includes(feature)||modelAssetsJs.includes(feature),'Missing V4.6 feature: '+feature);
-  assert.match(readme,/static stride-pose mesh/);
+  assert.match(readme,/skinned skeleton and seven named locomotion clips/);
+  assert.match(game,/new THREE.AnimationMixer\\(model\\)/);
+  assert.match(game,/switchHumanAnimation/);
   assert.match(licenses,/CC0/);
 });
