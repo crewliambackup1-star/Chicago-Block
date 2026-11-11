@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.0/);
+  assert.match(html, /UPDATE 4\.1/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
