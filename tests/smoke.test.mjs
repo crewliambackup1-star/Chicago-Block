@@ -76,7 +76,7 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-rendering-foundation/);
+  assert.match(game, /v4-1-architecture-environment/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -87,7 +87,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.0 Photorealism Foundation/);
+  assert.match(readme, /V4\.1 Architecture & Environment/);
   assert.match(readme, /rendering foundation/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -102,4 +102,24 @@ test('V4.0 records the renderer foundation version', () => {
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
   assert.match(game, /v4-rendering-foundation/);
+});
+
+test('V4.1 uses optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
+  for (const feature of [
+    'worn-brick-wall', 'asphalt-03', 'concrete-pavement',
+    'loadOptionalPbrMap', 'procedural-fallback', 'pbrSourceManifest.forEach(applyOptionalPbrSource)'
+  ]) assert.ok(game.includes(feature), 'Missing V4.1 material pipeline feature: ' + feature);
+  assert.match(readme, /procedural material fallback/);
+});
+
+test('V4.1 adds varied architecture, deep windows, rooftop and sidewalk detail', () => {
+  for (const feature of [
+    'const floorHeight=style===1?3.15:style===2?3.55:3.3',
+    'architecturalDetailCounts.rooftopPenthouses++',
+    'windowRecessMesh', 'windowLintelMesh',
+    'horizontalJointPositions', 'verticalJointPositions',
+    'fireEscapeStairFlights+=stairFlights'
+  ]) assert.ok(game.includes(feature), 'Missing V4.1 architectural feature: ' + feature);
+  assert.match(readme, /switchback stairs/);
+  assert.match(readme, /building-number plaques/);
 });
