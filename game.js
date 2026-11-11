@@ -1581,10 +1581,28 @@ function walkNPCs(dt,time){
   for(const p of pedestrians){
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
     if(d<.9)p.target=(p.target+1)%p.route.length;
-    else{const step=Math.min(d,p.speed*dt);p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;p.g.rotation.y=Math.atan2(dx,dz);}
-    const swing=Math.sin(time*7+p.phase)*.2;
-    p.g.userData.legs[0].rotation.x=swing;p.g.userData.legs[1].rotation.x=-swing;
-    p.g.userData.arms[0].rotation.x=-swing*.72;p.g.userData.arms[1].rotation.x=swing*.72;
+    else{
+      const step=Math.min(d,p.speed*dt);
+      p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;
+      p.g.rotation.y=Math.atan2(dx,dz);
+    }
+    const phase=time*(6.1+p.speed*.48)+p.phase;
+    const swing=Math.sin(phase)*.31;
+    const liftLeft=Math.max(0,Math.sin(phase))*.58;
+    const liftRight=Math.max(0,Math.sin(phase+Math.PI))*.58;
+    const legs=p.g.userData.legs,arms=p.g.userData.arms;
+    legs[0].rotation.x=swing;legs[1].rotation.x=-swing;
+    legs[0].userData.shin.rotation.x=liftLeft;legs[1].userData.shin.rotation.x=liftRight;
+    legs[0].userData.shin.rotation.z=Math.sin(phase)*.018;
+    legs[1].userData.shin.rotation.z=-Math.sin(phase)*.018;
+    arms[0].rotation.x=-swing*.78;arms[1].rotation.x=swing*.78;
+    arms[0].userData.elbow.rotation.x=.12+liftRight*.25;
+    arms[1].userData.elbow.rotation.x=.12+liftLeft*.25;
+    arms[0].rotation.z=-.08+Math.sin(phase)*.025;
+    arms[1].rotation.z=.08-Math.sin(phase)*.025;
+    p.g.userData.torso.position.y=1.18+Math.abs(Math.sin(phase*2))*.018;
+    p.g.userData.head.rotation.x=Math.sin(phase*.5+p.phase)*.018;
+    p.g.userData.head.rotation.z=Math.sin(phase*.35+p.phase)*.012;
   }
 }
 function moveTraffic(dt){
