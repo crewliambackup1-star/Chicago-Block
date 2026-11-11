@@ -329,6 +329,48 @@ const stuccoHeight=makeDataTexture((ctx,w,h)=>{
 });
 M.siding=mat(0xffffff,.88);M.siding.map=sidingTexture;M.siding.bumpMap=sidingHeight;M.siding.bumpScale=.055;M.siding.roughnessMap=sidingHeight;
 M.stucco=mat(0xffffff,.94);M.stucco.map=stuccoTexture;M.stucco.bumpMap=stuccoHeight;M.stucco.bumpScale=.045;M.stucco.roughnessMap=stuccoHeight;
+
+// Weathered wood grain and brushed metal tie together benches, fixtures, trim and vehicle hardware.
+const woodTexture=makeTexture((ctx,w,h)=>{
+  const base=ctx.createLinearGradient(0,0,0,h);base.addColorStop(0,'#9a7652');base.addColorStop(.5,'#b18a62');base.addColorStop(1,'#78583f');
+  ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<92;i++){
+    const y=(i*37)%h,alpha=.035+(i%5)*.018;
+    ctx.strokeStyle=`rgba(48,30,18,${alpha})`;ctx.lineWidth=1+(i%3);
+    ctx.beginPath();ctx.moveTo(0,y);
+    for(let x=0;x<=w;x+=80)ctx.lineTo(x,y+Math.sin(x*.009+i)*((i%4)+1));
+    ctx.stroke();
+  }
+  for(let i=0;i<9;i++){
+    const x=(i*131+47)%w,y=(i*197+63)%h;
+    ctx.strokeStyle='rgba(55,35,22,.28)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(x,y,13+(i%4)*6,4+(i%3)*2,.1,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(x,y,6+(i%4)*3,2,.1,0,Math.PI*2);ctx.stroke();
+  }
+});
+const woodHeight=makeDataTexture((ctx,w,h)=>{
+  ctx.fillStyle='#999';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#666';ctx.lineWidth=2;
+  for(let y=0;y<h;y+=11){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y+Math.sin(y*.02)*3);ctx.stroke();}
+  for(let i=0;i<8500;i++){const x=(i*43)%w,y=(i*97)%h,v=90+(i*29)%110;ctx.fillStyle=`rgba(${v},${v},${v},.2)`;ctx.fillRect(x,y,1,1);}
+},512);
+const brushedMetalTexture=makeTexture((ctx,w,h)=>{
+  const grad=ctx.createLinearGradient(0,0,w,0);grad.addColorStop(0,'#a3a8a8');grad.addColorStop(.45,'#e2e3df');grad.addColorStop(1,'#858e91');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<18000;i++){
+    const y=(i*31)%h,v=115+(i*17)%115;
+    ctx.fillStyle=`rgba(${v},${v},${v},.12)`;ctx.fillRect((i*53)%w,y,3+(i%8)*2,1);
+  }
+},512);
+const metalHeight=makeDataTexture((ctx,w,h)=>{
+  ctx.fillStyle='#999';ctx.fillRect(0,0,w,h);
+  for(let i=0;i<12000;i++){const v=85+(i*21)%125;ctx.fillStyle=`rgba(${v},${v},${v},.25)`;ctx.fillRect((i*53)%w,(i*31)%h,4+(i%5)*2,1);}
+},512);
+M.wood.map=woodTexture;M.wood.bumpMap=woodHeight;M.wood.bumpScale=.035;M.wood.roughnessMap=woodHeight;
+for(const metalMaterial of [M.metal,M.silver,M.trim]){
+  metalMaterial.map=brushedMetalTexture;metalMaterial.bumpMap=metalHeight;
+  metalMaterial.bumpScale=.012;metalMaterial.roughnessMap=metalHeight;metalMaterial.needsUpdate=true;
+}
+M.wood.needsUpdate=true;
 M.fabricTexture=fabricTexture;M.fabricBump=fabricBump;M.skinTexture=skinTexture;M.skinBump=skinBump;
 
 const world = new THREE.Group(); scene.add(world);
@@ -427,7 +469,7 @@ function building(x,z,w,d,h,color,side=true){
       windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:1.1,sy:1.4,sz:.08,face:'z',faceSign:face});
       // A portion of windows have projecting sills and compact air-conditioning units.
       if((r*cols+c+Math.round(x))%7===0){
-        const ac=cube(g,px,py-.93,z===z?face*(d/2+.22):0,.72,.28,.34,M.metal,false);
+        cube(g,px,py-.93,face*(d/2+.22),.72,.28,.34,M.metal,false);
         for(let vent=0;vent<4;vent++)cube(g,px-.24+vent*.16,py-.93,face*(d/2+.397),.025,.17,.018,M.silver,false);
         cube(g,px,py-1.1,face*(d/2+.22),.78,.045,.39,M.trim,false);
       }
