@@ -49,7 +49,7 @@ test('V2 visual polish adds neighborhood landmarks and readable road materials',
 test('V2 sedan uses a sloped, beveled body and separate cabin glass', () => {
   for (const feature of [
     'new THREE.ExtrudeGeometry(profile',
-    'bevelEnabled:true,bevelSegments:3',
+    'bevelEnabled:true,bevelSegments:5',
     'extrudedProfile([',
     'const addSideWindow=',
     'new THREE.PlaneGeometry(1.5,.5)',
@@ -90,7 +90,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.3 Lighting, Reflections & Atmosphere/);
+  assert.match(readme, /V4\.5 Smooth People & Vehicle Models/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
