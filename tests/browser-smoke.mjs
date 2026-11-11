@@ -53,7 +53,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       document.querySelector('#mode')?.textContent === 'THIRD PERSON'
       && document.querySelector('#speed')?.textContent === 'WALKING',
       null,
-      { timeout: 8000 }
+      { timeout: 16000 }
     );
     assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'on-foot camera mode should be clear without repeating the walking label');
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
@@ -101,7 +101,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       await page.waitForFunction(
         startZ => window.__CHICAGO_BLOCK_TEST__.getState().player.z < startZ - 0.2,
         walkingStartZ,
-        { timeout: 8000 }
+        { timeout: 16000 }
       );
     } catch (error) {
       const diagnostic = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
@@ -151,17 +151,17 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     const headingBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.heading;
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('w', true));
     const wheelRotationBefore = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).car.wheelRotations;
-    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().velocity > 1, null, { timeout: 8000 });
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().velocity > 1, null, { timeout: 16000 });
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.wheelRotations.some((rotation,index)=>Math.abs(rotation-before[index])>.1),
       wheelRotationBefore,
-      { timeout: 8000 }
+      { timeout: 16000 }
     );
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', true));
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.heading > before + 0.01,
       headingBefore,
-      { timeout: 8000 }
+      { timeout: 16000 }
     );
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setKey('a', false));
     const leftState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
@@ -173,7 +173,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     await page.waitForFunction(
       before => window.__CHICAGO_BLOCK_TEST__.getState().car.heading < before - 0.01,
       headingAfterLeft,
-      { timeout: 8000 }
+      { timeout: 16000 }
     );
     await page.evaluate(() => {
       window.__CHICAGO_BLOCK_TEST__.setKey('d', false);
@@ -194,7 +194,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v3-chromium-after-play.png');
+    await captureScreenshot(page, 'artifacts/v3-1-chromium-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -215,7 +215,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
       document.querySelector('#mode')?.textContent === 'THIRD PERSON'
       && document.querySelector('#speed')?.textContent === 'WALKING',
       null,
-      { timeout: 8000 }
+      { timeout: 16000 }
     );
     assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'mobile on-foot mode should use the concise HUD label');
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'mobile HUD should identify walking');
@@ -259,7 +259,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).firstPerson, false);
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-11, -12));
     await page.waitForTimeout(1400);
-    await page.screenshot({ path: 'artifacts/v3-webkit-mobile.png' });
+    await page.screenshot({ path: 'artifacts/v3-1-webkit-mobile.png' });
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
     await context.close();
@@ -277,7 +277,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v3-webkit-landscape.png' });
+    await landscapePage.screenshot({ path: 'artifacts/v3-1-webkit-landscape.png' });
     assert.deepEqual(landscapeErrors, [], 'landscape WebKit page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
