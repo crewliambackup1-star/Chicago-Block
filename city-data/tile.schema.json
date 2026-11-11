@@ -10,6 +10,7 @@
     "tileX",
     "tileZ",
     "tileSizeMeters",
+    "bounds",
     "source",
     "streets",
     "buildings"
