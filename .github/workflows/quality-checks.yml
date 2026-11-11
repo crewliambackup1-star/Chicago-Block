@@ -23,6 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Download licensed V4.6 model assets
+        run: npm run assets:download
       - name: Check JavaScript syntax
         run: npm run check
       - name: Run source-level smoke tests
@@ -40,6 +42,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Download licensed V4.6 model assets
+        run: npm run assets:download
       - name: Install Playwright
         run: npm install --no-save playwright
       - name: Install Chromium browser binary
@@ -54,6 +58,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: chicago-block-v4-5-browser-screenshots
+          name: chicago-block-v4-6-browser-screenshots
           path: artifacts/
           if-no-files-found: ignore
