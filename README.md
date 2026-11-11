@@ -20,6 +20,8 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 - Preserves vehicle dimensions, steering, wheel rotation, acceleration, braking and traffic routes.
 
 ## V4.1 architecture and environment retained
+- Building-number plaques, recessed window reveals, stone lintels, sidewalk joints and switchback fire escapes remain in the environment.
+- Scanned PBR materials keep their procedural material fallback, so external asset requests never block startup.
 - Optional CC0 scanned 1K PBR maps for worn brick, grey asphalt and concrete pavement, with procedural fallbacks that never block startup.
 - Varied building floor spacing, framed entries, rooftop penthouses and vent stacks.
 - Recessed window reveals, stone lintels, sidewalk expansion joints and connected fire-escape switchback stairs.
@@ -41,6 +43,7 @@ V4.2 builds on the V4 adaptive renderer and V4.1 architecture/environment work w
 ## Scope
 - No new missions, objectives or gameplay systems.
 - No changes to the current map footprint, routes, driving physics, movement, controls or camera.
+- Existing package delivery, all five collectibles and the clear/rain/fog weather states are retained.
 - The playable district remains fictional and Chicago-inspired; geographically grounded expansion is later roadmap work.
 
 ## V4 roadmap
