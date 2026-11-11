@@ -91,7 +91,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
   assert.match(readme, /V4\.3 Lighting, Reflections & Atmosphere/);
-  assert.match(readme, /rendering foundation/);
+  assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
