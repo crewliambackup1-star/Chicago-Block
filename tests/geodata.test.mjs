@@ -10,7 +10,8 @@ import {
   latLonToLocalMeters,
   localMetersToLatLon,
   normalizeGeoJsonFeature,
-  normalizeGeoJsonFeatureCollection
+  normalizeGeoJsonFeatureCollection,
+  partitionFeaturesByTile
 } from '../geodata.js';
 
 test('Chicago reference origin projects to the local world origin', () => {
@@ -114,5 +115,38 @@ test('FeatureCollection import normalizes batches and enforces memory bounds', (
   assert.throws(
     () => normalizeGeoJsonFeatureCollection({ ...collection, features: [collection.features[0], collection.features[0]] }, { maxFeatures: 1 }),
     /split the import into bounded batches/
+  );
+});
+
+test('feature partitioning duplicates seam-crossing roads into adjacent tiles', () => {
+  const crossingRoad = {
+    type: 'Feature',
+    id: 'seam-road',
+    properties: { name: 'Boundary Avenue' },
+    geometry: { type: 'LineString', coordinates: [[511, 0], [513, 0]] }
+  };
+  const tiles = partitionFeaturesByTile([crossingRoad]);
+  assert.deepEqual(Object.keys(tiles).sort(), ['0:0', '1:0']);
+  assert.equal(tiles['0:0'][0].id, 'seam-road');
+  assert.equal(tiles['1:0'][0].id, 'seam-road');
+});
+
+test('feature partitioning handles negative tiles and bounds very large geometry', () => {
+  const negativeRoad = {
+    type: 'Feature',
+    id: 'west-road',
+    properties: {},
+    geometry: { type: 'LineString', coordinates: [[-513, -1], [-511, -1]] }
+  };
+  const tiles = partitionFeaturesByTile([negativeRoad]);
+  assert.deepEqual(Object.keys(tiles).sort(), ['-2:-1', '-1:-1']);
+  const oversized = {
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'LineString', coordinates: [[0, 0], [5000, 5000]] }
+  };
+  assert.throws(
+    () => partitionFeaturesByTile([oversized], { maxTilesPerFeature: 4 }),
+    /spans too many tiles/
   );
 });
