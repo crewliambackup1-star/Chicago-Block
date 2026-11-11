@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/chicago-block/city-tile.schema.json",
+  "title": "Chicago Block normalized city tile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tileId",
+    "tileX",
+    "tileZ",
+    "tileSizeMeters",
+    "source",
+    "streets",
+    "buildings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tileId": {
+      "type": "string",
+      "pattern": "^-?\\\\d+:-?\\\\d+$"
+    },
+    "tileX": {
+      "type": "integer"
+    },
+    "tileZ": {
+      "type": "integer"
+    },
+    "tileSizeMeters": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "bounds": {
+      "type": "object",
+      "required": [
+        "minX",
+        "minZ",
+        "maxX",
+        "maxZ"
+      ],
+      "properties": {
+        "minX": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "publisher",
+        "datasetId",
+        "retrievedAt"
+      ],
+      "properties": {
+        "publisher": {
+          "type": "string"
+        },
+        "datasetId": {
+          "type": "string"
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "streets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    },
+    "buildings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "type",
+        "id",
+        "properties",
+        "geometry"
+      ],
+      "properties": {
+        "type": {
+          "const": "Feature"
+        },
+        "id": {
+          "type": [
+            "string",
+            "number",
+            "null"
+          ]
+        },
+        "properties": {
+          "type": "object"
+        },
+        "geometry": {
+          "type": "object",
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ]
+            },
+            "coordinates": {
+              "type": "array"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
