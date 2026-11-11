@@ -60,6 +60,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
     assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
+    assert.equal(initial.visualQuality.avatar, 'v3.1-anatomical-textured', 'the player model should use the V3.1 detailed character rig');
+    assert.equal(initial.visualQuality.pedestrian, 'v3.1-anatomical-textured', 'pedestrians should use the detailed character rig');
+    assert.ok(initial.visualQuality.grassInstances >= 1200, 'desktop lawns should use instanced grass cover');
     assert.equal(initial.car.details.plates, 2, 'the sedan should have front and rear plates');
     assert.equal(initial.car.details.doorHandles, 4, 'the sedan should have four door handles');
     assert.equal(initial.car.details.wheelSpokes, 20, 'the sedan should have five visible spokes on each wheel');
