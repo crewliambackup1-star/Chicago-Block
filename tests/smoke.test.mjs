@@ -76,7 +76,7 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-1-architecture-environment/);
+  assert.match(game, /v4-2-people-vehicles/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -87,7 +87,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.1 Architecture & Environment/);
+  assert.match(readme, /V4\.2 People, Vehicles & Animation/);
   assert.match(readme, /rendering foundation/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -97,14 +97,14 @@ test('README documents V4 scope, preserved gameplay and validation commands', ()
   assert.match(readme, /all five collectibles/);
   assert.match(readme, /Chromium and WebKit/);
 });
-test('V4.1 records the architecture and environment version', () => {
+test('V4.2 records the people and vehicle version', () => {
   assert.match(game, /renderProfile=createGraphicsProfile/);
   assert.match(game, /shadowMapSize/);
   assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
   assert.match(game, /v4-1-architecture-environment/);
 });
 
-test('V4.1 uses optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
+test('V4.2 retains optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
   for (const feature of [
     'worn-brick-wall', 'asphalt-02', 'concrete-pavement',
     'loadOptionalPbrMap', 'procedural-fallback', 'pbrSourceManifest.forEach(applyOptionalPbrSource)'
@@ -112,7 +112,7 @@ test('V4.1 uses optional CC0 scanned PBR maps with non-blocking procedural fallb
   assert.match(readme, /procedural material fallback/);
 });
 
-test('V4.1 adds varied architecture, deep windows, rooftop and sidewalk detail', () => {
+test('V4.2 retains varied architecture, deep windows, rooftop and sidewalk detail', () => {
   for (const feature of [
     'const floorHeight=style===1?3.15:style===2?3.55:3.3',
     'architecturalDetailCounts.rooftopPenthouses++',
@@ -122,4 +122,27 @@ test('V4.1 adds varied architecture, deep windows, rooftop and sidewalk detail',
   ]) assert.ok(game.includes(feature), 'Missing V4.1 architectural feature: ' + feature);
   assert.match(readme, /switchback stairs/);
   assert.match(readme, /building-number plaques/);
+});
+test('V4.2 human models use tapered anatomy, varied hairstyles and articulated gait rigs', () => {
+  for (const feature of [
+    'new THREE.LatheGeometry([', 'g.userData.visualQuality=\'v4.2-pbr-anatomical\'',
+    'g.userData.hairStyle=', 'g.userData.animationRig=\'v4.2-hinged-limbs\'',
+    'const elbowPivot=new THREE.Group()', 'const shinPivot=new THREE.Group()',
+    'const liftLeft=Math.max(0,Math.sin(phase))*.58',
+    'p.g.userData.torso.position.y=1.18+Math.abs(Math.sin(phase*2))*.018'
+  ]) assert.ok(game.includes(feature), 'Missing V4.2 character feature: ' + feature);
+  assert.match(readme, /four distinct procedural hairstyles/);
+  assert.match(readme, /gait cycle/);
+});
+
+test('V4.2 vehicles use microflake paint, improved glass and detailed wheel hardware', () => {
+  for (const feature of [
+    'const vehiclePaintTexture=makeTexture', 'vehiclePaintHeight',
+    'roughness:.22,metalness:.56', 'windowMaterial.clearcoatRoughness=.045',
+    'const panelLineMaterial=', 'const lugMaterial=', 'g.userData.wheelLugs=wheelLugCount',
+    'g.userData.visualQuality=\'v4.2-pbr-vehicle\'',
+    'g.userData.paintFinish=\'microflake-clearcoat\'', 'g.userData.interiorType=detailedInterior?'
+  ]) assert.ok(game.includes(feature), 'Missing V4.2 vehicle feature: ' + feature);
+  assert.match(readme, /wheel lug nuts/);
+  assert.match(readme, /traffic cars/);
 });
