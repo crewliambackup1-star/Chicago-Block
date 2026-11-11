@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crewliambackup1-star.github.io/Chicago-Block/city-data/tile.schema.json",
+  "title": "Chicago Block normalized city tile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tileId",
+    "tileX",
+    "tileZ",
+    "tileSizeMeters",
+    "bounds",
+    "source",
+    "streets",
+    "buildings"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tileId": {
+      "type": "string",
+      "pattern": "^-?\\d+:-?\\d+$"
+    },
+    "tileX": {
+      "type": "integer"
+    },
+    "tileZ": {
+      "type": "integer"
+    },
+    "tileSizeMeters": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "bounds": {
+      "type": "object",
+      "required": [
+        "minX",
+        "minZ",
+        "maxX",
+        "maxZ"
+      ],
+      "properties": {
+        "minX": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "publisher",
+        "datasets"
+      ],
+      "properties": {
+        "publisher": {
+          "type": "string"
+        },
+        "datasets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "layer",
+              "datasetId",
+              "retrievedAt"
+            ],
+            "properties": {
+              "layer": {
+                "enum": [
+                  "streets",
+                  "buildings"
+                ]
+              },
+              "datasetId": {
+                "type": "string"
+              },
+              "retrievedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "streets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    },
+    "buildings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feature"
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "type",
+        "id",
+        "properties",
+        "geometry"
+      ],
+      "properties": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "properties",
+          "geometry"
+        ],
+        "properties": {
+          "type": {
+            "const": "Feature"
+          },
+          "id": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          },
+          "properties": {
+            "type": "object"
+          },
+          "geometry": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "LineString"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/lineString"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "MultiLineString"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/multiLineString"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "Polygon"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/polygon"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "coordinates"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "MultiPolygon"
+                  },
+                  "coordinates": {
+                    "$ref": "#/$defs/multiPolygon"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "additionalProperties": false
+    },
+    "lineString": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "multiLineString": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/lineString"
+      }
+    },
+    "ring": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "polygon": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/ring"
+      }
+    },
+    "multiPolygon": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/polygon"
+      }
+    }
+  }
+}
