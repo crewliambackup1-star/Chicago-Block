@@ -141,6 +141,70 @@ export function getVisibleTileKeys(
   return Object.freeze(tiles.map(tile => getTileKey(tile.x, tile.z)));
 }
 
+function getCoordinateBounds(coordinates, bounds = { minX: Infinity, minZ: Infinity, maxX: -Infinity, maxZ: -Infinity }) {
+  if (!Array.isArray(coordinates)) throw new TypeError('Normalized coordinates must be arrays');
+  if (coordinates.length >= 2 && typeof coordinates[0] === 'number' && typeof coordinates[1] === 'number') {
+    const [x, z] = coordinates;
+    assertFiniteNumber(x, 'coordinate x');
+    assertFiniteNumber(z, 'coordinate z');
+    bounds.minX = Math.min(bounds.minX, x);
+    bounds.minZ = Math.min(bounds.minZ, z);
+    bounds.maxX = Math.max(bounds.maxX, x);
+    bounds.maxZ = Math.max(bounds.maxZ, z);
+    return bounds;
+  }
+  for (const coordinate of coordinates) getCoordinateBounds(coordinate, bounds);
+  return bounds;
+}
+
+/**
+ * Assign normalized features to every tile their bounding boxes intersect.
+ * Full geometry is retained in each intersected tile so roads crossing a
+ * tile seam stay continuous; clipping/deduplication is a later bake step.
+ */
+export function partitionFeaturesByTile(
+  features,
+  {
+    tileSizeMeters = DEFAULT_CITY_TILE_SIZE_METERS,
+    maxTilesPerFeature = 128
+  } = {}
+) {
+  if (!Array.isArray(features)) throw new TypeError('features must be an array');
+  validateTileSize(tileSizeMeters);
+  if (!Number.isInteger(maxTilesPerFeature) || maxTilesPerFeature < 1 || maxTilesPerFeature > 2048) {
+    throw new RangeError('maxTilesPerFeature must be an integer from 1 to 2048');
+  }
+
+  const tiles = new Map();
+  for (const feature of features) {
+    if (!feature || feature.type !== 'Feature' || !feature.geometry?.coordinates) {
+      throw new TypeError('Expected normalized GeoJSON Feature records');
+    }
+    const bounds = getCoordinateBounds(feature.geometry.coordinates);
+    const minTileX = Math.floor(bounds.minX / tileSizeMeters);
+    const maxTileX = Math.floor(bounds.maxX / tileSizeMeters);
+    const minTileZ = Math.floor(bounds.minZ / tileSizeMeters);
+    const maxTileZ = Math.floor(bounds.maxZ / tileSizeMeters);
+    const tileCount = (maxTileX - minTileX + 1) * (maxTileZ - minTileZ + 1);
+    if (!Number.isSafeInteger(tileCount) || tileCount > maxTilesPerFeature) {
+      throw new RangeError('Feature spans too many tiles; simplify or split it before tiling');
+    }
+    for (let tileZ = minTileZ; tileZ <= maxTileZ; tileZ++) {
+      for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+        const key = getTileKey(tileX, tileZ);
+        if (!tiles.has(key)) tiles.set(key, []);
+        tiles.get(key).push(feature);
+      }
+    }
+  }
+
+  return Object.freeze(Object.fromEntries(
+    [...tiles.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, items]) => [key, Object.freeze(items)])
+  ));
+}
+
 function transformCoordinates(coordinates, origin) {
   if (!Array.isArray(coordinates)) throw new TypeError('GeoJSON coordinates must be arrays');
   if (coordinates.length >= 2 && typeof coordinates[0] === 'number' && typeof coordinates[1] === 'number') {
