@@ -8,7 +8,7 @@ import {
 } from '../geodata.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const dataRoot = resolve(root, 'city-data');
+const dataRoot = process.env.CHICAGO_CITY_DATA_DIR\n  ? resolve(process.env.CHICAGO_CITY_DATA_DIR)\n  : resolve(root, 'city-data');
 const rawRoot = resolve(dataRoot, 'raw');
 const outputRoot = resolve(dataRoot, 'tiles');
 const manifest = JSON.parse(await readFile(resolve(dataRoot, 'manifest.json'), 'utf8'));
