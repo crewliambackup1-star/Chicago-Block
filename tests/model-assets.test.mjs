@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { V46_MODEL_ASSET_URLS } from '../model-assets.js';
 
-test('V4.6 model sources are CC0-hosted GLB files', () => {
-  assert.match(V46_MODEL_ASSET_URLS.pedestrian, /^https:\/\/files\.innerscene\.com\/.*locomotion-collection-maya-3d-person-animated\.glb$/);
-  assert.match(V46_MODEL_ASSET_URLS.vehicle, /^https:\/\/files\.innerscene\.com\/.*sedan-original\.glb$/);
+test('V4.6 production models resolve to same-origin local GLB paths', () => {
+  assert.ok(new URL(V46_MODEL_ASSET_URLS.pedestrian).pathname.endsWith('/assets/models/human-locomotion.glb'));
+  assert.ok(new URL(V46_MODEL_ASSET_URLS.vehicle).pathname.endsWith('/assets/models/sedan-exterior.glb'));
 });
