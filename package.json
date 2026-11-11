@@ -1,6 +1,6 @@
 {
   "name": "chicago-block",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "private": true,
   "type": "module",
   "description": "A browser-based Chicago-inspired neighborhood game with adaptive high-fidelity rendering, detailed architecture, realistic human and vehicle models, and refined animation",
