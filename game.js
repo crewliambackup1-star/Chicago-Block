@@ -123,7 +123,7 @@ scene.environment=environmentTexture;scene.environmentIntensity=.58;
 
 const mat = (color, roughness=.9) => new THREE.MeshStandardMaterial({color, roughness});
 const M = {
-  grass:mat(0x687d60), road:mat(0xffffff), walk:mat(0xffffff), line:mat(0xe5e2d8),
+  grass:mat(0x687d60), road:new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.96,metalness:0,clearcoat:.06,clearcoatRoughness:.48}), walk:mat(0xffffff), line:mat(0xe5e2d8),
   yellow:mat(0xf0c65f), brick:mat(0xc08270,.94), dark:mat(0xb17b6d,.92), cream:mat(0xe2d1b7,.88),
   limestone:mat(0xb9aa96,.86),
   glass:new THREE.MeshPhysicalMaterial({color:0x203743,roughness:.14,metalness:.18,clearcoat:1,clearcoatRoughness:.08,envMapIntensity:1.35,transparent:true,opacity:.91}),
@@ -1585,7 +1585,7 @@ function showToast(message){$('toast').textContent=message;$('toast').classList.
 function cycleWeather(){
   const modes=['clear','rain','fog'];weatherMode=modes[(modes.indexOf(weatherMode)+1)%modes.length];
   rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
-  M.road.roughness=weatherMode==='rain'?.29:.96;M.road.metalness=weatherMode==='rain'?.09:0;M.road.clearcoat=weatherMode==='rain'?.72:.06;M.road.clearcoatRoughness=weatherMode==='rain'?.16:.48;M.road.envMapIntensity=weatherMode==='rain'?.82:.22;
+  M.road.roughness=weatherMode==='rain'?.29:.96;M.road.metalness=weatherMode==='rain'?.09:0;M.road.clearcoat=weatherMode==='rain'?.72:.06;M.road.clearcoatRoughness=weatherMode==='rain'?.16:.48;M.road.envMapIntensity=weatherMode==='rain'?.82:.22;M.road.clearcoat=weatherMode==='rain'?.72:.06;M.road.clearcoatRoughness=weatherMode==='rain'?.16:.48;M.road.envMapIntensity=weatherMode==='rain'?.82:.22;
   $('weatherLabel').textContent='· '+weatherMode.toUpperCase();
   showToast('Weather: '+weatherMode.toUpperCase());
 }
