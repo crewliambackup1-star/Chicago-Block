@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/chicago-block/city-tile.schema.json",
+  "$id": "https://crewliambackup1-star.github.io/Chicago-Block/city-data/tile.schema.json",
   "title": "Chicago Block normalized city tile",
   "type": "object",
   "additionalProperties": false,
@@ -60,19 +60,39 @@
       "type": "object",
       "required": [
         "publisher",
-        "datasetId",
-        "retrievedAt"
+        "datasets"
       ],
       "properties": {
         "publisher": {
           "type": "string"
         },
-        "datasetId": {
-          "type": "string"
-        },
-        "retrievedAt": {
-          "type": "string",
-          "format": "date-time"
+        "datasets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "layer",
+              "datasetId",
+              "retrievedAt"
+            ],
+            "properties": {
+              "layer": {
+                "enum": [
+                  "streets",
+                  "buildings"
+                ]
+              },
+              "datasetId": {
+                "type": "string"
+              },
+              "retrievedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
