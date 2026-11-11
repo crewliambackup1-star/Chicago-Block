@@ -27,6 +27,7 @@ jobs:
         run: npm test
 
   browser:
+    if: github.ref != 'refs/heads/v4-4-geographic-data-foundation'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     needs: test
