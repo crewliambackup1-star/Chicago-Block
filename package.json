@@ -1,9 +1,9 @@
 {
   "name": "chicago-block",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
-  "description": "A browser-based Chicago-inspired open-world game with an adaptive high-fidelity rendering foundation, realistic materials, driving and exploration",
+  "description": "A browser-based Chicago-inspired neighborhood game with detailed architecture, CC0 scanned PBR materials, adaptive high-fidelity rendering, driving and exploration",
   "scripts": {
     "check": "node --check game.js && node --check controls.js && node --check rendering.js",
     "test": "node --test",
