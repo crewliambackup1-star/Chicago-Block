@@ -29,7 +29,7 @@ A browser-based 3D neighborhood game on the path toward high-fidelity, photoreal
 - The setting remains a fictional Chicago-inspired environment while future stages prepare for the larger geographically grounded city.
 
 ## Validation
-Existing gameplay remains in place, including package delivery, all five collectibles and weather states. Automated coverage uses desktop Chromium and mobile WebKit.
+Existing gameplay remains in place, including package delivery, all five collectibles and weather states. Automated coverage uses Chromium and WebKit: desktop Chromium and mobile WebKit.
 
 `npm run check` validates the game, controls and rendering modules. `npm test` covers source behavior and adaptive-quality rules. Browser automation covers desktop Chromium and mobile WebKit, including runtime render-profile diagnostics, existing gameplay systems and responsive controls.
 
