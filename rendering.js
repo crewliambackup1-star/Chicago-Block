@@ -82,7 +82,7 @@ export function createAdaptiveResolutionController(
     pixelRatio = rounded;
     renderer.setPixelRatio(pixelRatio);
     const viewport = getViewport();
-    renderer.setSize(viewport.width, viewport.height, false);
+    renderer.setSize(viewport.width, viewport.height, true);
     lastChangeReason = reason;
     onChange?.({
       pixelRatio,
@@ -139,7 +139,7 @@ export function createAdaptiveResolutionController(
   function resize() {
     renderer.setPixelRatio(pixelRatio);
     const viewport = getViewport();
-    renderer.setSize(viewport.width, viewport.height, false);
+    renderer.setSize(viewport.width, viewport.height, true);
   }
 
   return Object.freeze({
