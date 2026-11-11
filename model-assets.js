@@ -1,7 +1,9 @@
-// CC0 model sources used by V4.6. Embedded GLB files are hosted by Innerscene.
+// V4.6 model assets are copied into the site so normal browsers load them same-origin.
+// scripts/download-model-assets.mjs populates these paths during CI and Pages publishing.
+const modelRoot=new URL('./assets/models/',import.meta.url);
 export const V46_MODEL_ASSET_URLS=Object.freeze({
-  pedestrian:'https://files.innerscene.com/library/locomotion-collection-maya-3d-person-animated-1499b2fd/565cfb8a45b8a67a79c4/locomotion-collection-maya-3d-person-animated.glb',
-  vehicle:'https://files.innerscene.com/library/sedan-car-42109739/75c64c1b3c8b03734314/sedan-original.glb'
+  pedestrian:new URL('human-locomotion.glb',modelRoot).href,
+  vehicle:new URL('sedan-exterior.glb',modelRoot).href
 });
 export async function loadModelAssets(){
   const [{GLTFLoader},{clone:cloneSkinnedModel}]=await Promise.all([
