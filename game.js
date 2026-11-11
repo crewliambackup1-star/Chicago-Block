@@ -40,7 +40,7 @@ sunDisc.frustumCulled=false;scene.add(sunDisc);
 const automationMode=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
   &&new URLSearchParams(location.search).has('automation');
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
-const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches;
+const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches||(navigator.maxTouchPoints||0)>0;
 const renderProfile=createGraphicsProfile({
   automationMode,
   isCoarsePointer:isCoarsePointer(),
