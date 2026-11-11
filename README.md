@@ -1,50 +1,51 @@
-# Chicago Block — The Realism Update (V3)
+# Chicago Block — V3.1 Model & Texture Overhaul
 
-A browser-based 3D neighborhood exploration game set in an original, fictional Chicago-inspired district. V3 is a **graphics-only overhaul** of the existing V2 world. It does not expand the map or introduce new gameplay systems.
+A browser-based 3D neighborhood exploration game set in an original Chicago-inspired district. V3.1 is a graphics-only refinement of the V3 world. The map, player movement, driving, camera behavior, activities, weather, traffic and pedestrian routes remain unchanged.
 
-## V3 visual overhaul
+## V3.1 visual targets
 
-### Rendering, materials, and atmosphere
-- Reworked the renderer for higher desktop pixel density, tuned mobile resolution, ACES filmic tone mapping, and soft PCF shadows.
-- Added a procedural equirectangular environment map to provide ambient reflections without relying on external HDR downloads.
-- Added physically based materials for car paint, glass, lights, and metal, with more convincing roughness, clearcoat, and reflection response.
-- Rebuilt 1024px procedural brick, concrete, asphalt, sidewalk, and grass textures with matching bump and roughness data.
-- Added surface grain, brick variation, concrete weathering, asphalt wear/cracks, grass detail, and more pronounced sidewalk joints.
+The supplied visual reference informed the broad direction: natural human proportions, textured skin and clothing, layered architectural materials, realistic glazing, and sunlight that reveals surface detail. The reference image itself is not copied into the game.
 
-### Architecture and street detail
-- Added layered stone plinths, pilasters, parapet/cornice accents, window mullions, and projecting stone sills.
-- Added curb geometry, metal manhole covers, and storm-drain grates along the existing road grid.
-- Kept the existing fictional 3-by-3 neighborhood layout and building footprints.
+### People and clothing
+- Rebuilt the shared pedestrian/player model with more natural torso, shoulder, arm, hand, leg and footwear proportions.
+- Added procedural skin grain, subtle facial details, eye/eyelid/brow geometry, ears, nose, mouth, hairline and separated curls.
+- Added fabric weave and surface relief to clothing, plus varied clothing and skin material palettes.
+- Preserved the existing pedestrian routes and walk animation.
 
-### Vehicles, people, and landscaping
-- Upgraded sedan paint with clearcoat and environment reflections.
-- Added visible seats, headrests, steering wheel, cabin trim, improved glass, sidewall detail, brake discs, and refined wheel assemblies.
-- Improved pedestrian head, ear, face, clothing, sleeve, and shoe geometry while retaining the existing walkers and animation.
-- Rebuilt tree silhouettes with trunks, branches, layered foliage, and more natural variation.
+### Buildings and streets
+- Added weathered siding and stucco material sets with color, bump and roughness data.
+- Added window AC units, small metal balcony rails, roof coping, facade bands, drainage pipes and mounting straps.
+- Increased asphalt patch, aggregate and crack detail while preserving the existing roads and sidewalk layout.
 
-### Presentation
-- Updated the title screen and HUD styling for V3 while keeping the existing control layout and functionality.
-- Preserved the time-of-day, clear/rain/fog states, activities, traffic, pedestrians, driving, and camera modes.
+### Cars and landscaping
+- Added body panel seams, additional chrome trim, front grille slats, projector-style lamps, rear light details, and tyre-sidewall/tread accents.
+- Added more varied high-resolution tree canopy geometry and instanced leaf clusters.
+- Applied fine wood grain and brushed-metal texture/roughness detail to benches, props, fixtures, trim and vehicle hardware.
+- Added instanced grass blades to lawn areas to give green spaces a more natural silhouette.
 
-## What V3 deliberately does not do
-- No new missions, activities, or gameplay mechanics.
-- No map expansion or new neighborhood areas.
-- No changes to the driving model, movement, camera behavior, or controls except fixes required to preserve existing behavior.
-- No new major systems unrelated to rendering or visual quality.
+## Performance approach
+- The target experience remains the MacBook Air M3 with 16 GB unified memory, using full desktop graphics settings.
+- Repeated grass blades and foliage detail are instanced to limit draw calls.
+- Touch devices receive fewer grass instances to preserve performance.
+- The local automated `?automation=1` mode still reduces render resolution and disables real-time shadows for headless software-rendered tests only.
+
+## Scope
+- No new gameplay, missions, or activities.
+- No map expansion or new neighborhood area.
+- No changes to movement, vehicle handling, controls or camera behavior.
+- The location remains a fictional Chicago-inspired environment, not a one-to-one recreation of private residential properties.
 
 ## Validation
+Automated checks run JavaScript syntax and source-level tests, followed by Chromium and WebKit browser playthroughs covering:
+- 3D renderer boot and runtime exceptions.
+- Movement, pedestrian and traffic simulation, both camera modes and clock.
+- Existing weather states, five snapshots and package delivery.
+- Vehicle acceleration, steering and wheel rotation.
+- Mobile portrait/landscape layout, touch movement, activity, weather and braking.
 
-Automated checks run JavaScript syntax and source-level tests, then launch Chromium and WebKit to exercise the existing game:
-- WebGL scene boot and runtime-error checks.
-- Player movement, pedestrian and traffic motion, first-/third-person camera, and clock.
-- Existing weather states, all five collectibles, and package delivery.
-- Vehicle acceleration, steering directions, and wheel rotation.
-- Mobile portrait/landscape layout, touch movement, activity, weather, and braking.
-
-Automated WebKit runs are engine coverage, not hands-on tests on every physical Safari device. The published game should still be checked on the target device after deployment.
+These checks cover all five collectibles, package delivery, weather states, and vehicle controls. They are not a physical benchmark of every MacBook or Safari device. The MacBook Air M3 should be manually checked after the release candidate is ready.
 
 ## Run locally
-
 Use a web server because browsers restrict ES modules opened directly from a file:
 
 ```bash
@@ -81,6 +82,4 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-GitHub Actions runs checks on pushes and pull requests. The browser automation interface is local-only and is not enabled on the published game.
-
-Automated browser checks use a local `?automation=1` mode with reduced render resolution and disabled real-time shadows. This keeps headless software-rendered gameplay tests responsive; normal player graphics are unchanged.
+GitHub Actions runs checks on pushes and pull requests.
