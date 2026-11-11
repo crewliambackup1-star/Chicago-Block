@@ -40,7 +40,7 @@ jobs:
       - name: Install Playwright
         run: npm install --no-save playwright
       - name: Install Chromium and WebKit
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install chromium webkit
       - name: Start local test server
         run: |
           python3 -m http.server 4173 > /tmp/chicago-block-server.log 2>&1 &
