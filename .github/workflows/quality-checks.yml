@@ -39,6 +39,8 @@ jobs:
           node-version: 22
       - name: Install Playwright
         run: npm install --no-save playwright
+      - name: Install WebKit system dependencies
+        run: npx playwright install-deps webkit
       - name: Install Chromium and WebKit
         run: npx playwright install chromium webkit
       - name: Start local test server
