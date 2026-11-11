@@ -20,13 +20,16 @@
       "name": "Street Center Lines",
       "publisher": "City of Chicago",
       "datasetId": "6imu-meau",
-      "portal": "https://data.cityofchicago.org/Transportation/Street-Center-Lines/6imu-meau",
+      "portal": "https://data.cityofchicago.org/Transportation/Street-Center-Lines/6imu-meau/about",
       "expectedFormat": "GeoJSON",
       "geometryTypes": [
         "LineString",
         "MultiLineString"
       ],
-      "usageNote": "Use the current City of Chicago dataset page and review its metadata and reuse terms when exporting derived tiles."
+      "usageNote": "This is the current Street Center Lines portal dataset. Do not substitute the older MIT GitHub snapshot without checking its date and differences.",
+      "lastPortalUpdate": "2024-04-24",
+      "access": "Public",
+      "licenseStatus": "The portal entry does not state a clear reuse license. Verify current terms and attribution before redistribution."
     },
     {
       "id": "chicago-building-footprints",
@@ -34,14 +37,18 @@
       "name": "Building Footprints",
       "publisher": "City of Chicago",
       "datasetId": "syp8-uezg",
-      "portal": "https://data.cityofchicago.org/",
+      "portal": "https://data.cityofchicago.org/d/syp8-uezg",
       "apiResource": "https://data.cityofchicago.org/api/v3/views/syp8-uezg/query.geojson?accessType=DOWNLOAD",
       "expectedFormat": "GeoJSON",
       "geometryTypes": [
         "Polygon",
         "MultiPolygon"
       ],
-      "usageNote": "Verify dataset metadata, attribution and reuse terms before redistributing a processed tile pack."
+      "usageNote": "Use the authoritative syp8-uezg Building Footprints dataset. Avoid the similarly named ssaf-e4ub public-created visualization as a source of record.",
+      "catalogRecord": "https://catalog.data.gov/dataset/building-footprints",
+      "lastPortalUpdate": "2025-06-12",
+      "access": "Public",
+      "licenseStatus": "Review current City terms and attribution requirements before redistribution."
     }
   ],
   "status": "Foundation only. No source datasets have been downloaded or incorporated into the playable map yet."
