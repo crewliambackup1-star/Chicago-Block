@@ -31,8 +31,8 @@ test('city tile builder creates schema-shaped output from local GeoJSON fixtures
         geometry: {
           type: 'LineString',
           coordinates: [
-            [-87.6298, 41.8781],
-            [-87.6288, 41.8781]
+            [-87.6298, 41.8777],
+            [-87.6288, 41.8777]
           ]
         }
       }]
@@ -46,11 +46,11 @@ test('city tile builder creates schema-shaped output from local GeoJSON fixtures
         geometry: {
           type: 'Polygon',
           coordinates: [[
-            [-87.6298, 41.8781],
-            [-87.6297, 41.8781],
-            [-87.6297, 41.8782],
-            [-87.6298, 41.8782],
-            [-87.6298, 41.8781]
+            [-87.6298, 41.8777],
+            [-87.6297, 41.8777],
+            [-87.6297, 41.8778],
+            [-87.6298, 41.8778],
+            [-87.6298, 41.8777]
           ]]
         }
       }]
