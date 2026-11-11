@@ -29,6 +29,7 @@ V4.1 builds on the V4.0 adaptive renderer with a focused environment pass. The e
 - No new missions or gameplay systems.
 - No changes to map footprint, driving, movement, camera, traffic paths, pedestrian paths, or controls.
 - No full Chicago map expansion in V4.1. Geographic mapping and streamed city sections remain later roadmap work.
+- The current playable district is fictional and Chicago-inspired; it is not a one-to-one reconstruction of real homes or private residential properties.
 
 ## V4 roadmap
 - V4.0: adaptive renderer, quality profiles and player-centered shadow coverage.
