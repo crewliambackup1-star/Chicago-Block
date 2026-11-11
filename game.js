@@ -40,7 +40,7 @@ const automationMode=(location.hostname==='localhost'||location.hostname==='127.
   &&new URLSearchParams(location.search).has('automation');
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
 const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches;
-const renderPixelRatio=()=>automationMode?.8:Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
+const renderPixelRatio=()=>automationMode?.55:Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});
 renderer.setPixelRatio(renderPixelRatio());
 renderer.setSize(innerWidth, innerHeight);
@@ -1388,7 +1388,7 @@ function updateZone(){
   const z=player.x<-82?'WEST SIDE':player.x>82?'EAST SIDE':player.z<-82?'NORTH BLOCK':player.z>82?'SOUTH BLOCK':'COURTYARD DISTRICT';
   $('zone').textContent='· '+z;
 }
-const timer=new THREE.Clock();let elapsed=0;
+const timer=new THREE.Clock();let elapsed=0,automationRenderCounter=0;
 function frame(){
   requestAnimationFrame(frame);const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
   if(started){
@@ -1401,7 +1401,8 @@ function frame(){
     if(elapsed%0.22<dt){updateMap();updateZone();}
     if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   }
-  renderer.render(scene,camera);
+  // CI uses a software renderer: simulate every frame but draw every third frame in test mode.
+  if(!automationMode||++automationRenderCounter%3===0)renderer.render(scene,camera);
 }
 frame();
 if(automationMode){
