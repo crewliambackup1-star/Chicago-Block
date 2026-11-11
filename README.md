@@ -66,7 +66,7 @@ V4.5 replaces angular people and repeated traffic silhouettes with smaller, more
 - V4.5: smooth, naturally proportioned people and varied vehicle models.
 
 ## Validation
-`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
