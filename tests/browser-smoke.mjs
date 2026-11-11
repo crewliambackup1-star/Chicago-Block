@@ -70,6 +70,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(Object.keys(renderProfile?.externalPbrStatus || {}).length, 3, 'three optional CC0 PBR sources should be registered');
     assert.equal(renderProfile?.qualityProfile, 'automation', 'headless desktop tests should use the lightweight automation profile');
     assert.equal(renderProfile?.shadowMapSize, 0, 'automation should not allocate a real-time shadow map');
+    assert.ok(renderProfile?.atmosphere?.daylight >= 0, 'V4.3 atmosphere diagnostics should be available');
+    assert.ok(renderProfile?.atmosphere?.fogFar > renderProfile?.atmosphere?.fogNear, 'clear atmosphere should retain a valid fog range');
+    assert.ok(renderProfile?.reflectionQuality?.wetRoadClearcoat >= 0, 'V4.3 wet-road response should be measurable');
     assert.equal(renderProfile?.shadowsEnabled, false, 'automation shadows should be disabled');
     assert.equal(renderProfile?.pixelRatio, 0.55, 'automation should use its fixed low-resolution scale');
     assert.equal(initial.visualQuality.pedestrian, 'v4.2-pbr-anatomical', 'pedestrians should use the detailed character rig');
@@ -143,6 +146,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
 
     await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_RENDER__?.getState().reflectionQuality?.wetRoadClearcoat > 0.6);
     await sendKey(page, 'r');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'fog');
     await sendKey(page, 'r');
@@ -214,7 +218,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v4-2-chromium-desktop-after-play.png');
+    await captureScreenshot(page, 'artifacts/v4-3-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -289,7 +293,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
       test.setYaw(0);
     });
     await page.waitForTimeout(2200);
-    await page.screenshot({ path: 'artifacts/v4-2-webkit-mobile-portrait.png' });
+    await page.screenshot({ path: 'artifacts/v4-3-webkit-mobile-portrait.png' });
     assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
   } finally {
     await context.close();
@@ -307,7 +311,7 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v4-2-webkit-mobile-landscape.png' });
+    await landscapePage.screenshot({ path: 'artifacts/v4-3-webkit-mobile-landscape.png' });
     assert.deepEqual(landscapeErrors, [], 'landscape WebKit page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
