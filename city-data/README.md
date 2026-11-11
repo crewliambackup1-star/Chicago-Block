@@ -10,6 +10,7 @@ This folder is the start of the data-driven Chicago map pipeline. It is not yet 
 - Default tiles are 512 metres square and use integer grid coordinates, including negative tile indices.
 - `../geodata.js` contains the projection, inverse projection, tile addressing and GeoJSON feature normalization helpers.
 - `../tile-streaming.js` provides a loader-injected tile manager with in-flight request deduplication, cancellation of no-longer-visible requests, a bounded LRU cache and player-centered prefetch.
+- `../scripts/build-city-tiles.mjs` converts locally downloaded source GeoJSON into 512-metre tile files and a tile manifest. It retains complete features in every intersecting tile so street segments crossing boundaries stay continuous.
 
 The local projection is scaled at the origin latitude so distances remain usable for city-scale rendering. Keep the original longitude/latitude with source records; projected coordinates are a rendering representation, not a replacement for source geodata.
 
@@ -18,7 +19,16 @@ The local projection is scaled at the origin latitude so distances remain usable
 1. **Street Center Lines** — City of Chicago dataset `6imu-meau`. The current data portal page is linked in `manifest.json`. Convert line features into tile-local road centerline data first; road widths, intersections and surface styling belong in the rendering stage.
 2. **Building Footprints** — City of Chicago Building Footprints GeoJSON resource `syp8-uezg`. Convert Polygon and MultiPolygon outlines into tile-local footprint rings; building heights and usage should come from validated attributes when available, never guessed from footprint alone.
 
-Review source metadata, attribution and reuse terms for each export before building a distributable tile pack. Preserve dataset identifiers and source dates in the generated tile metadata.
+Review source metadata, attribution and reuse terms for each export before building a distributable tile pack. Preserve dataset identifiers and source dates in the generated tile metadata. Do not commit raw source exports until their size and reuse terms have been reviewed.
+
+## Build a local tile pack
+
+Download GeoJSON exports from the dataset pages in `manifest.json` and place them at:
+
+- `city-data/raw/streets.geojson`
+- `city-data/raw/buildings.geojson`
+
+Then run `npm run build:city-tiles`. The script writes normalized tile records to `city-data/tiles/` and removes only previously generated tile JSON files before rebuilding. It does not download data itself or modify the playable scene.
 
 ## Next implementation stages
 
