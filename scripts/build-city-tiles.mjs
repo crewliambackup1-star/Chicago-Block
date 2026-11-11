@@ -2,7 +2,6 @@ import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_CHICAGO_ORIGIN,
   getTileWorldBounds,
   normalizeGeoJsonFeatureCollection,
   partitionFeaturesByTile
