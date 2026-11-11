@@ -348,8 +348,8 @@ test('V4.6 normal player mode loads the real human and vehicle GLB assets', asyn
       return assets && assets.pedestrian !== 'loading' && assets.vehicle !== 'loading';
     }, null, { timeout: 180000 });
     const assets = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__.getState().modelAssets);
-    assert.equal(assets.pedestrian, 'loaded-cc0-rigged-animated-glb', 'the skinned animated human model should load in normal player mode');
-    assert.equal(assets.vehicle, 'loaded-cc0-glb', 'the detailed sedan model should load in normal player mode');
+    assert.equal(assets.pedestrian, 'loaded-cc0-rigged-animated-glb', 'the skinned animated human model should load in normal player mode: '+JSON.stringify(assets));
+    assert.equal(assets.vehicle, 'loaded-cc0-glb', 'the detailed sedan model should load in normal player mode: '+JSON.stringify(assets));
     await page.locator('#playButton').click();
     await page.waitForTimeout(900);
     assert.deepEqual(pageErrors, [], 'normal player mode should load models without runtime exceptions');
