@@ -3,11 +3,11 @@
 V4.6 introduces an actual asset-based model path instead of relying exclusively on procedural primitive assemblies. Nearby pedestrians and the player avatar can use a textured, clothed CC0 human GLB; the player car and traffic can use a separate CC0 sedan GLB with PBR coachwork, glazing, lamps, wheels and trim. Existing procedural models remain as graceful fallbacks and as lower-detail pedestrian models at distance. Existing movement, pedestrian routes, vehicle physics, traffic routes, weather, cameras and activities are preserved.
 
 ## V4.6 high-fidelity people and vehicles
-- Adds asynchronous GLB loading through Three.js GLTFLoader. Remote assets do not block the start screen or simulation; failed requests leave procedural models active.
+- Adds asynchronous GLB loading through Three.js GLTFLoader. The model binaries are downloaded during CI and Pages publishing into the site's own `assets/models/` folder, so the game loads them same-origin rather than depending on third-party browser CORS. Missing or failed local files leave procedural models active.
 - Uses the Innerscene CC0 Maya human GLB, built from MakeHuman/MPFB assets, for close pedestrians and the player avatar. It includes a skinned skeleton and seven named locomotion clips (idle, relaxed walk, brisk walk, jog, run, carry walk, sit/stand); Three.js AnimationMixer drives idle and walking on the player and pedestrians. NPCs retain route-based movement, while the original procedural articulated character remains the far-distance LOD and offline fallback.
 - Uses the Innerscene CC0 sedan exterior asset for the player vehicle and seven traffic vehicles. Existing vehicle groups preserve physics, scale, routes and movement. High-detail assets are used near the camera; the existing procedural vehicle remains the far-distance fallback. The fallback retains V4.5's four distinct traffic body-size variants: sedan, SUV, wagon and compact.
 - Adds a player cockpit detail pass because the source sedan asset focuses on the exterior.
-- Model loading is skipped in automation mode, keeping CI deterministic and fast.
+- Model loading is skipped in automation mode for the gameplay smoke tests; a separate normal-mode browser integration test verifies both same-origin GLB files load and become active.
 - The character clips are authored procedural motion, not motion-captured. Additional distinct character variants, contextual actions and multiple vehicle body styles remain future refinements.
 
 ## V4.2 human model and animation changes (retained)
