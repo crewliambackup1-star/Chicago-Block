@@ -232,8 +232,8 @@ export function normalizeGeoJsonFeatureCollection(
   if (!collection || collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) {
     throw new TypeError('Expected a GeoJSON FeatureCollection');
   }
-  if (!Number.isInteger(maxFeatures) || maxFeatures < 1 || maxFeatures > 500000) {
-    throw new RangeError('maxFeatures must be an integer from 1 to 500000');
+  if (!Number.isInteger(maxFeatures) || maxFeatures < 1 || maxFeatures > 1000000) {
+    throw new RangeError('maxFeatures must be an integer from 1 to 1000000');
   }
   if (collection.features.length > maxFeatures) {
     throw new RangeError('FeatureCollection exceeds maxFeatures; split the import into bounded batches');
