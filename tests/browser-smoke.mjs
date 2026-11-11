@@ -61,6 +61,13 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(initial.traffic, 7);
     assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
     const renderProfile = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__?.getState());
+    assert.equal(initial.architecturalDetails.buildings, 13, 'all 13 existing buildings should use the V4.1 architecture pass');
+    assert.ok(initial.architecturalDetails.rooftopPenthouses >= 1, 'selected buildings should have rooftop penthouses');
+    assert.ok(initial.architecturalDetails.windowRecesses > 0, 'window openings should receive dark interior reveals');
+    assert.ok(initial.architecturalDetails.windowLintels > 0, 'selected windows should have stone lintels');
+    assert.ok(initial.architecturalDetails.sidewalkJoints >= 300, 'sidewalk slabs should use instanced expansion joints');
+    assert.equal(initial.architecturalDetails.fireEscapeStairFlights, 7, 'existing fire escapes should have connected switchback stairs');
+    assert.equal(Object.keys(renderProfile?.externalPbrStatus || {}).length, 3, 'three optional CC0 PBR sources should be registered');
     assert.equal(renderProfile?.qualityProfile, 'automation', 'headless desktop tests should use the lightweight automation profile');
     assert.equal(renderProfile?.shadowMapSize, 0, 'automation should not allocate a real-time shadow map');
     assert.equal(renderProfile?.shadowsEnabled, false, 'automation shadows should be disabled');

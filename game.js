@@ -255,6 +255,66 @@ M.road.color.setHex(0xffffff);M.walk.color.setHex(0xffffff);
 
 M.brick.needsUpdate=M.dark.needsUpdate=M.cream.needsUpdate=M.road.needsUpdate=M.walk.needsUpdate=true;
 
+/*
+ * Optional scanned PBR sets from Poly Haven (CC0).
+ * The procedural 1K/2K canvases above remain immediate fallbacks. Remote
+ * maps load asynchronously and never block the game boot sequence.
+ */
+const externalTextureLoader=new THREE.TextureLoader();
+externalTextureLoader.setCrossOrigin('anonymous');
+const pbrSourceManifest=[
+  {
+    id:'worn-brick-wall',material:M.brick,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/worn_brick_wall/worn_brick_wall',
+    repeat:[2.4,1.8],normalStrength:.62,roughness:.94
+  },
+  {
+    id:'asphalt-02',material:M.road,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02',
+    repeat:[8,2.2],normalStrength:.42,roughness:.97
+  },
+  {
+    id:'concrete-pavement',material:M.walk,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement',
+    repeat:[3.2,1.8],normalStrength:.5,roughness:.93
+  }
+];
+const externalPbrStatus=Object.create(null);
+function loadOptionalPbrMap(url,colorSpace,repeat){
+  return new Promise(resolve=>{
+    externalTextureLoader.load(url,texture=>{
+      texture.colorSpace=colorSpace;
+      texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+      texture.repeat.set(repeat[0],repeat[1]);
+      texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+      texture.minFilter=THREE.LinearMipmapLinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      resolve(texture);
+    },undefined,()=>resolve(null));
+  });
+}
+function applyOptionalPbrSource(source){
+  externalPbrStatus[source.id]='loading';
+  Promise.all([
+    loadOptionalPbrMap(source.base+'_diff_1k.jpg',THREE.SRGBColorSpace,source.repeat),
+    loadOptionalPbrMap(source.base+'_nor_gl_1k.jpg',THREE.NoColorSpace,source.repeat),
+    loadOptionalPbrMap(source.base+'_rough_1k.jpg',THREE.NoColorSpace,source.repeat)
+  ]).then(([colorMap,normalMap,roughnessMap])=>{
+    if(colorMap)source.material.map=colorMap;
+    if(normalMap){
+      source.material.normalMap=normalMap;
+      source.material.normalScale.set(source.normalStrength,source.normalStrength);
+    }
+    if(roughnessMap)source.material.roughnessMap=roughnessMap;
+    source.material.roughness=source.roughness;
+    source.material.needsUpdate=true;
+    externalPbrStatus[source.id]=colorMap&&normalMap&&roughnessMap?'loaded':'procedural-fallback';
+  }).catch(()=>{
+    externalPbrStatus[source.id]='procedural-fallback';
+  });
+}
+pbrSourceManifest.forEach(applyOptionalPbrSource);
+
 // V3.1 material library: physically based micro-detail for close-up surfaces.
 const fabricTexture=makeTexture((ctx,w,h)=>{
   ctx.fillStyle='#d8d5cf';ctx.fillRect(0,0,w,h);
@@ -382,6 +442,7 @@ M.fabricTexture=fabricTexture;M.fabricBump=fabricBump;M.skinTexture=skinTexture;
 
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
+const architecturalDetailCounts={buildings:0,rooftopPenthouses:0,sidewalkJoints:0,windowRecesses:0,windowLintels:0,fireEscapeStairFlights:0};
 function cube(parent,x,y,z,w,h,d,material,shadow=true) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
   mesh.position.set(x,y,z); mesh.castShadow=shadow; mesh.receiveShadow=true; parent.add(mesh); return mesh;
@@ -428,6 +489,29 @@ for(const v of [-82,0,82]){
     cube(world,v+4.5,.018,p,.13,.025,4.5,M.white,false);
   }
 }
+// Expansion joints divide long sidewalks into believable poured-concrete panels.
+const sidewalkJointMaterial=new THREE.MeshStandardMaterial({color:0x6d6a61,roughness:.96});
+const horizontalJointPositions=[],verticalJointPositions=[];
+for(const street of [-82,0,82])for(const side of [-1,1]){
+  for(let along=-150;along<=150;along+=7.5){
+    if([-82,0,82].some(crossing=>Math.abs(along-crossing)<17))continue;
+    horizontalJointPositions.push([along,-.008,street+side*10.1]);
+    verticalJointPositions.push([street+side*10.1,-.008,along]);
+  }
+}
+function makeSidewalkJoints(positions,geometry){
+  const joints=new THREE.InstancedMesh(geometry,sidewalkJointMaterial,positions.length);
+  const transform=new THREE.Object3D();
+  positions.forEach(([x,y,z],index)=>{
+    transform.position.set(x,y,z);transform.updateMatrix();joints.setMatrixAt(index,transform.matrix);
+  });
+  joints.instanceMatrix.needsUpdate=true;joints.castShadow=false;joints.receiveShadow=false;
+  world.add(joints);return joints;
+}
+makeSidewalkJoints(horizontalJointPositions,new THREE.BoxGeometry(.045,.012,3.0));
+makeSidewalkJoints(verticalJointPositions,new THREE.BoxGeometry(3.0,.012,.045));
+architecturalDetailCounts.sidewalkJoints=horizontalJointPositions.length+verticalJointPositions.length;
+
 for(const x of [-82,0,82])for(const z of [-82,0,82])for(let k=-3;k<=3;k++){
   cube(world,x+k*1.15,.025,z-7,.55,.03,2.6,M.white,false);
   cube(world,x-7,.025,z+k*1.15,2.6,.03,.55,M.white,false);
@@ -452,51 +536,92 @@ function stormDrain(x,z,rotation=0){
 
 function building(x,z,w,d,h,color,side=true){
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+  const style=Math.abs(Math.round(x*17+z*11))%4;
   const facade=color===M.cream?M.siding:color===M.dark?M.stucco:color;
-  cube(g,0,h/2,0,w,h,d,facade);cube(g,0,h+.2,0,w+.5,.4,d+.5,M.dark);
+  const floorHeight=style===1?3.15:style===2?3.55:3.3;
+  cube(g,0,h/2,0,w,h,d,facade);
+  cube(g,0,h+.2,0,w+.5,.4,d+.5,M.dark);
   cube(g,0,.16,0,w+.28,.32,d+.28,M.trim,false);
   cube(g,0,h+.43,0,w+.9,.16,d+.9,M.trim,false);
   cube(g,0,.42,0,w+.24,.32,d+.24,M.limestone,false);
   cube(g,0,h+.62,0,w+1.02,.12,d+1.02,M.limestone,false);
+
+  // Facade pilasters and projecting floor courses create real wall depth.
   for(const sx of [-1,1])for(const sz of [-1,1]){
     cube(g,sx*(w/2-.42),h/2,sz*(d/2+.045),.2,h-.9,.18,M.limestone,false);
   }
-  // Layered floor bands, drip caps and corner drainage pipes add believable depth.
-  for(let level=3.3;level<h;level+=3.3){
-    cube(g,0,level,d/2+.035,w,.085,.16,M.trim,false);
-    cube(g,0,level,-d/2-.035,w,.085,.16,M.trim,false);
-    cube(g,w/2+.035,level,0,.16,.085,d,M.trim,false);
-    cube(g,-w/2-.035,level,0,.16,.085,d,M.trim,false);
+  for(let level=floorHeight;level<h;level+=floorHeight){
+    const band=style===2?.11:.085;
+    cube(g,0,level,d/2+.035,w,band,.16,M.trim,false);
+    cube(g,0,level,-d/2-.035,w,band,.16,M.trim,false);
+    cube(g,w/2+.035,level,0,.16,band,d,M.trim,false);
+    cube(g,-w/2-.035,level,0,.16,band,d,M.trim,false);
   }
   for(const sx of [-1,1])for(const sz of [-1,1])cube(g,sx*(w/2-.12),h/2,sz*(d/2-.12),.16,h,.16,M.trim,false);
-  const rows=Math.max(2,Math.floor(h/3.3)),cols=Math.max(2,Math.floor(w/4.7));
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const px=-w/2+(c+.5)*w/cols,py=1.4+r*(h-2.2)/rows;
+
+  const rows=Math.max(2,Math.floor(h/floorHeight)),cols=Math.max(2,Math.floor(w/(style===0?4.1:4.7)));
+  for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){
+    const px=-w/2+(col+.5)*w/cols,py=1.4+r*(h-2.2)/rows;
     for(const face of [-1,1]){
-      windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:1.1,sy:1.4,sz:.08,face:'z',faceSign:face});
-      // A portion of windows have projecting sills and compact air-conditioning units.
-      if((r*cols+c+Math.round(x))%7===0){
+      windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:style===0?1.18:1.1,sy:style===2?1.55:1.4,sz:.08,face:'z',faceSign:face});
+      if((r*cols+col+Math.round(x))%7===0){
         cube(g,px,py-.93,face*(d/2+.22),.72,.28,.34,M.metal,false);
         for(let vent=0;vent<4;vent++)cube(g,px-.24+vent*.16,py-.93,face*(d/2+.397),.025,.17,.018,M.silver,false);
         cube(g,px,py-1.1,face*(d/2+.22),.78,.045,.39,M.trim,false);
       }
-      // Select buildings receive small metal balconettes instead of a perfectly flat facade.
-      if(h>14&&((r*cols+c+Math.abs(Math.round(x)))%11===0)){
-        const balcony=cube(g,px,py-.82,face*(d/2+.55),1.48,.09,.78,M.metal,false);
+      if(h>14&&((r*cols+col+Math.abs(Math.round(x)))%11===0)){
+        cube(g,px,py-.82,face*(d/2+.55),1.48,.09,.78,M.metal,false);
         for(let rail=0;rail<7;rail++)cube(g,px-.68+rail*.227,py-.37,face*(d/2+.9),.035,.78,.045,M.silver,false);
         cube(g,px,py+.03,face*(d/2+.9),1.5,.055,.055,M.silver,false);
       }
     }
-    if(side)for(const face of [-1,1])windows.push({x:x+face*(w/2+.04),y:py,z:z-d/2+(c+.5)*d/cols,sx:.08,sy:1.35,sz:1,face:'x',faceSign:face});
+    if(side)for(const face of [-1,1])windows.push({x:x+face*(w/2+.04),y:py,z:z-d/2+(col+.5)*d/cols,sx:.08,sy:1.35,sz:1,face:'x',faceSign:face});
   }
+
+  // Framed entry, glazed door panel and a stone threshold at street level.
+  const front=d/2;
+  cube(g,0,.16,front+.43,2.05,.24,.82,M.limestone,false);
+  cube(g,-.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
+  cube(g,.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
+  cube(g,0,2.22,front+.15,1.42,.14,.18,M.limestone,false);
+  cube(g,0,1.42,front+.127,.64,.78,.035,M.glass,false);
+  cube(g,.39,1.04,front+.15,.045,.16,.04,M.silver,false);
+  cube(g,0,2.43,front+.42,1.82,.1,.88,style%2===0?M.metal:M.wood,false);
+  if(style===0||style===3){
+    cube(g,0,2.86,front+.84,2.0,.055,.045,M.silver,false);
+    for(let awning=-.84;awning<=.84;awning+=.28){
+      cube(g,awning,2.39,front+.87,.26,.12,.06,Math.round(awning*10)%2===0?M.white:M.red,false);
+    }
+  }
+
+  // Roof parapets, service hatches and vent stacks break up repeated flat rooflines.
+  for(const sx of [-1,1]){
+    cube(g,sx*(w/2-.5),h+.83,0,.16,.23,d+.56,M.limestone,false);
+  }
+  if(style===0||style===2||h>16){
+    const penthouseW=Math.max(4.2,w*.27),penthouseD=Math.max(4,d*.34);
+    cube(g,-w*.22,h+1.45,0,penthouseW,1.5,penthouseD,M.stucco,false);
+    cube(g,-w*.22,h+2.23,0,penthouseW+.28,.12,penthouseD+.28,M.limestone,false);
+    cube(g,-w*.22,h+1.35,penthouseD/2+.03,1.05,1.05,.06,M.metal,false);
+    architecturalDetailCounts.rooftopPenthouses++;
+  }
+  for(let vent=0;vent<2;vent++){
+    const stack=new THREE.Mesh(new THREE.CylinderGeometry(.14,.18,.68,12),M.metal);
+    stack.position.set(w*.2+vent*.75,h+.99,-d*.22);stack.castShadow=true;g.add(stack);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.07,12),M.silver);
+    cap.position.set(stack.position.x,h+1.35,stack.position.z);g.add(cap);
+  }
+
   // Downspouts with mounting straps make long blank corners less synthetic.
   for(const sx of [-1,1]){
-    const pipe=cube(g,sx*(w/2-.24),h/2,d/2+.13,.075,h-.35,.075,M.metal,false);
+    cube(g,sx*(w/2-.24),h/2,d/2+.13,.075,h-.35,.075,M.metal,false);
     for(let strap=0;strap<Math.floor(h/3.4);strap++)cube(g,sx*(w/2-.24),1.2+strap*3.3,d/2+.18,.18,.045,.045,M.silver,false);
   }
-  // Concrete roof coping and small vent stacks.
-  for(const sx of [-1,1])cube(g,sx*(w/2-.5),h+.74,0,.16,.22,d+.5,M.limestone,false);
-  cube(g,0,1.05,d/2+.06,1.1,2.1,.12,M.wood,false);block(x,z,w,d);
+  cube(g,0,1.05,d/2+.06,1.1,2.1,.12,M.wood,false);
+  cube(g,w*.31,2.45,d/2+.16,.48,.32,.08,M.metal,false);
+  cube(g,w*.31,2.45,d/2+.205,.34,.18,.018,M.white,false);
+  block(x,z,w,d);
+  architecturalDetailCounts.buildings++;
 }
 [
  [-119,-120,42,31,15,M.brick],[-72,-121,21,28,11,M.cream],
@@ -596,6 +721,40 @@ windows.forEach((item,index)=>{
   windowTransform.updateMatrix();windowSillMesh.setMatrixAt(index,windowTransform.matrix);
 });
 windowSillMesh.instanceMatrix.needsUpdate=true;windowSillMesh.castShadow=false;world.add(windowSillMesh);
+
+// Deep window reveals and varied stone lintels add shadow lines around each opening.
+const windowRevealMaterial=new THREE.MeshStandardMaterial({color:0x182024,roughness:.91,metalness:0});
+const windowRecessMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),windowRevealMaterial,windows.length);
+let recessIndex=0;
+for(const item of windows){
+  const front=item.face==='z',sign=item.faceSign;
+  if(front){
+    windowTransform.position.set(item.x,item.y,item.z-sign*.085);
+    windowTransform.scale.set(item.sx*.88,item.sy*.88,.035);
+  }else{
+    windowTransform.position.set(item.x-sign*.085,item.y,item.z);
+    windowTransform.scale.set(.035,item.sy*.88,item.sz*.88);
+  }
+  windowTransform.updateMatrix();windowRecessMesh.setMatrixAt(recessIndex++,windowTransform.matrix);
+}
+windowRecessMesh.instanceMatrix.needsUpdate=true;windowRecessMesh.castShadow=false;world.add(windowRecessMesh);
+architecturalDetailCounts.windowRecesses=recessIndex;
+
+const lintelItems=windows.filter((item,index)=>index%3===0);
+const windowLintelMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),M.limestone,lintelItems.length);
+lintelItems.forEach((item,index)=>{
+  const front=item.face==='z',sign=item.faceSign;
+  if(front){
+    windowTransform.position.set(item.x,item.y+item.sy/2+.085,item.z+sign*.065);
+    windowTransform.scale.set(item.sx+.22,.14,.17);
+  }else{
+    windowTransform.position.set(item.x+sign*.065,item.y+item.sy/2+.085,item.z);
+    windowTransform.scale.set(.17,.14,item.sz+.22);
+  }
+  windowTransform.updateMatrix();windowLintelMesh.setMatrixAt(index,windowTransform.matrix);
+});
+windowLintelMesh.instanceMatrix.needsUpdate=true;windowLintelMesh.castShadow=false;world.add(windowLintelMesh);
+architecturalDetailCounts.windowLintels=lintelItems.length;
 
 // Corner market, courtyard, benches and trees.
 const shop=new THREE.Group();shop.position.set(39,0,-38);world.add(shop);
@@ -747,21 +906,71 @@ streetSign(80,94,'COURTYARD WAY',Math.PI);
 const visualDetailCounts={fireEscapes:0,courtyardPlanters:0,murals:0};
 function fireEscape(x,z,levels=3){
   const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  const stairFlights=Math.max(0,levels-1);
   for(let level=0;level<levels;level++){
     const y=3.4+level*3.35;
+    // Expanded metal landing with a raised, perforated edge.
     cube(group,0,y,1.05,5.7,.14,1.55,M.metal,false);
     cube(group,0,y+.88,1.78,5.7,.11,.12,M.silver,false);
     for(const side of [-1,1]){
       cube(group,side*2.78,y+.45,1.12,.11,.9,1.42,M.silver,false);
-      for(let post=0;post<5;post++)cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+      for(let post=0;post<5;post++){
+        cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+      }
+      // Cross-braced landing supports.
+      cube(group,side*2.25,y-.62,.45,.12,1.12,.12,M.metal,false);
+      cube(group,side*2.1,y-.7,.9,.08,.95,.08,M.silver,false);
     }
     for(let post=0;post<7;post++)cube(group,-2.55+post*.85,y+.43,1.78,.055,.86,.055,M.silver,false);
-    for(const support of [-2.25,2.25])cube(group,support,y-.62,.45,.12,1.12,.12,M.metal,false);
+    cube(group,0,y+.92,1.78,5.82,.06,.16,M.silver,false);
   }
+
+  // Alternating switchback stair flights connect the landings instead of leaving stacked platforms.
+  for(let level=0;level<stairFlights;level++){
+    const baseY=3.4+level*3.35,side=level%2===0?1:-1;
+    const stairX=side*2.15,steps=9,startZ=1.05,run=1.85,rise=3.35;
+    for(let step=0;step<steps;step++){
+      const t=(step+.5)/steps;
+      const tread=cube(group,stairX,baseY+t*rise,startZ+t*run,.96,.105,.31,M.silver,false);
+      tread.rotation.x=-.015;
+    }
+    const lowerRail=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(stairX-.55,baseY+.45,startZ-.12),
+      new THREE.Vector3(stairX-.55,baseY+1.35,startZ+.52),
+      new THREE.Vector3(stairX-.55,baseY+2.35,startZ+1.12),
+      new THREE.Vector3(stairX-.55,baseY+3.2,startZ+run+.16)
+    ]);
+    const upperRail=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(stairX+.55,baseY+.45,startZ-.12),
+      new THREE.Vector3(stairX+.55,baseY+1.35,startZ+.52),
+      new THREE.Vector3(stairX+.55,baseY+2.35,startZ+1.12),
+      new THREE.Vector3(stairX+.55,baseY+3.2,startZ+run+.16)
+    ]);
+    group.add(new THREE.Mesh(new THREE.TubeGeometry(lowerRail,20,.035,7,false),M.silver));
+    group.add(new THREE.Mesh(new THREE.TubeGeometry(upperRail,20,.035,7,false),M.silver));
+    // Short vertical balusters beneath the handrails.
+    for(let rail=0;rail<6;rail++){
+      const t=rail/5;
+      for(const offset of [-.55,.55]){
+        const post=cube(group,stairX+offset,baseY+.48+t*2.7,startZ+.04+t*run,.035,.7,.035,M.silver,false);
+        post.rotation.x=-Math.atan2(rise,run);
+      }
+    }
+  }
+
+  // Roof access ladder, safety hoops and mounting feet.
   const ladderX=2.35;
-  for(const side of [-1,1])cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+  for(const side of [-1,1]){
+    cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+    for(let hoop=0;hoop<Math.floor(levels*1.5);hoop++){
+      const y=1.35+hoop*2.15;
+      const arc=new THREE.Mesh(new THREE.TorusGeometry(.34,.028,5,18,Math.PI),M.silver);
+      arc.position.set(ladderX,y,2.0);arc.rotation.z=Math.PI/2;group.add(arc);
+    }
+  }
   for(let rung=0;rung<levels*6;rung++)cube(group,ladderX,1.1+rung*.55,2.0,.5,.055,.055,M.silver,false);
   visualDetailCounts.fireEscapes++;
+  architecturalDetailCounts.fireEscapeStairFlights+=stairFlights;
   return group;
 }
 fireEscape(-45,-18.3,4);
@@ -1420,7 +1629,8 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     ...adaptiveResolution.getSnapshot(),
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
-    qualityProfile:renderProfile.name
+    qualityProfile:renderProfile.name,
+    externalPbrStatus:{...externalPbrStatus}
   })
 }),configurable:false});
 if(automationMode){
@@ -1432,6 +1642,7 @@ if(automationMode){
       streetSigns:streetSigns.length,
       visualDetails:{...visualDetailCounts},
       visualQuality:{avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,grassInstances:world.userData.grassInstances},
+      architecturalDetails:{...architecturalDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
@@ -1469,4 +1680,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-rendering-foundation';
+document.documentElement.dataset.visualVersion='v4-1-architecture-environment';
