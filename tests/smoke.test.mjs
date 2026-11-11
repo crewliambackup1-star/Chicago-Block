@@ -106,7 +106,7 @@ test('V4.1 records the architecture and environment version', () => {
 
 test('V4.1 uses optional CC0 scanned PBR maps with non-blocking procedural fallbacks', () => {
   for (const feature of [
-    'worn-brick-wall', 'asphalt-03', 'concrete-pavement',
+    'worn-brick-wall', 'asphalt-02', 'concrete-pavement',
     'loadOptionalPbrMap', 'procedural-fallback', 'pbrSourceManifest.forEach(applyOptionalPbrSource)'
   ]) assert.ok(game.includes(feature), 'Missing V4.1 material pipeline feature: ' + feature);
   assert.match(readme, /procedural material fallback/);
