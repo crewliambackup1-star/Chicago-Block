@@ -91,5 +91,6 @@ A separate V4.4 development branch now contains the first geographic-data layer:
 - 512-metre tile addressing, bounds and player-centered visible-tile key selection.
 - GeoJSON normalization helpers for street centerlines and building footprint geometries.
 - A source manifest, normalized tile schema and pipeline notes for the City of Chicago datasets.
+- A local GeoJSON tile-bake script that groups features into every intersecting tile and writes a compact index; raw source downloads remain local inputs rather than being silently bundled.
 
 This is groundwork only. It does not alter the currently playable fictional district or add real Chicago geometry yet. The next stages are source-data inspection, clipping/cleaning, bounded tile generation, and a tested streaming/cache manager. Do not describe the live map as geographically accurate until those stages are integrated and validated.
