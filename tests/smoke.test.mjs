@@ -160,7 +160,7 @@ test('V4.5 vehicles use rounded silhouettes, soft wheel geometry and distinct tr
 
 test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fallbacks', async () => {
   const { V46_MODEL_ASSET_URLS } = await import('../model-assets.js');
-  assert.match(V46_MODEL_ASSET_URLS.pedestrian, /walking-cross-step\.glb$/);
+  assert.match(V46_MODEL_ASSET_URLS.pedestrian, /locomotion-collection-maya-3d-person-animated\.glb$/);
   assert.match(V46_MODEL_ASSET_URLS.vehicle, /sedan-original\.glb$/);
   for (const feature of [
     'loadModelAssets','new THREE.LOD()','installHumanAssets','installVehicleAsset',
@@ -168,7 +168,7 @@ test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fall
     'v4.6-cc0-rigged-animated-human-glb','v4.6-cc0-realistic-vehicle-glb'
   ]) assert.ok(game.includes(feature)||modelAssetsJs.includes(feature),'Missing V4.6 feature: '+feature);
   assert.match(readme,/skinned skeleton and seven named locomotion clips/);
-  assert.match(game,/new THREE.AnimationMixer\\(model\\)/);
+  assert.match(game,/new THREE.AnimationMixer\(model\)/);
   assert.match(game,/switchHumanAnimation/);
   assert.match(licenses,/CC0/);
 });
