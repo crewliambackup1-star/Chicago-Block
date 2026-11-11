@@ -4,11 +4,11 @@ V4.6 introduces an actual asset-based model path instead of relying exclusively 
 
 ## V4.6 high-fidelity people and vehicles
 - Adds asynchronous GLB loading through Three.js GLTFLoader. Remote assets do not block the start screen or simulation; failed requests leave procedural models active.
-- Uses the Innerscene CC0 clothed walking-person asset for close pedestrians and the player avatar. It is a detailed, textured static stride-pose mesh, not a skeletal animation clip; NPC route movement and subtle root bob remain active. The existing articulated procedural pedestrian rig remains the far-distance LOD and offline fallback.
+- Uses the Innerscene CC0 Maya human GLB, built from MakeHuman/MPFB assets, for close pedestrians and the player avatar. It includes a skinned skeleton and seven named locomotion clips (idle, relaxed walk, brisk walk, jog, run, carry walk, sit/stand); Three.js AnimationMixer drives idle and walking on the player and pedestrians. NPCs retain route-based movement, while the original procedural articulated character remains the far-distance LOD and offline fallback.
 - Uses the Innerscene CC0 sedan exterior asset for the player vehicle and seven traffic vehicles. Existing vehicle groups preserve physics, scale, routes and movement. High-detail assets are used near the camera; the existing procedural vehicle remains the far-distance fallback.
 - Adds a player cockpit detail pass because the source sedan asset focuses on the exterior.
 - Model loading is skipped in automation mode, keeping CI deterministic and fast.
-- Full motion-captured skeletal pedestrian animation, additional distinct character variants and multiple vehicle body styles remain future refinements.
+- The character clips are authored procedural motion, not motion-captured. Additional distinct character variants, contextual actions and multiple vehicle body styles remain future refinements.
 
 ## V4.2 human model and animation changes (retained)
 - Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
