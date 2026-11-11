@@ -1585,7 +1585,7 @@ for(let i=0;i<7;i++){
 const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue,23);world.add(avatar);
 
-const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading'};
+const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading',errors:{pedestrian:null,vehicle:null,loader:null}};
 function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
   const model=cloneSkinnedModel(source.scene);
   const boundsBeforeScale=new THREE.Box3().setFromObject(model);
@@ -1722,19 +1722,43 @@ function updateVehicleAssetLods(){
 }
 async function loadV46Models(){
   if(automationMode)return;
+  let loaded;
   try{
-    const loaded=await loadModelAssets();
-    if(loaded.pedestrian?.scene){installHumanAssets(loaded.pedestrian,loaded.cloneSkinnedModel);modelAssetStatus.pedestrian='loaded-cc0-rigged-animated-glb';}
-    else modelAssetStatus.pedestrian='procedural-fallback';
-    if(loaded.vehicle?.scene){
+    loaded=await loadModelAssets();
+  }catch(error){
+    modelAssetStatus.errors.loader=String(error?.stack||error);
+    modelAssetStatus.pedestrian='procedural-fallback';
+    modelAssetStatus.vehicle='procedural-fallback';
+    console.warn('V4.6 GLB loader initialization failed.',error);
+    return;
+  }
+  if(loaded.pedestrian?.scene){
+    try{
+      installHumanAssets(loaded.pedestrian,loaded.cloneSkinnedModel);
+      modelAssetStatus.pedestrian='loaded-cc0-rigged-animated-glb';
+    }catch(error){
+      modelAssetStatus.pedestrian='procedural-fallback';
+      modelAssetStatus.errors.pedestrian=String(error?.stack||error);
+      console.warn('V4.6 human model installation failed.',error);
+    }
+  }else{
+    modelAssetStatus.pedestrian='procedural-fallback';
+    modelAssetStatus.errors.pedestrian=loaded.errors?.pedestrian||'No human scene returned from GLTFLoader.';
+  }
+  if(loaded.vehicle?.scene){
+    try{
       installVehicleAsset(playerCar,loaded.vehicle,0x315e83,true);
       const colors=[0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92];
       traffic.forEach((item,index)=>installVehicleAsset(item.g,loaded.vehicle,colors[index%colors.length],false));
       modelAssetStatus.vehicle='loaded-cc0-glb';
-    }else modelAssetStatus.vehicle='procedural-fallback';
-  }catch(error){
-    modelAssetStatus.pedestrian='procedural-fallback';modelAssetStatus.vehicle='procedural-fallback';
-    console.warn('V4.6 model assets unavailable; keeping procedural models.',error);
+    }catch(error){
+      modelAssetStatus.vehicle='procedural-fallback';
+      modelAssetStatus.errors.vehicle=String(error?.stack||error);
+      console.warn('V4.6 vehicle model installation failed.',error);
+    }
+  }else{
+    modelAssetStatus.vehicle='procedural-fallback';
+    modelAssetStatus.errors.vehicle=loaded.errors?.vehicle||'No vehicle scene returned from GLTFLoader.';
   }
   const label=$('brand')?.querySelector('small');
   if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
