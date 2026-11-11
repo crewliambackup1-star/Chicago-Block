@@ -1368,14 +1368,25 @@ function car(color=0x365b78,detailedInterior=false){
     const plate=new THREE.Mesh(new THREE.PlaneGeometry(.82,.15),licensePlateMaterial);
     plate.position.set(0,.49,z);plate.rotation.y=rotation;g.add(plate);
   }
+  const lensMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.075,metalness:.08,clearcoat:1,clearcoatRoughness:.025,transmission:.08});
   for(const sx of [-.72,.72]){
     cube(g,sx,.91,-2.235,.38,.24,.07,M.headlight,false);
+    const headLens=new THREE.Mesh(new THREE.SphereGeometry(.125,20,14),lensMaterial);
+    headLens.position.set(sx,.91,-2.28);headLens.scale.set(1,.62,.24);g.add(headLens);
+    const ledCurve=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(sx-.13,.985,-2.31),new THREE.Vector3(sx,.995,-2.315),new THREE.Vector3(sx+.13,.985,-2.31)
+    ]);
+    const led=new THREE.Mesh(new THREE.TubeGeometry(ledCurve,12,.012,6,false),M.headlight);g.add(led);
     cube(g,sx,.88,2.235,.34,.24,.07,M.tailLight,false);
+    const tailBar=new THREE.Mesh(new THREE.BoxGeometry(.29,.055,.028),new THREE.MeshStandardMaterial({color:0xff6b58,emissive:0xb6291f,emissiveIntensity:.65,roughness:.22}));
+    tailBar.position.set(sx,.89,2.275);g.add(tailBar);
     cube(g,sx*1.38,1.17,-.95,.34,.17,.28,bodyMat,false);
-    const mirror=cube(g,sx*1.12,1.24,-1.08,.2,.16,.3,M.metal,false);
+    const mirror=cube(g,sx*1.12,1.24,-1.08,.2,.16,.3,bodyMat,false);
     mirror.rotation.z=sx*.08;
+    const mirrorGlass=new THREE.Mesh(new THREE.BoxGeometry(.028,.085,.19),windowMaterial);
+    mirrorGlass.position.set(sx*1.245,1.26,-1.08);mirrorGlass.rotation.z=sx*.08;g.add(mirrorGlass);
   }
-  let wheelSpokeCount=0;
+  let wheelSpokeCount=0,wheelLugCount=0;
   for(const sx of [-1,1])for(const sz of [-1,1]){
     const rig=new THREE.Group();rig.position.set(sx*1.07,.4,sz*1.38);g.add(rig);wheelRigs.push(rig);
     const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.27,40),M.tire);tire.rotation.z=Math.PI/2;rig.add(tire);
@@ -1393,6 +1404,21 @@ function car(color=0x365b78,detailedInterior=false){
     }
     const centerCap=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.27,14),M.trim);
     centerCap.rotation.z=Math.PI/2;rig.add(centerCap);
+    // Five exposed lug nuts and a painted brake caliper add hardware behind the spokes.
+    const lugMaterial=new THREE.MeshStandardMaterial({color:0xc2c6c5,roughness:.34,metalness:.88});
+    for(let lug=0;lug<5;lug++){
+      const angle=lug*Math.PI*2/5;
+      const nut=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.032,8),lugMaterial);
+      nut.rotation.z=Math.PI/2;
+      nut.position.set(sx*.16,Math.sin(angle)*.115,Math.cos(angle)*.115);rig.add(nut);wheelLugCount++;
+    }
+    const caliper=new THREE.Mesh(new THREE.BoxGeometry(.075,.18,.14),new THREE.MeshStandardMaterial({color:0x8d4b39,roughness:.62,metalness:.22}));
+    caliper.position.set(sx*.105,.16,-.105);rig.add(caliper);
+    for(let grooveIndex=0;grooveIndex<8;grooveIndex++){
+      const angle=grooveIndex*Math.PI/4;
+      const rotorMark=new THREE.Mesh(new THREE.SphereGeometry(.009,6,5),new THREE.MeshStandardMaterial({color:0x9ea5a6,roughness:.42,metalness:.78}));
+      rotorMark.position.set(sx*.145,Math.sin(angle)*.145,Math.cos(angle)*.145);rig.add(rotorMark);
+    }
     const arch=new THREE.Mesh(new THREE.TorusGeometry(.43,.045,7,20,Math.PI),M.trim);
     arch.rotation.set(0,Math.PI/2,Math.PI);arch.position.set(sx*1.05,.42,sz*1.38);g.add(arch);
   }
@@ -1444,7 +1470,12 @@ function car(color=0x365b78,detailedInterior=false){
   cube(g,0,1.79,-.25,1.48,.08,2.08,M.trim,false);
   g.userData.wheels=wheelRigs;
   g.userData.plates=2;g.userData.doorHandles=4;
-  g.userData.wheelSpokes=wheelSpokeCount;g.userData.wheelArches=4;
+  g.userData.wheelSpokes=wheelSpokeCount;g.userData.wheelLugs=wheelLugCount;g.userData.wheelArches=4;
+  g.userData.visualQuality='v4.2-pbr-vehicle';
+  g.userData.paintFinish='microflake-clearcoat';
+  g.userData.glassFinish='high-clearcoat-transmission';
+  g.userData.interiorType=detailedInterior?'full':'standard';
+  g.userData.panelSeams=8;g.userData.headlightDetails=4;
   return g;
 }
 const playerCar=car(0x315e83,true);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
