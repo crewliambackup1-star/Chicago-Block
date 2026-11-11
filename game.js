@@ -36,13 +36,15 @@ const stars=new THREE.Points(starGeometry,starMaterial);stars.frustumCulled=fals
 const sunDisc=new THREE.Mesh(new THREE.SphereGeometry(7,18,14),new THREE.MeshBasicMaterial({color:0xffe4b3,fog:false}));
 sunDisc.frustumCulled=false;scene.add(sunDisc);
 
+const automationMode=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  &&new URLSearchParams(location.search).has('automation');
 const camera = new THREE.PerspectiveCamera(68, innerWidth / innerHeight, .1, 600);
 const isCoarsePointer=()=>matchMedia('(pointer:coarse)').matches;
-const renderPixelRatio=()=>Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
+const renderPixelRatio=()=>automationMode?.8:Math.min(devicePixelRatio||1,isCoarsePointer()?1.35:1.65);
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});
 renderer.setPixelRatio(renderPixelRatio());
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !automationMode;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate = true;
 renderer.toneMappingExposure = 1.08;
@@ -942,8 +944,6 @@ brake.addEventListener('pointerdown',e=>{e.preventDefault();brake.setPointerCapt
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
 
 let locked=false;
-const automationMode=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
-  &&new URLSearchParams(location.search).has('automation');
 function canUsePointerLock(){
   return innerWidth>760&&matchMedia('(pointer:fine)').matches;
 }
