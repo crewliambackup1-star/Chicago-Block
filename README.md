@@ -20,6 +20,7 @@ The supplied visual reference informed the broad direction: natural human propor
 ### Cars and landscaping
 - Added body panel seams, additional chrome trim, front grille slats, projector-style lamps, rear light details, and tyre-sidewall/tread accents.
 - Added more varied high-resolution tree canopy geometry and instanced leaf clusters.
+- Applied fine wood grain and brushed-metal texture/roughness detail to benches, props, fixtures, trim and vehicle hardware.
 - Added instanced grass blades to lawn areas to give green spaces a more natural silhouette.
 
 ## Performance approach
