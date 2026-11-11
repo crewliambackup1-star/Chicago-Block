@@ -293,23 +293,27 @@ function loadOptionalPbrMap(url,colorSpace,repeat){
     },undefined,()=>resolve(null));
   });
 }
-for(const source of pbrSourceManifest){
+function applyOptionalPbrSource(source){
   externalPbrStatus[source.id]='loading';
-  const [colorMap,normalMap,roughnessMap]=await Promise.all([
+  Promise.all([
     loadOptionalPbrMap(source.base+'_diff_1k.jpg',THREE.SRGBColorSpace,source.repeat),
     loadOptionalPbrMap(source.base+'_nor_gl_1k.jpg',THREE.NoColorSpace,source.repeat),
     loadOptionalPbrMap(source.base+'_rough_1k.jpg',THREE.NoColorSpace,source.repeat)
-  ]);
-  if(colorMap)source.material.map=colorMap;
-  if(normalMap){
-    source.material.normalMap=normalMap;
-    source.material.normalScale.set(source.normalStrength,source.normalStrength);
-  }
-  if(roughnessMap)source.material.roughnessMap=roughnessMap;
-  source.material.roughness=source.roughness;
-  source.material.needsUpdate=true;
-  externalPbrStatus[source.id]=colorMap&&normalMap&&roughnessMap?'loaded':'procedural-fallback';
+  ]).then(([colorMap,normalMap,roughnessMap])=>{
+    if(colorMap)source.material.map=colorMap;
+    if(normalMap){
+      source.material.normalMap=normalMap;
+      source.material.normalScale.set(source.normalStrength,source.normalStrength);
+    }
+    if(roughnessMap)source.material.roughnessMap=roughnessMap;
+    source.material.roughness=source.roughness;
+    source.material.needsUpdate=true;
+    externalPbrStatus[source.id]=colorMap&&normalMap&&roughnessMap?'loaded':'procedural-fallback';
+  }).catch(()=>{
+    externalPbrStatus[source.id]='procedural-fallback';
+  });
 }
+pbrSourceManifest.forEach(applyOptionalPbrSource);
 
 // V3.1 material library: physically based micro-detail for close-up surfaces.
 const fabricTexture=makeTexture((ctx,w,h)=>{
