@@ -442,6 +442,7 @@ M.fabricTexture=fabricTexture;M.fabricBump=fabricBump;M.skinTexture=skinTexture;
 
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
+const architecturalDetailCounts={buildings:0,rooftopPenthouses:0,sidewalkJoints:0,windowRecesses:0,windowLintels:0,fireEscapeStairFlights:0};
 function cube(parent,x,y,z,w,h,d,material,shadow=true) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
   mesh.position.set(x,y,z); mesh.castShadow=shadow; mesh.receiveShadow=true; parent.add(mesh); return mesh;
@@ -488,6 +489,29 @@ for(const v of [-82,0,82]){
     cube(world,v+4.5,.018,p,.13,.025,4.5,M.white,false);
   }
 }
+// Expansion joints divide long sidewalks into believable poured-concrete panels.
+const sidewalkJointMaterial=new THREE.MeshStandardMaterial({color:0x6d6a61,roughness:.96});
+const horizontalJointPositions=[],verticalJointPositions=[];
+for(const street of [-82,0,82])for(const side of [-1,1]){
+  for(let along=-150;along<=150;along+=7.5){
+    if([-82,0,82].some(crossing=>Math.abs(along-crossing)<17))continue;
+    horizontalJointPositions.push([along,-.008,street+side*10.1]);
+    verticalJointPositions.push([street+side*10.1,-.008,along]);
+  }
+}
+function makeSidewalkJoints(positions,geometry){
+  const joints=new THREE.InstancedMesh(geometry,sidewalkJointMaterial,positions.length);
+  const transform=new THREE.Object3D();
+  positions.forEach(([x,y,z],index)=>{
+    transform.position.set(x,y,z);transform.updateMatrix();joints.setMatrixAt(index,transform.matrix);
+  });
+  joints.instanceMatrix.needsUpdate=true;joints.castShadow=false;joints.receiveShadow=false;
+  world.add(joints);return joints;
+}
+makeSidewalkJoints(horizontalJointPositions,new THREE.BoxGeometry(.045,.012,3.0));
+makeSidewalkJoints(verticalJointPositions,new THREE.BoxGeometry(3.0,.012,.045));
+architecturalDetailCounts.sidewalkJoints=horizontalJointPositions.length+verticalJointPositions.length;
+
 for(const x of [-82,0,82])for(const z of [-82,0,82])for(let k=-3;k<=3;k++){
   cube(world,x+k*1.15,.025,z-7,.55,.03,2.6,M.white,false);
   cube(world,x-7,.025,z+k*1.15,2.6,.03,.55,M.white,false);
