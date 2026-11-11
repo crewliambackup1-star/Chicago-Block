@@ -671,7 +671,7 @@ function addGrassCover(){
     grass.setColorAt(placed,new THREE.Color(i%5===0?0x6d8654:i%3===0?0x829961:0x9aad70));
     placed++;
   }
-  grass.count=placed;grass.instanceMatrix.needsUpdate=true;grass.castShadow=false;grass.receiveShadow=true;world.add(grass);
+  grass.count=placed;grass.instanceMatrix.needsUpdate=true;grass.castShadow=false;grass.receiveShadow=true;world.add(grass);world.userData.grassInstances=placed;
 }
 addGrassCover();
 function bench(x,z,rotation=0){
@@ -1412,6 +1412,7 @@ if(automationMode){
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelArches:playerCar.userData.wheelArches}},
       streetSigns:streetSigns.length,
       visualDetails:{...visualDetailCounts},
+      visualQuality:{avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,grassInstances:world.userData.grassInstances},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
