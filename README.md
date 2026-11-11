@@ -42,7 +42,7 @@ Automated checks run JavaScript syntax and source-level tests, followed by Chrom
 - Vehicle acceleration, steering and wheel rotation.
 - Mobile portrait/landscape layout, touch movement, activity, weather and braking.
 
-These browser checks are not a physical benchmark of every MacBook or Safari device. The MacBook Air M3 should be manually checked after the release candidate is ready.
+These checks cover all five collectibles, package delivery, weather states, and vehicle controls. They are not a physical benchmark of every MacBook or Safari device. The MacBook Air M3 should be manually checked after the release candidate is ready.
 
 ## Run locally
 Use a web server because browsers restrict ES modules opened directly from a file:
