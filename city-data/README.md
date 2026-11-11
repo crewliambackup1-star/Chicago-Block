@@ -9,6 +9,7 @@ This folder is the start of the data-driven Chicago map pipeline. It is not yet 
 - World X points east; negative Three.js Z points north.
 - Default tiles are 512 metres square and use integer grid coordinates, including negative tile indices.
 - `../geodata.js` contains the projection, inverse projection, tile addressing and GeoJSON feature normalization helpers.
+- `../tile-streaming.js` provides a loader-injected tile manager with in-flight request deduplication, cancellation of no-longer-visible requests, a bounded LRU cache and player-centered prefetch.
 
 The local projection is scaled at the origin latitude so distances remain usable for city-scale rendering. Keep the original longitude/latitude with source records; projected coordinates are a rendering representation, not a replacement for source geodata.
 
@@ -24,7 +25,7 @@ Review source metadata, attribution and reuse terms for each export before build
 - Download a small, bounded sample around the initial Chicago area and inspect geometry quality, coordinate systems, duplicate segments, invalid rings and attribute coverage.
 - Normalize street and building features; clip features at tile boundaries so large roads/buildings do not require entire-city geometry in memory.
 - Generate compressed tile files plus a lightweight spatial index and manifest.
-- Add a client-side tile manager with request deduplication, bounded LRU cache, cancellation of distant pending requests, and player-centered prefetch.
+- Connect the tested tile manager to generated tile assets, then tune the visible radius, cache budget and prefetch distance against desktop and mobile hardware.
 - Replace the fictional starter block gradually, validating alignment against real street intersections before expanding the loaded radius.
 
 ## Current status
