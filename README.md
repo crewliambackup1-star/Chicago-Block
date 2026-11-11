@@ -82,3 +82,5 @@ npm run test:browser
 ```
 
 GitHub Actions runs checks on pushes and pull requests. The browser automation interface is local-only and is not enabled on the published game.
+
+Automated browser checks use a local `?automation=1` mode with reduced render resolution and disabled real-time shadows. This keeps headless software-rendered gameplay tests responsive; normal player graphics are unchanged.
