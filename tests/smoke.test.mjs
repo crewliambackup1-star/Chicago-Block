@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 2/);
+  assert.match(html, /UPDATE 3/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -67,9 +67,17 @@ test('V2 sedan has detailed rotating wheels while retaining plates and door hand
   }
 });
 
-test('renderer uses the current soft shadow-map setting', () => {
-  assert.match(game, /renderer\.shadowMap\.type = THREE\.PCFShadowMap/);
-  assert.doesNotMatch(game, /PCFSoftShadowMap/);
+test('V3 renderer uses soft shadows, reflection environment, and adaptive detail', () => {
+  assert.match(game, /PCFSoftShadowMap/);
+  assert.match(game, /scene\.environment=environmentTexture/);
+  assert.match(game, /new THREE\.MeshPhysicalMaterial/);
+  assert.match(game, /bumpMap=brickHeight/);
+  assert.match(game, /roughnessMap=asphaltHeight/);
+  assert.match(game, /renderPixelRatio/);
+  assert.match(game, /function manhole/);
+  assert.match(game, /function stormDrain/);
+  assert.match(game, /windowSillMesh/);
+  assert.match(game, /visualVersion='v3-realism'/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -79,13 +87,14 @@ test('car steering maps A/left to left and D/right to right', () => {
   assert.equal(getCarSteeringInput(true, true), 0, 'Opposing simultaneous inputs should cancel');
 });
 
-test('README documents the V2 features and validation commands', () => {
-  assert.match(readme, /Life on the Streets/);
+test('README documents the V3 graphics scope and validation commands', () => {
+  assert.match(readme, /Realism Update \(V3\)/);
+  assert.match(readme, /graphics-only overhaul/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
-  assert.match(readme, /package deliveries/);
-  assert.match(readme, /clear, rain, and fog/);
-  assert.match(readme, /five collectible neighborhood snapshots/);
+  assert.match(readme, /package delivery/);
+  assert.match(readme, /weather states/);
+  assert.match(readme, /all five collectibles/);
   assert.match(readme, /Chromium and WebKit/);
 });

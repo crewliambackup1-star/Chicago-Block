@@ -1,53 +1,47 @@
-# Chicago Block — Life on the Streets (V2)
+# Chicago Block — The Realism Update (V3)
 
-A browser-based 3D neighborhood exploration game built with Three.js. The setting is an original, fictional Chicago-inspired district, not a precise recreation of any real residential property.
+A browser-based 3D neighborhood exploration game set in an original, fictional Chicago-inspired district. V3 is a **graphics-only overhaul** of the existing V2 world. It does not expand the map or introduce new gameplay systems.
 
-## What's new in V2
+## V3 visual overhaul
 
-### A more detailed neighborhood
-- Procedural asphalt, sidewalk, brick, and concrete surface textures.
-- More detailed building facades with exterior trim, floor bands, corner columns, framed windows, and illuminated window accents.
-- A procedural sky with clouds, a day/night cycle, stars, and a moving sun.
-- Rooftop HVAC units and a wooden water tank, plus storefront signage, street bins, and hydrants.
-- More detailed pedestrians with animated arms and legs.
-- A more detailed blue sedan with a front grille, door handles, custom front/rear plates, wheel hubs, mirrors, and front/rear lights.
-- Four readable street-name signs along the sidewalk corners.
-- Three metal fire escapes, planted courtyard beds, and a hand-painted west-side neighborhood mural.
-- Brighter, more varied asphalt with subtle pavement cracks, clearer sidewalk coloring, and corrected texture tinting.
-- A more readable day/night lighting balance, with streetlamp bulbs and local lights responding to the in-game clock.
-- More detailed sedan wheel assemblies with rims, spokes, center caps, and wheel arches; wheels rotate as cars move.
-- A more sculpted sedan silhouette with beveled body panels, sloped cabin lines, and separate side/front/rear glass.
-- Improved shadows, brighter material/lighting balance, clearer double-yellow center lines, dashed lane dividers, and crosswalk markings.
-- Animated wheel rotation on the player sedan and traffic cars, with headlights and taillights that brighten naturally at night.
+### Rendering, materials, and atmosphere
+- Reworked the renderer for higher desktop pixel density, tuned mobile resolution, ACES filmic tone mapping, and soft PCF shadows.
+- Added a procedural equirectangular environment map to provide ambient reflections without relying on external HDR downloads.
+- Added physically based materials for car paint, glass, lights, and metal, with more convincing roughness, clearcoat, and reflection response.
+- Rebuilt 1024px procedural brick, concrete, asphalt, sidewalk, and grass textures with matching bump and roughness data.
+- Added surface grain, brick variation, concrete weathering, asphalt wear/cracks, grass detail, and more pronounced sidewalk joints.
 
-### Things to do
-- Find five collectible neighborhood snapshots at distinct landmarks. Cyan beacons appear on the minimap; press F nearby to collect each one.
-- Complete repeatable package deliveries from the corner market to the courtyard. Follow the gold marker and press F near each stop.
-- Explore in clear, rain, and fog weather. Press R to cycle; rain adds animated rainfall and wet-road puddles.
-- Advance the displayed time by four hours with N, or let the clock progress naturally.
-- Switch between first-person and third-person camera views with V.
+### Architecture and street detail
+- Added layered stone plinths, pilasters, parapet/cornice accents, window mullions, and projecting stone sills.
+- Added curb geometry, metal manhole covers, and storm-drain grates along the existing road grid.
+- Kept the existing fictional 3-by-3 neighborhood layout and building footprints.
 
-### Driving and controls
-- Corrected steering: A / Left Arrow steers left; D / Right Arrow steers right.
-- Walk up to the blue sedan and press E to enter; press E again to exit.
-- While driving, W / Up Arrow accelerates, S / Down Arrow reverses or slows, A / Left Arrow turns left, D / Right Arrow turns right, and Space brakes.
+### Vehicles, people, and landscaping
+- Upgraded sedan paint with clearcoat and environment reflections.
+- Added visible seats, headrests, steering wheel, cabin trim, improved glass, sidewall detail, brake discs, and refined wheel assemblies.
+- Improved pedestrian head, ear, face, clothing, sleeve, and shoe geometry while retaining the existing walkers and animation.
+- Rebuilt tree silhouettes with trunks, branches, layered foliage, and more natural variation.
 
-### The neighborhood you can explore
-- A 3-by-3 fictional street grid with roads, sidewalks, crosswalks, a market, courtyard, trees, benches, and a minimap.
-- 20 pedestrians, 7 traffic vehicles, and a drivable blue sedan.
-- Walking, sprinting, jumping, building collision, keyboard controls, and mobile touch controls.
+### Presentation
+- Updated the title screen and HUD styling for V3 while keeping the existing control layout and functionality.
+- Preserved the time-of-day, clear/rain/fog states, activities, traffic, pedestrians, driving, and camera modes.
 
-## Browser support and validation
+## What V3 deliberately does not do
+- No new missions, activities, or gameplay mechanics.
+- No map expansion or new neighborhood areas.
+- No changes to the driving model, movement, camera behavior, or controls except fixes required to preserve existing behavior.
+- No new major systems unrelated to rendering or visual quality.
 
-The automated test suite runs syntax and source-level checks, then launches Chromium and WebKit to exercise:
-- WebGL scene loading and runtime error checks.
-- Player movement, pedestrian and traffic movement, both camera views, and the in-game clock.
-- Clear, rain, and fog transitions.
-- All five snapshot collectibles and a complete delivery.
-- Vehicle acceleration and both steering directions.
-- Mobile portrait and landscape layouts, HUD spacing, touch movement, activity, weather, and brake controls.
+## Validation
 
-These automated runs cover Chromium and the WebKit engine, but they are not a hands-on test on every physical Safari device. The public build should still be checked on your device after deployment.
+Automated checks run JavaScript syntax and source-level tests, then launch Chromium and WebKit to exercise the existing game:
+- WebGL scene boot and runtime-error checks.
+- Player movement, pedestrian and traffic motion, first-/third-person camera, and clock.
+- Existing weather states, all five collectibles, and package delivery.
+- Vehicle acceleration, steering directions, and wheel rotation.
+- Mobile portrait/landscape layout, touch movement, activity, weather, and braking.
+
+Automated WebKit runs are engine coverage, not hands-on tests on every physical Safari device. The published game should still be checked on the target device after deployment.
 
 ## Run locally
 
@@ -87,4 +81,6 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-GitHub Actions runs these checks on pushes and pull requests. Browser tests use a local-only automation interface; it is not exposed on the published game site.
+GitHub Actions runs checks on pushes and pull requests. The browser automation interface is local-only and is not enabled on the published game.
+
+Automated browser checks use a local `?automation=1` mode with reduced render resolution and disabled real-time shadows. This keeps headless software-rendered gameplay tests responsive; normal player graphics are unchanged.
