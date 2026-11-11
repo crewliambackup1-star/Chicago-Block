@@ -12,7 +12,7 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 3\.1/);
+  assert.match(html, /UPDATE 4\.0/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -67,17 +67,16 @@ test('V2 sedan has detailed rotating wheels while retaining plates and door hand
   }
 });
 
-test('V3 renderer uses soft shadows, reflection environment, and adaptive detail', () => {
+test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /PCFSoftShadowMap/);
   assert.match(game, /scene\.environment=environmentTexture/);
-  assert.match(game, /new THREE\.MeshPhysicalMaterial/);
-  assert.match(game, /bumpMap=brickHeight/);
-  assert.match(game, /roughnessMap=asphaltHeight/);
-  assert.match(game, /renderPixelRatio/);
-  assert.match(game, /function manhole/);
-  assert.match(game, /function stormDrain/);
-  assert.match(game, /windowSillMesh/);
-  assert.match(game, /v3\.1-model-textures/);
+  assert.match(game, /createGraphicsProfile/);
+  assert.match(game, /createAdaptiveResolutionController/);
+  assert.match(game, /adaptiveResolution\.update/);
+  assert.match(game, /adaptiveResolution\.resize/);
+  assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
+  assert.match(game, /sun\.shadow\.camera\.left=-100/);
+  assert.match(game, /v4-rendering-foundation/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -87,9 +86,9 @@ test('car steering maps A/left to left and D/right to right', () => {
   assert.equal(getCarSteeringInput(true, true), 0, 'Opposing simultaneous inputs should cancel');
 });
 
-test('README documents the V3 graphics scope and validation commands', () => {
-  assert.match(readme, /V3\.1 Model & Texture Overhaul/);
-  assert.match(readme, /graphics-only refinement/);
+test('README documents V4 scope, preserved gameplay and validation commands', () => {
+  assert.match(readme, /V4\.0 Photorealism Foundation/);
+  assert.match(readme, /rendering foundation/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
   assert.match(readme, /fictional/);
@@ -98,14 +97,9 @@ test('README documents the V3 graphics scope and validation commands', () => {
   assert.match(readme, /all five collectibles/);
   assert.match(readme, /Chromium and WebKit/);
 });
-test('V3.1 adds textured clothing and skin, refined human models, facades, vehicles and landscaping', () => {
-  for (const feature of [
-    'const fabricTexture=makeTexture', 'const skinTexture=makeTexture',
-    'function person(material,appearance=0)', 'v3.1-anatomical-textured',
-    'M.siding=mat', 'M.stucco=mat', 'const sidingHeight=', 'const woodTexture=makeTexture', 'const brushedMetalTexture=makeTexture',
-    'function addGrassCover()', 'world.userData.grassInstances=placed', 'new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.105,1)',
-    'panel gaps', 'projector-style lamps', 'v3.1-model-textures'
-  ]) {
-    assert.ok(game.includes(feature), 'Missing V3.1 visual feature: ' + feature);
-  }
+test('V4.0 records the renderer foundation version', () => {
+  assert.match(game, /renderProfile=createGraphicsProfile/);
+  assert.match(game, /shadowMapSize/);
+  assert.match(game, /__CHICAGO_BLOCK_RENDER__/);
+  assert.match(game, /v4-rendering-foundation/);
 });

@@ -1,76 +1,45 @@
-# Chicago Block — V3.1 Model & Texture Overhaul
+# Chicago Block — V4.0 Photorealism Foundation
 
-A browser-based 3D neighborhood exploration game set in an original Chicago-inspired district. V3.1 is a graphics-only refinement of the V3 world. The map, player movement, driving, camera behavior, activities, weather, traffic and pedestrian routes remain unchanged.
+A browser-based 3D neighborhood game on the path toward high-fidelity, photorealistic visuals. V4.0 establishes a stronger render-quality and performance foundation before the next asset and world-detail stages.
 
-## V3.1 visual targets
+## V4.0 rendering foundation
+- Desktop starts with an ultra-quality profile: up to 2x device pixel ratio, 2048px directional shadow map (when supported), antialiasing, high precision and ACES tone mapping.
+- Touch devices use a separate high-quality profile capped at 1.45x pixel ratio and 1024px shadows to keep thermal and memory pressure manageable.
+- Adaptive resolution watches sustained frame times and adjusts pixel density gradually. It never changes simulation speed, movement, driving or gameplay timing.
+- Directional shadows now follow the player and focus on a tighter nearby area, spending more shadow resolution where it is visible.
+- Browser automation keeps a separate lightweight profile with low resolution, no real-time shadows and reduced render frequency; these settings do not affect normal players.
+- A read-only render diagnostics hook exposes the selected profile, pixel ratio, shadow configuration and adaptive-resolution state for tests.
 
-The supplied visual reference informed the broad direction: natural human proportions, textured skin and clothing, layered architectural materials, realistic glazing, and sunlight that reveals surface detail. The reference image itself is not copied into the game.
+## Performance goals
+- Primary target: MacBook Air M3 with 16 GB unified memory.
+- Aim for 60 FPS when scene complexity permits, while maintaining a playable experience in heavier scenes.
+- Preserve quality by reducing pixel density gradually only when frame time shows sustained pressure.
+- Use a separate touch-device profile and retain an automated-test profile.
 
-### People and clothing
-- Rebuilt the shared pedestrian/player model with more natural torso, shoulder, arm, hand, leg and footwear proportions.
-- Added procedural skin grain, subtle facial details, eye/eyelid/brow geometry, ears, nose, mouth, hairline and separated curls.
-- Added fabric weave and surface relief to clothing, plus varied clothing and skin material palettes.
-- Preserved the existing pedestrian routes and walk animation.
+## V4 roadmap
+- V4.0: render pipeline, quality profiles, adaptive resolution and player-centered shadow coverage.
+- V4.1: realistic environment and architecture assets, material library and building/road detail.
+- V4.2: higher fidelity people, vehicles and animations.
+- V4.3: lighting, reflections and weather atmosphere.
+- V4.4: streamed city sections, geographic data foundation and large-world optimization.
 
-### Buildings and streets
-- Added weathered siding and stucco material sets with color, bump and roughness data.
-- Added window AC units, small metal balcony rails, roof coping, facade bands, drainage pipes and mounting straps.
-- Increased asphalt patch, aggregate and crack detail while preserving the existing roads and sidewalk layout.
-
-### Cars and landscaping
-- Added body panel seams, additional chrome trim, front grille slats, projector-style lamps, rear light details, and tyre-sidewall/tread accents.
-- Added more varied high-resolution tree canopy geometry and instanced leaf clusters.
-- Applied fine wood grain and brushed-metal texture/roughness detail to benches, props, fixtures, trim and vehicle hardware.
-- Added instanced grass blades to lawn areas to give green spaces a more natural silhouette.
-
-## Performance approach
-- The target experience remains the MacBook Air M3 with 16 GB unified memory, using full desktop graphics settings.
-- Repeated grass blades and foliage detail are instanced to limit draw calls.
-- Touch devices receive fewer grass instances to preserve performance.
-- The local automated `?automation=1` mode still reduces render resolution and disables real-time shadows for headless software-rendered tests only.
-
-## Scope
-- No new gameplay, missions, or activities.
-- No map expansion or new neighborhood area.
-- No changes to movement, vehicle handling, controls or camera behavior.
-- The location remains a fictional Chicago-inspired environment, not a one-to-one recreation of private residential properties.
+## Scope of V4.0
+- No changes to map layout, movement, vehicle handling, activities, traffic routes, pedestrian routes, controls or camera behavior.
+- V4.0 is a rendering foundation, not a claim that the game is already photorealistic.
+- The setting remains a fictional Chicago-inspired environment while future stages prepare for the larger geographically grounded city.
 
 ## Validation
-Automated checks run JavaScript syntax and source-level tests, followed by Chromium and WebKit browser playthroughs covering:
-- 3D renderer boot and runtime exceptions.
-- Movement, pedestrian and traffic simulation, both camera modes and clock.
-- Existing weather states, five snapshots and package delivery.
-- Vehicle acceleration, steering and wheel rotation.
-- Mobile portrait/landscape layout, touch movement, activity, weather and braking.
+Existing gameplay remains in place, including package delivery, all five collectibles and weather states. Automated coverage uses Chromium and WebKit: desktop Chromium and mobile WebKit.
 
-These checks cover all five collectibles, package delivery, weather states, and vehicle controls. They are not a physical benchmark of every MacBook or Safari device. The MacBook Air M3 should be manually checked after the release candidate is ready.
+`npm run check` validates the game, controls and rendering modules. `npm test` covers source behavior and adaptive-quality rules. Browser automation covers desktop Chromium and mobile WebKit, including runtime render-profile diagnostics, existing gameplay systems and responsive controls.
 
 ## Run locally
-Use a web server because browsers restrict ES modules opened directly from a file:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080. An internet connection is required because Three.js is loaded from jsDelivr.
-
-## Controls
-
-| Action | Keyboard | Mobile |
-|---|---|---|
-| Move | WASD or arrow keys | Direction pad |
-| Sprint | Shift | — |
-| Jump | Space (on foot) | — |
-| Enter / exit car | E | Interact button |
-| First / third person | V | Camera button |
-| Look around | Mouse | Drag on the game view |
-| Accelerate / reverse | W / S or Up / Down | Direction pad while in car |
-| Steering | A / D or Left / Right | Direction pad while in car |
-| Brake | Space (while driving) | Brake button |
-| Snapshot / delivery activity | F | Activity button |
-| Cycle weather | R | Weather button |
-| Advance displayed time | N | — |
-| Release mouse capture | Esc | — |
+Open http://localhost:8080. Three.js is loaded from jsDelivr, so an internet connection is required.
 
 ## Automated checks
 
@@ -82,4 +51,7 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-GitHub Actions runs checks on pushes and pull requests.
+## Prior releases
+- V3.1 delivered the model and texture refinement.
+- V3 delivered the original realism renderer update.
+- V2 delivered the first major neighborhood gameplay update.
