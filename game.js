@@ -440,6 +440,24 @@ for(const metalMaterial of [M.metal,M.silver,M.trim]){
 M.wood.needsUpdate=true;
 M.fabricTexture=fabricTexture;M.fabricBump=fabricBump;M.skinTexture=skinTexture;M.skinBump=skinBump;
 
+// Shared clearcoat paint microflake and fine orange-peel normal detail for every vehicle.
+const vehiclePaintTexture=makeTexture((ctx,w,h)=>{
+  const base=ctx.createLinearGradient(0,0,w,h);
+  base.addColorStop(0,'#e7e7e7');base.addColorStop(.5,'#bfc2c2');base.addColorStop(1,'#dedede');
+  ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+  for(let i=0;i<14500;i++){
+    const x=(i*61)%w,y=(i*137)%h,v=145+(i*19)%92;
+    ctx.fillStyle=`rgba(${v},${v},${v},.24)`;ctx.fillRect(x,y,1,1);
+  }
+},512);
+const vehiclePaintHeight=makeDataTexture((ctx,w,h)=>{
+  ctx.fillStyle='#999';ctx.fillRect(0,0,w,h);
+  for(let i=0;i<18000;i++){
+    const x=(i*71)%w,y=(i*139)%h,v=118+(i*23)%24;
+    ctx.fillStyle=`rgba(${v},${v},${v},.22)`;ctx.fillRect(x,y,1,1);
+  }
+},512);
+
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
 const architecturalDetailCounts={buildings:0,rooftopPenthouses:0,sidewalkJoints:0,windowRecesses:0,windowLintels:0,fireEscapeStairFlights:0};
@@ -1236,7 +1254,11 @@ const plateTexture=new THREE.CanvasTexture(plateCanvas);plateTexture.colorSpace=
 const licensePlateMaterial=new THREE.MeshStandardMaterial({map:plateTexture,roughness:.82});
 
 function car(color=0x365b78,detailedInterior=false){
-  const g=new THREE.Group(),bodyMat=new THREE.MeshPhysicalMaterial({color,roughness:.24,metalness:.48,clearcoat:1,clearcoatRoughness:.12,envMapIntensity:1.45}),wheelRigs=[];
+  const g=new THREE.Group(),bodyMat=new THREE.MeshPhysicalMaterial({
+    color,map:vehiclePaintTexture,bumpMap:vehiclePaintHeight,bumpScale:.008,
+    roughnessMap:vehiclePaintHeight,roughness:.22,metalness:.56,
+    clearcoat:1,clearcoatRoughness:.085,envMapIntensity:1.7
+  }),wheelRigs=[];
   // Rounded, sloped side profiles replace the old rectangular body and cabin blocks.
   const extrudedProfile=(points,depth,material)=>{
     const profile=new THREE.Shape();
@@ -1260,7 +1282,7 @@ function car(color=0x365b78,detailedInterior=false){
   extrudedProfile([
     [-1.3,.88],[1.2,.88],[.78,1.48],[.48,1.62],[-.82,1.62],[-1.15,1.4]
   ],1.76,bodyMat);
-  const windowMaterial=M.glass.clone();windowMaterial.side=THREE.DoubleSide;windowMaterial.roughness=.12;windowMaterial.clearcoat=1;windowMaterial.envMapIntensity=1.7;windowMaterial.transmission=.08;windowMaterial.ior=1.46;
+  const windowMaterial=M.glass.clone();windowMaterial.side=THREE.DoubleSide;windowMaterial.roughness=.085;windowMaterial.metalness=.12;windowMaterial.clearcoat=1;windowMaterial.clearcoatRoughness=.045;windowMaterial.envMapIntensity=2.05;windowMaterial.transmission=.12;windowMaterial.ior=1.48;windowMaterial.thickness=.045;
   const addSideWindow=(points,side)=>{
     const shape=new THREE.Shape();
     points.forEach(([x,y],index)=>index===0?shape.moveTo(x,y):shape.lineTo(x,y));
