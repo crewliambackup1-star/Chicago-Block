@@ -255,6 +255,62 @@ M.road.color.setHex(0xffffff);M.walk.color.setHex(0xffffff);
 
 M.brick.needsUpdate=M.dark.needsUpdate=M.cream.needsUpdate=M.road.needsUpdate=M.walk.needsUpdate=true;
 
+/*
+ * Optional scanned PBR sets from Poly Haven (CC0).
+ * The procedural 1K/2K canvases above remain immediate fallbacks. Remote
+ * maps load asynchronously and never block the game boot sequence.
+ */
+const externalTextureLoader=new THREE.TextureLoader();
+externalTextureLoader.setCrossOrigin('anonymous');
+const pbrSourceManifest=[
+  {
+    id:'worn-brick-wall',material:M.brick,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/worn_brick_wall/worn_brick_wall',
+    repeat:[2.4,1.8],normalStrength:.62,roughness:.94
+  },
+  {
+    id:'asphalt-03',material:M.road,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_03/asphalt_03',
+    repeat:[8,2.2],normalStrength:.42,roughness:.97
+  },
+  {
+    id:'concrete-pavement',material:M.walk,
+    base:'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement/concrete_pavement',
+    repeat:[3.2,1.8],normalStrength:.5,roughness:.93
+  }
+];
+const externalPbrStatus=Object.create(null);
+function loadOptionalPbrMap(url,colorSpace,repeat){
+  return new Promise(resolve=>{
+    externalTextureLoader.load(url,texture=>{
+      texture.colorSpace=colorSpace;
+      texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+      texture.repeat.set(repeat[0],repeat[1]);
+      texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);
+      texture.minFilter=THREE.LinearMipmapLinearFilter;
+      texture.magFilter=THREE.LinearFilter;
+      resolve(texture);
+    },undefined,()=>resolve(null));
+  });
+}
+for(const source of pbrSourceManifest){
+  externalPbrStatus[source.id]='loading';
+  const [colorMap,normalMap,roughnessMap]=await Promise.all([
+    loadOptionalPbrMap(source.base+'_diff_1k.jpg',THREE.SRGBColorSpace,source.repeat),
+    loadOptionalPbrMap(source.base+'_nor_gl_1k.jpg',THREE.NoColorSpace,source.repeat),
+    loadOptionalPbrMap(source.base+'_rough_1k.jpg',THREE.NoColorSpace,source.repeat)
+  ]);
+  if(colorMap)source.material.map=colorMap;
+  if(normalMap){
+    source.material.normalMap=normalMap;
+    source.material.normalScale.set(source.normalStrength,source.normalStrength);
+  }
+  if(roughnessMap)source.material.roughnessMap=roughnessMap;
+  source.material.roughness=source.roughness;
+  source.material.needsUpdate=true;
+  externalPbrStatus[source.id]=colorMap&&normalMap&&roughnessMap?'loaded':'procedural-fallback';
+}
+
 // V3.1 material library: physically based micro-detail for close-up surfaces.
 const fabricTexture=makeTexture((ctx,w,h)=>{
   ctx.fillStyle='#d8d5cf';ctx.fillRect(0,0,w,h);
