@@ -1017,7 +1017,7 @@ function car(color=0x365b78,detailedInterior=false){
     cube(g,sx*.91,.43,0,.045,.11,2.5,M.trim,false);
   }
   for(const sx of [-1,1])for(const z of [-.58,.48]){
-    cube(g,sx*1.075,1.03,z,.05,.085,.3,M.silver,false);
+    const doorHandle=cube(g,sx*1.075,1.03,z,.05,.085,.3,M.silver,false);
   }
   // Fine panel gaps, lower body crease and chrome beltline catch directional light.
   const seamMaterial=new THREE.MeshBasicMaterial({color:0x20282c,transparent:true,opacity:.68});
@@ -1038,10 +1038,15 @@ function car(color=0x365b78,detailedInterior=false){
     projector.position.set(sx*.72,.84,-2.29);projector.scale.set(1,.68,.25);g.add(projector);
     const tailLens=new THREE.Mesh(new THREE.BoxGeometry(.28,.13,.06),M.tailLight);
     tailLens.position.set(sx*.73,.85,2.27);g.add(tailLens);
-    for(let tread=0;tread<12;tread++){
-      const groove=new THREE.Mesh(new THREE.TorusGeometry(.355,.008,4,18),new THREE.MeshStandardMaterial({color:0x333638,roughness:.95}));
-      groove.rotation.set(tread*.04,Math.PI/2,tread*Math.PI/6);
-      groove.position.set(sx*1.215,.4,0);g.add(groove);
+    for(const axle of [-1,1]){
+      const sidewallDetail=new THREE.Mesh(new THREE.TorusGeometry(.315,.009,5,28),new THREE.MeshStandardMaterial({color:0x303537,roughness:.96}));
+      sidewallDetail.rotation.y=Math.PI/2;sidewallDetail.position.set(sx*1.215,.4,axle*1.38);g.add(sidewallDetail);
+      for(let tread=0;tread<10;tread++){
+        const angle=tread*Math.PI/5;
+        const groove=new THREE.Mesh(new THREE.BoxGeometry(.018,.075,.018),new THREE.MeshStandardMaterial({color:0x393d3e,roughness:.98}));
+        groove.position.set(sx*1.218,.4+Math.sin(angle)*.335,axle*1.38+Math.cos(angle)*.335);
+        groove.rotation.x=angle;g.add(groove);
+      }
     }
   }
   // Windshield wipers and mirror glass add close-up cues in first-person view.
