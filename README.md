@@ -1,6 +1,6 @@
 # Chicago Block — V4.3 Lighting, Reflections & Atmosphere
 
-V4.3 builds on the V4.3 people and vehicle pass with a higher fidelity lighting, reflection and weather pipeline. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
+V4.3 builds on the V4.2 people and vehicle pass with a higher fidelity lighting, reflection and weather pipeline. The existing neighborhood footprint, gameplay systems, driving physics, controls, camera behavior, traffic routes and pedestrian routes remain unchanged.
 
 ## V4.2 human model and animation changes (retained)
 - Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
@@ -55,11 +55,10 @@ V4.3 builds on the V4.3 people and vehicle pass with a higher fidelity lighting,
 - V4.1: architecture, scanned PBR materials and street environment.
 - V4.2: human and vehicle models, materials and animations.
 - V4.3: lighting, reflections, sky and weather atmosphere.
-- V4.3: lighting, reflections, sky and weather atmosphere.
 - V4.4: geographic data foundation and streamed city sections.
 
 ## Validation
-`npm run check` validates the game, controls and renderer. `npm test` covers source behavior, adaptive-resolution rules, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.2 model/animation code. Browser automation checks Chromium and WebKit: desktop Chromium and mobile WebKit, including runtime character, vehicle, driving, movement and environment diagnostics.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
