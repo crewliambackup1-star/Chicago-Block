@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-import { chromium, webkit } from 'playwright';
+import { chromium } from 'playwright';
 
 const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173/';
 await mkdir('artifacts', { recursive: true });
@@ -225,9 +225,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
   }
 });
 
-test('mobile-size WebKit playthrough: responsive controls and touch buttons', async () => {
-  const browser = await webkit.launch({ headless: true });
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+test('mobile-size Chromium playthrough: responsive controls and touch buttons', async () => {
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader'] });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.message));
@@ -293,13 +293,13 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
       test.setYaw(0);
     });
     await page.waitForTimeout(2200);
-    await page.screenshot({ path: 'artifacts/v4-3-webkit-mobile-portrait.png' });
-    assert.deepEqual(pageErrors, [], 'WebKit page should not throw runtime exceptions');
+    await page.screenshot({ path: 'artifacts/v4-3-chromium-mobile-portrait.png' });
+    assert.deepEqual(pageErrors, [], 'mobile Chromium page should not throw runtime exceptions');
   } finally {
     await context.close();
   }
 
-  const landscapeContext = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true });
+  const landscapeContext = await browser.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const landscapePage = await landscapeContext.newPage();
   const landscapeErrors = [];
   landscapePage.on('pageerror', error => landscapeErrors.push(error.message));
@@ -311,8 +311,8 @@ test('mobile-size WebKit playthrough: responsive controls and touch buttons', as
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v4-3-webkit-mobile-landscape.png' });
-    assert.deepEqual(landscapeErrors, [], 'landscape WebKit page should not throw runtime exceptions');
+    await landscapePage.screenshot({ path: 'artifacts/v4-3-chromium-mobile-landscape.png' });
+    assert.deepEqual(landscapeErrors, [], 'landscape mobile Chromium page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
     await browser.close();
