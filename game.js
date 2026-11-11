@@ -1816,10 +1816,15 @@ if(automationMode){
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,carryingPackage,deliveriesCompleted,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
-      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelArches:playerCar.userData.wheelArches}},
+      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails}},
       streetSigns:streetSigns.length,
       visualDetails:{...visualDetailCounts},
-      visualQuality:{avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,grassInstances:world.userData.grassInstances},
+      visualQuality:{
+        avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,
+        avatarHairStyle:avatar.userData.hairStyle,pedestrianHairStyles:[...new Set(pedestrians.map(p=>p.g.userData.hairStyle))],
+        animationRig:pedestrians[0]?.g.userData.animationRig,grassInstances:world.userData.grassInstances
+      },
+      trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs})),
       architecturalDetails:{...architecturalDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
@@ -1858,4 +1863,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-1-architecture-environment';
+document.documentElement.dataset.visualVersion='v4-2-people-vehicles';
