@@ -103,7 +103,7 @@ test('V3.1 adds textured clothing and skin, refined human models, facades, vehic
     'const fabricTexture=makeTexture', 'const skinTexture=makeTexture',
     'function person(material,appearance=0)', 'v3.1-anatomical-textured',
     'M.siding=mat', 'M.stucco=mat', 'const sidingHeight=', 'const woodTexture=makeTexture', 'const brushedMetalTexture=makeTexture',
-    'function addGrassCover()', 'new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.105,1)',
+    'function addGrassCover()', 'world.userData.grassInstances=placed', 'new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.105,1)',
     'panel gaps', 'projector-style lamps', 'v3.1-model-textures'
   ]) {
     assert.ok(game.includes(feature), 'Missing V3.1 visual feature: ' + feature);
