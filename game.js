@@ -906,21 +906,71 @@ streetSign(80,94,'COURTYARD WAY',Math.PI);
 const visualDetailCounts={fireEscapes:0,courtyardPlanters:0,murals:0};
 function fireEscape(x,z,levels=3){
   const group=new THREE.Group();group.position.set(x,0,z);world.add(group);
+  const stairFlights=Math.max(0,levels-1);
   for(let level=0;level<levels;level++){
     const y=3.4+level*3.35;
+    // Expanded metal landing with a raised, perforated edge.
     cube(group,0,y,1.05,5.7,.14,1.55,M.metal,false);
     cube(group,0,y+.88,1.78,5.7,.11,.12,M.silver,false);
     for(const side of [-1,1]){
       cube(group,side*2.78,y+.45,1.12,.11,.9,1.42,M.silver,false);
-      for(let post=0;post<5;post++)cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+      for(let post=0;post<5;post++){
+        cube(group,side*(.7+post*.47),y+.43,1.78,.055,.86,.055,M.silver,false);
+      }
+      // Cross-braced landing supports.
+      cube(group,side*2.25,y-.62,.45,.12,1.12,.12,M.metal,false);
+      cube(group,side*2.1,y-.7,.9,.08,.95,.08,M.silver,false);
     }
     for(let post=0;post<7;post++)cube(group,-2.55+post*.85,y+.43,1.78,.055,.86,.055,M.silver,false);
-    for(const support of [-2.25,2.25])cube(group,support,y-.62,.45,.12,1.12,.12,M.metal,false);
+    cube(group,0,y+.92,1.78,5.82,.06,.16,M.silver,false);
   }
+
+  // Alternating switchback stair flights connect the landings instead of leaving stacked platforms.
+  for(let level=0;level<stairFlights;level++){
+    const baseY=3.4+level*3.35,side=level%2===0?1:-1;
+    const stairX=side*2.15,steps=9,startZ=1.05,run=1.85,rise=3.35;
+    for(let step=0;step<steps;step++){
+      const t=(step+.5)/steps;
+      const tread=cube(group,stairX,baseY+t*rise,startZ+t*run,.96,.105,.31,M.silver,false);
+      tread.rotation.x=-.015;
+    }
+    const lowerRail=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(stairX-.55,baseY+.45,startZ-.12),
+      new THREE.Vector3(stairX-.55,baseY+1.35,startZ+.52),
+      new THREE.Vector3(stairX-.55,baseY+2.35,startZ+1.12),
+      new THREE.Vector3(stairX-.55,baseY+3.2,startZ+run+.16)
+    ]);
+    const upperRail=new THREE.CatmullRomCurve3([
+      new THREE.Vector3(stairX+.55,baseY+.45,startZ-.12),
+      new THREE.Vector3(stairX+.55,baseY+1.35,startZ+.52),
+      new THREE.Vector3(stairX+.55,baseY+2.35,startZ+1.12),
+      new THREE.Vector3(stairX+.55,baseY+3.2,startZ+run+.16)
+    ]);
+    group.add(new THREE.Mesh(new THREE.TubeGeometry(lowerRail,20,.035,7,false),M.silver));
+    group.add(new THREE.Mesh(new THREE.TubeGeometry(upperRail,20,.035,7,false),M.silver));
+    // Short vertical balusters beneath the handrails.
+    for(let rail=0;rail<6;rail++){
+      const t=rail/5;
+      for(const offset of [-.55,.55]){
+        const post=cube(group,stairX+offset,baseY+.48+t*2.7,startZ+.04+t*run,.035,.7,.035,M.silver,false);
+        post.rotation.x=-Math.atan2(rise,run);
+      }
+    }
+  }
+
+  // Roof access ladder, safety hoops and mounting feet.
   const ladderX=2.35;
-  for(const side of [-1,1])cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+  for(const side of [-1,1]){
+    cube(group,ladderX+side*.22,(levels*3.35)/2+1.2,2.0,.075,levels*3.35,.075,M.silver,false);
+    for(let hoop=0;hoop<Math.floor(levels*1.5);hoop++){
+      const y=1.35+hoop*2.15;
+      const arc=new THREE.Mesh(new THREE.TorusGeometry(.34,.028,5,18,Math.PI),M.silver);
+      arc.position.set(ladderX,y,2.0);arc.rotation.z=Math.PI/2;group.add(arc);
+    }
+  }
   for(let rung=0;rung<levels*6;rung++)cube(group,ladderX,1.1+rung*.55,2.0,.5,.055,.055,M.silver,false);
   visualDetailCounts.fireEscapes++;
+  architecturalDetailCounts.fireEscapeStairFlights+=stairFlights;
   return group;
 }
 fireEscape(-45,-18.3,4);
