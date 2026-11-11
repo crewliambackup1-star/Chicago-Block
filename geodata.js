@@ -200,7 +200,11 @@ export function partitionFeaturesByTile(
 
   return Object.freeze(Object.fromEntries(
     [...tiles.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => {
+        const [ax, az] = a.split(':').map(Number);
+        const [bx, bz] = b.split(':').map(Number);
+        return az - bz || ax - bx;
+      })
       .map(([key, items]) => [key, Object.freeze(items)])
   ));
 }
