@@ -153,6 +153,27 @@ function transformCoordinates(coordinates, origin) {
 }
 
 /**
+ * Normalize a FeatureCollection with an explicit size bound so data imports
+ * can be paged instead of accidentally materializing an entire city in memory.
+ */
+export function normalizeGeoJsonFeatureCollection(
+  collection,
+  { origin = DEFAULT_CHICAGO_ORIGIN, maxFeatures = 100000 } = {}
+) {
+  validateOrigin(origin);
+  if (!collection || collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) {
+    throw new TypeError('Expected a GeoJSON FeatureCollection');
+  }
+  if (!Number.isInteger(maxFeatures) || maxFeatures < 1 || maxFeatures > 500000) {
+    throw new RangeError('maxFeatures must be an integer from 1 to 500000');
+  }
+  if (collection.features.length > maxFeatures) {
+    throw new RangeError('FeatureCollection exceeds maxFeatures; split the import into bounded batches');
+  }
+  return Object.freeze(collection.features.map(feature => normalizeGeoJsonFeature(feature, { origin })));
+}
+
+/**
  * Convert supported GeoJSON features into local metre coordinates. Supported
  * geometry types cover road centerlines and building footprints.
  */
