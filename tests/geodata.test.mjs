@@ -9,7 +9,8 @@ import {
   getVisibleTileKeys,
   latLonToLocalMeters,
   localMetersToLatLon,
-  normalizeGeoJsonFeature
+  normalizeGeoJsonFeature,
+  normalizeGeoJsonFeatureCollection
 } from '../geodata.js';
 
 test('Chicago reference origin projects to the local world origin', () => {
@@ -91,4 +92,27 @@ test('projection and GeoJSON normalization reject invalid coordinates', () => {
     type: 'Feature',
     geometry: { type: 'GeometryCollection', geometries: [] }
   }), /Unsupported GeoJSON geometry type/);
+});
+
+test('FeatureCollection import normalizes batches and enforces memory bounds', () => {
+  const collection = {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      properties: { kind: 'street' },
+      geometry: { type: 'Point', coordinates: [-87.6298, 41.8781] }
+    }]
+  };
+  const normalized = normalizeGeoJsonFeatureCollection(collection);
+  assert.equal(normalized.length, 1);
+  assert.equal(normalized[0].properties.kind, 'street');
+  assert.deepEqual(normalized[0].geometry.coordinates, [0, -0]);
+  assert.throws(
+    () => normalizeGeoJsonFeatureCollection(collection, { maxFeatures: 0 }),
+    RangeError
+  );
+  assert.throws(
+    () => normalizeGeoJsonFeatureCollection({ ...collection, features: [collection.features[0], collection.features[0]] }, { maxFeatures: 1 }),
+    /split the import into bounded batches/
+  );
 });
