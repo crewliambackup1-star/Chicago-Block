@@ -1622,11 +1622,14 @@ function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
 }
 function switchHumanAnimation(rig,name){
   if(!rig)return;
-  const next=rig.actions?.[name]||rig.actions?.walk||rig.actions?.idle||rig.actions?.brisk;
-  if(!next||next===rig.activeAction)return;
-  rig.activeAction?.fadeOut(.18);
+  const actions=rig.highDetailActions||rig.actions;
+  const active=rig.highDetailActiveAction||rig.activeAction;
+  const next=actions?.[name]||actions?.walk||actions?.idle||actions?.brisk;
+  if(!next||next===active)return;
+  active?.fadeOut(.18);
   next.reset().fadeIn(.18).play();
-  rig.activeAction=next;
+  if(rig.highDetailActions)rig.highDetailActiveAction=next;
+  else rig.activeAction=next;
 }
 function installHumanAssets(template,cloneSkinnedModel){
   pedestrians.forEach((pedestrian,index)=>{
