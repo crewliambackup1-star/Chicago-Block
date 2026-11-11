@@ -1,11 +1,11 @@
 {
   "name": "chicago-block",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "A 3D Chicago-inspired neighborhood exploration game with a high-detail model and physically based texture overhaul, driving, deliveries, weather, and collectible landmarks",
+  "description": "A browser-based Chicago-inspired open-world game with an adaptive high-fidelity rendering foundation, realistic materials, driving and exploration",
   "scripts": {
-    "check": "node --check game.js && node --check controls.js",
+    "check": "node --check game.js && node --check controls.js && node --check rendering.js",
     "test": "node --test",
     "test:browser": "node tests/browser-smoke.mjs"
   }
