@@ -536,51 +536,92 @@ function stormDrain(x,z,rotation=0){
 
 function building(x,z,w,d,h,color,side=true){
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+  const style=Math.abs(Math.round(x*17+z*11))%4;
   const facade=color===M.cream?M.siding:color===M.dark?M.stucco:color;
-  cube(g,0,h/2,0,w,h,d,facade);cube(g,0,h+.2,0,w+.5,.4,d+.5,M.dark);
+  const floorHeight=style===1?3.15:style===2?3.55:3.3;
+  cube(g,0,h/2,0,w,h,d,facade);
+  cube(g,0,h+.2,0,w+.5,.4,d+.5,M.dark);
   cube(g,0,.16,0,w+.28,.32,d+.28,M.trim,false);
   cube(g,0,h+.43,0,w+.9,.16,d+.9,M.trim,false);
   cube(g,0,.42,0,w+.24,.32,d+.24,M.limestone,false);
   cube(g,0,h+.62,0,w+1.02,.12,d+1.02,M.limestone,false);
+
+  // Facade pilasters and projecting floor courses create real wall depth.
   for(const sx of [-1,1])for(const sz of [-1,1]){
     cube(g,sx*(w/2-.42),h/2,sz*(d/2+.045),.2,h-.9,.18,M.limestone,false);
   }
-  // Layered floor bands, drip caps and corner drainage pipes add believable depth.
-  for(let level=3.3;level<h;level+=3.3){
-    cube(g,0,level,d/2+.035,w,.085,.16,M.trim,false);
-    cube(g,0,level,-d/2-.035,w,.085,.16,M.trim,false);
-    cube(g,w/2+.035,level,0,.16,.085,d,M.trim,false);
-    cube(g,-w/2-.035,level,0,.16,.085,d,M.trim,false);
+  for(let level=floorHeight;level<h;level+=floorHeight){
+    const band=style===2?.11:.085;
+    cube(g,0,level,d/2+.035,w,band,.16,M.trim,false);
+    cube(g,0,level,-d/2-.035,w,band,.16,M.trim,false);
+    cube(g,w/2+.035,level,0,.16,band,d,M.trim,false);
+    cube(g,-w/2-.035,level,0,.16,band,d,M.trim,false);
   }
   for(const sx of [-1,1])for(const sz of [-1,1])cube(g,sx*(w/2-.12),h/2,sz*(d/2-.12),.16,h,.16,M.trim,false);
-  const rows=Math.max(2,Math.floor(h/3.3)),cols=Math.max(2,Math.floor(w/4.7));
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const px=-w/2+(c+.5)*w/cols,py=1.4+r*(h-2.2)/rows;
+
+  const rows=Math.max(2,Math.floor(h/floorHeight)),cols=Math.max(2,Math.floor(w/(style===0?4.1:4.7)));
+  for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){
+    const px=-w/2+(col+.5)*w/cols,py=1.4+r*(h-2.2)/rows;
     for(const face of [-1,1]){
-      windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:1.1,sy:1.4,sz:.08,face:'z',faceSign:face});
-      // A portion of windows have projecting sills and compact air-conditioning units.
-      if((r*cols+c+Math.round(x))%7===0){
+      windows.push({x:x+px,y:py,z:z+face*(d/2+.04),sx:style===0?1.18:1.1,sy:style===2?1.55:1.4,sz:.08,face:'z',faceSign:face});
+      if((r*cols+col+Math.round(x))%7===0){
         cube(g,px,py-.93,face*(d/2+.22),.72,.28,.34,M.metal,false);
         for(let vent=0;vent<4;vent++)cube(g,px-.24+vent*.16,py-.93,face*(d/2+.397),.025,.17,.018,M.silver,false);
         cube(g,px,py-1.1,face*(d/2+.22),.78,.045,.39,M.trim,false);
       }
-      // Select buildings receive small metal balconettes instead of a perfectly flat facade.
-      if(h>14&&((r*cols+c+Math.abs(Math.round(x)))%11===0)){
-        const balcony=cube(g,px,py-.82,face*(d/2+.55),1.48,.09,.78,M.metal,false);
+      if(h>14&&((r*cols+col+Math.abs(Math.round(x)))%11===0)){
+        cube(g,px,py-.82,face*(d/2+.55),1.48,.09,.78,M.metal,false);
         for(let rail=0;rail<7;rail++)cube(g,px-.68+rail*.227,py-.37,face*(d/2+.9),.035,.78,.045,M.silver,false);
         cube(g,px,py+.03,face*(d/2+.9),1.5,.055,.055,M.silver,false);
       }
     }
-    if(side)for(const face of [-1,1])windows.push({x:x+face*(w/2+.04),y:py,z:z-d/2+(c+.5)*d/cols,sx:.08,sy:1.35,sz:1,face:'x',faceSign:face});
+    if(side)for(const face of [-1,1])windows.push({x:x+face*(w/2+.04),y:py,z:z-d/2+(col+.5)*d/cols,sx:.08,sy:1.35,sz:1,face:'x',faceSign:face});
   }
+
+  // Framed entry, glazed door panel and a stone threshold at street level.
+  const front=d/2;
+  cube(g,0,.16,front+.43,2.05,.24,.82,M.limestone,false);
+  cube(g,-.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
+  cube(g,.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
+  cube(g,0,2.22,front+.15,1.42,.14,.18,M.limestone,false);
+  cube(g,0,1.42,front+.127,.64,.78,.035,M.glass,false);
+  cube(g,.39,1.04,front+.15,.045,.16,.04,M.silver,false);
+  cube(g,0,2.43,front+.42,1.82,.1,.88,style%2===0?M.metal:M.wood,false);
+  if(style===0||style===3){
+    cube(g,0,2.86,front+.84,2.0,.055,.045,M.silver,false);
+    for(let awning=-.84;awning<=.84;awning+=.28){
+      cube(g,awning,2.39,front+.87,.26,.12,.06,Math.round(awning*10)%2===0?M.white:M.red,false);
+    }
+  }
+
+  // Roof parapets, service hatches and vent stacks break up repeated flat rooflines.
+  for(const sx of [-1,1]){
+    cube(g,sx*(w/2-.5),h+.83,0,.16,.23,d+.56,M.limestone,false);
+  }
+  if(style===0||style===2||h>16){
+    const penthouseW=Math.max(4.2,w*.27),penthouseD=Math.max(4,d*.34);
+    cube(g,-w*.22,h+1.45,0,penthouseW,1.5,penthouseD,M.stucco,false);
+    cube(g,-w*.22,h+2.23,0,penthouseW+.28,.12,penthouseD+.28,M.limestone,false);
+    cube(g,-w*.22,h+1.35,penthouseD/2+.03,1.05,1.05,.06,M.metal,false);
+    architecturalDetailCounts.rooftopPenthouses++;
+  }
+  for(let vent=0;vent<2;vent++){
+    const stack=new THREE.Mesh(new THREE.CylinderGeometry(.14,.18,.68,12),M.metal);
+    stack.position.set(w*.2+vent*.75,h+.99,-d*.22);stack.castShadow=true;g.add(stack);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.07,12),M.silver);
+    cap.position.set(stack.position.x,h+1.35,stack.position.z);g.add(cap);
+  }
+
   // Downspouts with mounting straps make long blank corners less synthetic.
   for(const sx of [-1,1]){
-    const pipe=cube(g,sx*(w/2-.24),h/2,d/2+.13,.075,h-.35,.075,M.metal,false);
+    cube(g,sx*(w/2-.24),h/2,d/2+.13,.075,h-.35,.075,M.metal,false);
     for(let strap=0;strap<Math.floor(h/3.4);strap++)cube(g,sx*(w/2-.24),1.2+strap*3.3,d/2+.18,.18,.045,.045,M.silver,false);
   }
-  // Concrete roof coping and small vent stacks.
-  for(const sx of [-1,1])cube(g,sx*(w/2-.5),h+.74,0,.16,.22,d+.5,M.limestone,false);
-  cube(g,0,1.05,d/2+.06,1.1,2.1,.12,M.wood,false);block(x,z,w,d);
+  cube(g,0,1.05,d/2+.06,1.1,2.1,.12,M.wood,false);
+  cube(g,w*.31,2.45,d/2+.16,.48,.32,.08,M.metal,false);
+  cube(g,w*.31,2.45,d/2+.205,.34,.18,.018,M.white,false);
+  block(x,z,w,d);
+  architecturalDetailCounts.buildings++;
 }
 [
  [-119,-120,42,31,15,M.brick],[-72,-121,21,28,11,M.cream],
