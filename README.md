@@ -1,13 +1,14 @@
-# Chicago Block — V4.5 Smooth People & Vehicle Models
+# Chicago Block — V4.6 Realistic 3D Model Overhaul
 
-V4.5 replaces angular people and repeated traffic silhouettes with smaller, more naturally proportioned character heads and shoulders, rounded anatomical and footwear geometry, smoother curved vehicle bodies, rounded roof and tyre profiles, and four distinct traffic body-size variants. Pedestrian gait, traffic routes, driving physics, controls and camera behavior remain unchanged. The V4.3 lighting, reflections and weather pipeline and V4.4 geographic-data foundation are retained.
+V4.6 introduces an actual asset-based model path instead of relying exclusively on procedural primitive assemblies. Nearby pedestrians and the player avatar can use a textured, clothed CC0 human GLB; the player car and traffic can use a separate CC0 sedan GLB with PBR coachwork, glazing, lamps, wheels and trim. Existing procedural models remain as graceful fallbacks and as lower-detail pedestrian models at distance. Existing movement, pedestrian routes, vehicle physics, traffic routes, weather, cameras and activities are preserved.
 
-## V4.5 people and vehicle model refinement
-- Character head assemblies are proportionally reduced around a pivot, preserving the existing head animation while bringing head-to-body scale closer to natural adult proportions.
-- Shoulder span, torso width, arm and leg profiles, shoes and soles are refined with smoother, less block-like shapes.
-- Vehicle side profiles use rounded quadratic corners and deeper multi-segment bevels; the roof panel, tyres and wheel spokes use softer curved geometry.
-- Four distinct traffic body-size variants include sedan, SUV, wagon and compact silhouettes while preserving all seven traffic routes and the player sedan's handling dimensions.
-- Character and vehicle material finishes, interior silhouettes, wheel hardware, lighting and adaptive rendering remain active.
+## V4.6 high-fidelity people and vehicles
+- Adds asynchronous GLB loading through Three.js GLTFLoader. Remote assets do not block the start screen or simulation; failed requests leave procedural models active.
+- Uses the Innerscene CC0 clothed walking-person asset for close pedestrians and the player avatar. It is a detailed, textured static stride-pose mesh, not a skeletal animation clip; NPC route movement and subtle root bob remain active. The existing articulated procedural pedestrian rig remains the far-distance LOD and offline fallback.
+- Uses the Innerscene CC0 sedan exterior asset for the player vehicle and seven traffic vehicles. Existing vehicle groups preserve physics, scale, routes and movement. High-detail assets are used near the camera; the existing procedural vehicle remains the far-distance fallback.
+- Adds a player cockpit detail pass because the source sedan asset focuses on the exterior.
+- Model loading is skipped in automation mode, keeping CI deterministic and fast.
+- Full motion-captured skeletal pedestrian animation, additional distinct character variants and multiple vehicle body styles remain future refinements.
 
 ## V4.2 human model and animation changes (retained)
 - Replaces the single-sphere torso with a tapered lathed body profile that defines the shoulders, chest, waist and abdomen more naturally.
@@ -64,6 +65,7 @@ V4.5 replaces angular people and repeated traffic silhouettes with smaller, more
 - V4.3: lighting, reflections, sky and weather atmosphere.
 - V4.4: geographic data foundation and streamed city sections.
 - V4.5: smooth, naturally proportioned people and varied vehicle models.
+- V4.6: real CC0 human and vehicle GLB assets, distance-based fallback and non-blocking loading.
 
 ## Validation
 `npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
@@ -76,7 +78,7 @@ Automated screenshots are saved as GitHub Actions artifacts. Tests use the local
 python3 -m http.server 8080
 ```
 
-Open http://localhost:8080. Three.js loads from jsDelivr. Optional CC0 PBR images load from Poly Haven when available; procedural fallbacks remain if those requests fail.
+Open http://localhost:8080. Three.js and its GLTFLoader addon load from jsDelivr. V4.6 CC0 GLB model assets load asynchronously from Innerscene; the existing procedural assets remain active if remote loading fails. Optional CC0 PBR images load from Poly Haven when available; procedural fallbacks remain if those requests fail.
 
 ## Automated checks
 
@@ -89,7 +91,7 @@ npm run test:browser
 ```
 
 ## Asset licensing
-See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for third-party CC0 texture sources.
+See [`assets/ASSET_LICENSES.md`](assets/ASSET_LICENSES.md) for the CC0 human, vehicle and texture sources.
 
 ## V4.4 geographic-data foundation
 
