@@ -1586,11 +1586,11 @@ const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue,23);world.add(avatar);
 
 const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading'};
-function prepareHumanAsset(source,appearance=0){
-  const model=source.scene.clone(true);
-  const initialBounds=new THREE.Box3().setFromObject(model);
-  const initialSize=initialBounds.getSize(new THREE.Vector3());
-  model.scale.setScalar(1.74/Math.max(initialSize.y,.001));model.updateMatrixWorld(true);
+function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
+  const model=cloneSkinnedModel(source.scene);
+  const boundsBeforeScale=new THREE.Box3().setFromObject(model);
+  const sizeBeforeScale=boundsBeforeScale.getSize(new THREE.Vector3());
+  model.scale.setScalar(1.74/Math.max(sizeBeforeScale.y,.001));model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
   model.position.set(-center.x,-bounds.min.y,-center.z);
   model.traverse(node=>{
@@ -1599,33 +1599,65 @@ function prepareHumanAsset(source,appearance=0){
     const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
     const materials=sourceMaterials.map(material=>{
       const cloned=material.clone(),tag=(node.name+' '+(material.name||'')).toLowerCase();
-      if(/shirt|trouser|jacket|coat|fabric|clothing|jean|sweater/.test(tag)&&cloned.color)
+      if(/shirt|trouser|jacket|coat|fabric|clothing|jean|sweater|top/.test(tag)&&cloned.color)
         cloned.color.multiplyScalar([.94,1.04,.98,1.08,.9][appearance%5]);
       return cloned;
     });
     node.material=Array.isArray(node.material)?materials:materials[0];
   });
-  return model;
+  const mixer=new THREE.AnimationMixer(model);
+  const clips=source.animations||[];
+  const findClip=patterns=>clips.find(clip=>patterns.some(pattern=>clip.name.toLowerCase().includes(pattern)));
+  const idleClip=findClip(['idle','stand']);
+  const walkClip=findClip(['relaxed walk','walk']);
+  const briskClip=findClip(['brisk walk','jog']);
+  const actions={
+    idle:idleClip?mixer.clipAction(idleClip):null,
+    walk:walkClip?mixer.clipAction(walkClip):null,
+    brisk:briskClip?mixer.clipAction(briskClip):null
+  };
+  const initialAction=actions.walk||actions.idle||actions.brisk;
+  if(initialAction)initialAction.play();
+  return {model,mixer,actions,activeAction:initialAction};
 }
-function installHumanAssets(template){
+function switchHumanAnimation(rig,name){
+  if(!rig)return;
+  const next=rig.actions?.[name]||rig.actions?.walk||rig.actions?.idle||rig.actions?.brisk;
+  if(!next||next===rig.activeAction)return;
+  rig.activeAction?.fadeOut(.18);
+  next.reset().fadeIn(.18).play();
+  rig.activeAction=next;
+}
+function installHumanAssets(template,cloneSkinnedModel){
   pedestrians.forEach((pedestrian,index)=>{
-    const low=pedestrian.g,position=low.position.clone(),high=prepareHumanAsset(template,index);
+    const low=pedestrian.g,position=low.position.clone();
+    const prepared=prepareHumanAsset(template,index,cloneSkinnedModel);
     const lod=new THREE.LOD();
-    lod.addLevel(high,0);lod.addLevel(low,27+(index%3)*4);
+    lod.addLevel(prepared.model,0);lod.addLevel(low,27+(index%3)*4);
     low.position.set(0,0,0);
     Object.assign(lod.userData,low.userData);
-    lod.userData.highDetailModel=high;lod.userData.externalModel=true;
-    lod.userData.visualQuality='v4.6-cc0-realistic-human-glb';
-    lod.userData.animationRig='v4.6-stride-pose-root-motion';
+    lod.userData.highDetailModel=prepared.model;
+    lod.userData.highDetailMixer=prepared.mixer;
+    lod.userData.highDetailActions=prepared.actions;
+    lod.userData.highDetailActiveAction=prepared.activeAction;
+    lod.userData.externalModel=true;
+    lod.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
+    lod.userData.animationRig='v4.6-skeleton-animation-clips';
     lod.position.copy(position);
     world.remove(low);world.add(lod);pedestrian.g=lod;
   });
-  const high=prepareHumanAsset(template,23);
+  const prepared=prepareHumanAsset(template,23,cloneSkinnedModel);
   for(const child of avatar.children)child.visible=false;
-  avatar.add(high);avatar.userData.highDetailModel=high;avatar.userData.externalModel=true;
-  avatar.userData.visualQuality='v4.6-cc0-realistic-human-glb';
-  avatar.userData.animationRig='v4.6-stride-pose-root-motion';
+  avatar.add(prepared.model);
+  avatar.userData.highDetailModel=prepared.model;
+  avatar.userData.highDetailMixer=prepared.mixer;
+  avatar.userData.highDetailActions=prepared.actions;
+  avatar.userData.highDetailActiveAction=prepared.activeAction;
+  avatar.userData.externalModel=true;
+  avatar.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
+  avatar.userData.animationRig='v4.6-skeleton-animation-clips';
 }
+
 function prepareVehicleAsset(source,color){
   const model=source.scene.clone(true),initial=new THREE.Box3().setFromObject(source.scene);
   const size=initial.getSize(new THREE.Vector3());
@@ -1688,7 +1720,7 @@ async function loadV46Models(){
   if(automationMode)return;
   try{
     const loaded=await loadModelAssets();
-    if(loaded.pedestrian?.scene){installHumanAssets(loaded.pedestrian);modelAssetStatus.pedestrian='loaded-cc0-glb';}
+    if(loaded.pedestrian?.scene){installHumanAssets(loaded.pedestrian,loaded.cloneSkinnedModel);modelAssetStatus.pedestrian='loaded-cc0-rigged-animated-glb';}
     else modelAssetStatus.pedestrian='procedural-fallback';
     if(loaded.vehicle?.scene){
       installVehicleAsset(playerCar,loaded.vehicle,0x315e83,true);
@@ -1701,7 +1733,7 @@ async function loadV46Models(){
     console.warn('V4.6 model assets unavailable; keeping procedural models.',error);
   }
   const label=$('brand')?.querySelector('small');
-  if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
+  if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
     ?'HIGH-FIDELITY 3D MODELS · V4.6':'V4.6 MODEL FALLBACK ACTIVE';
 }
 if(!automationMode)void loadV46Models();
@@ -1866,6 +1898,14 @@ $('playButton').addEventListener('click',()=>{
   requestLookLock();
 });
 
+function updateAvatarAssetAnimation(dt){
+  const rig=avatar.userData;
+  if(!rig.highDetailMixer)return;
+  const moving=!inCar&&(input('w')||input('a')||input('s')||input('d')||
+    input('arrowup')||input('arrowdown')||input('arrowleft')||input('arrowright'));
+  switchHumanAnimation(rig,moving?'walk':'idle');
+  rig.highDetailMixer.update(dt);
+}
 function walkNPCs(dt,time){
   for(const p of pedestrians){
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
@@ -1876,7 +1916,7 @@ function walkNPCs(dt,time){
       p.g.rotation.y=Math.atan2(dx,dz);
     }
     const phase=time*(6.1+p.speed*.48)+p.phase;
-    if(p.g.userData.highDetailModel?.visible){p.g.position.y=Math.abs(Math.sin(phase*2))*.012;continue;}
+    if(p.g.userData.highDetailModel?.visible){p.g.userData.highDetailMixer?.update(dt);continue;}
     p.g.position.y=0;
     const swing=Math.sin(phase)*.31;
     const liftLeft=Math.max(0,Math.sin(phase))*.58;
@@ -2007,7 +2047,7 @@ const timer=new THREE.Clock();let elapsed=0,automationRenderCounter=0;
 function frame(){
   requestAnimationFrame(frame);const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
   if(started){
-    elapsed+=dt;movePlayer(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+    elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
     deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
     for(let i=0;i<landmarks.length;i++){
       const marker=landmarks[i].marker;
