@@ -2073,19 +2073,21 @@ function updateZone(){
 }
 const timer=new THREE.Clock();let elapsed=0,automationRenderCounter=0;
 function frame(){
-  requestAnimationFrame(frame);const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
-  if(started){
-    elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
-    deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
-    for(let i=0;i<landmarks.length;i++){
-      const marker=landmarks[i].marker;
-      if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
-    }
-    if(elapsed%0.22<dt){updateMap();updateZone();}
-    if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
+  requestAnimationFrame(frame);
+  const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
+  // The title screen fully covers the 3D scene. Skip simulation and WebGL draws until
+  // the player starts, avoiding unnecessary GPU work while large models load.
+  if(!started)return;
+  elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+  deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
+  for(let i=0;i<landmarks.length;i++){
+    const marker=landmarks[i].marker;
+    if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
   }
+  if(elapsed%0.22<dt){updateMap();updateZone();}
+  if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   updateVehicleAssetLods();
-  adaptiveResolution.update(dt,started&&!document.hidden);
+  adaptiveResolution.update(dt,!document.hidden);
   // CI's software renderer draws less often; normal players render every frame.
   if(++automationRenderCounter%renderProfile.renderEveryNthFrame===0)renderer.render(scene,camera);
 }
