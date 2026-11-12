@@ -160,8 +160,8 @@ test('V4.5 vehicles use rounded silhouettes, soft wheel geometry and distinct tr
 
 test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fallbacks', async () => {
   const { V46_MODEL_ASSET_URLS } = await import('../model-assets.js');
-  assert.match(V46_MODEL_ASSET_URLS.pedestrian, /assets\\/models\\/human-locomotion\\.glb$/);
-  assert.match(V46_MODEL_ASSET_URLS.vehicle, /assets\\/models\\/sedan-exterior\\.glb$/);
+  assert.ok(new URL(V46_MODEL_ASSET_URLS.pedestrian).pathname.endsWith('/assets/models/human-locomotion.glb'));
+  assert.ok(new URL(V46_MODEL_ASSET_URLS.vehicle).pathname.endsWith('/assets/models/sedan-exterior.glb'));
   for (const feature of [
     'loadModelAssets','new THREE.LOD()','installHumanAssets','installVehicleAsset',
     'updateVehicleAssetLods','procedural-fallback','automation-fallback',
