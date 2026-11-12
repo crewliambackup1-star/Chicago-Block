@@ -325,3 +325,36 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
     await browser.close();
   }
 });
+
+
+test('V4.6 normal player mode loads the real human and vehicle GLB assets', async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader']
+  });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  try {
+    // Deliberately omit ?automation=1: that mode skips large remote assets.
+    await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForFunction(
+      () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
+      null,
+      { timeout: 60000 }
+    );
+    await page.waitForFunction(() => {
+      const assets = window.__CHICAGO_BLOCK_RENDER__?.getState()?.modelAssets;
+      return assets && assets.pedestrian !== 'loading' && assets.vehicle !== 'loading';
+    }, null, { timeout: 180000 });
+    const assets = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__.getState().modelAssets);
+    assert.equal(assets.pedestrian, 'loaded-cc0-rigged-animated-glb', 'the skinned animated human model should load in normal player mode: '+JSON.stringify(assets));
+    assert.equal(assets.vehicle, 'loaded-cc0-glb', 'the detailed sedan model should load in normal player mode: '+JSON.stringify(assets));
+    // Model loading and installation are the scope of this test. The desktop/mobile
+    // playthroughs above already cover interaction; avoid hit-testing a live WebGL
+    // canvas here because software-rendered CI can make UI stability waits flaky.
+    assert.deepEqual(pageErrors, [], 'normal player mode should load models without runtime exceptions');
+  } finally {
+    await browser.close();
+  }
+});

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { getCarSteeringInput } from './controls.js';
 import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
 import { getAtmosphereState } from './atmosphere.js';
+import { loadModelAssets } from './model-assets.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1583,6 +1584,188 @@ for(let i=0;i<7;i++){
 
 const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue,23);world.add(avatar);
+
+const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading',errors:{pedestrian:null,vehicle:null,loader:null}};
+function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
+  const model=cloneSkinnedModel(source.scene);
+  const boundsBeforeScale=new THREE.Box3().setFromObject(model);
+  const sizeBeforeScale=boundsBeforeScale.getSize(new THREE.Vector3());
+  model.scale.setScalar(1.74/Math.max(sizeBeforeScale.y,.001));model.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
+  model.position.set(-center.x,-bounds.min.y,-center.z);
+  model.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
+    const materials=sourceMaterials.map(material=>{
+      const cloned=material.clone(),tag=(node.name+' '+(material.name||'')).toLowerCase();
+      if(/shirt|trouser|jacket|coat|fabric|clothing|jean|sweater|top/.test(tag)&&cloned.color)
+        cloned.color.multiplyScalar([.94,1.04,.98,1.08,.9][appearance%5]);
+      return cloned;
+    });
+    node.material=Array.isArray(node.material)?materials:materials[0];
+  });
+  const mixer=new THREE.AnimationMixer(model);
+  const clips=source.animations||[];
+  const findClip=patterns=>clips.find(clip=>patterns.some(pattern=>clip.name.toLowerCase().includes(pattern)));
+  const idleClip=findClip(['idle','stand']);
+  const walkClip=findClip(['relaxed walk','walk']);
+  const briskClip=findClip(['brisk walk','jog']);
+  const actions={
+    idle:idleClip?mixer.clipAction(idleClip):null,
+    walk:walkClip?mixer.clipAction(walkClip):null,
+    brisk:briskClip?mixer.clipAction(briskClip):null
+  };
+  const initialAction=actions.walk||actions.idle||actions.brisk;
+  if(initialAction)initialAction.play();
+  return {model,mixer,actions,activeAction:initialAction};
+}
+function switchHumanAnimation(rig,name){
+  if(!rig)return;
+  const actions=rig.highDetailActions||rig.actions;
+  const active=rig.highDetailActiveAction||rig.activeAction;
+  const next=actions?.[name]||actions?.walk||actions?.idle||actions?.brisk;
+  if(!next||next===active)return;
+  active?.fadeOut(.18);
+  next.reset().fadeIn(.18).play();
+  if(rig.highDetailActions)rig.highDetailActiveAction=next;
+  else rig.activeAction=next;
+}
+function installHumanAssets(template,cloneSkinnedModel){
+  pedestrians.forEach((pedestrian,index)=>{
+    const low=pedestrian.g,position=low.position.clone();
+    const prepared=prepareHumanAsset(template,index,cloneSkinnedModel);
+    prepared.mixer.timeScale=pedestrian.speed/1.3;
+    const lod=new THREE.LOD();
+    lod.addLevel(prepared.model,0);lod.addLevel(low,27+(index%3)*4);
+    low.position.set(0,0,0);
+    Object.assign(lod.userData,low.userData);
+    lod.userData.highDetailModel=prepared.model;
+    lod.userData.highDetailMixer=prepared.mixer;
+    lod.userData.highDetailActions=prepared.actions;
+    lod.userData.highDetailActiveAction=prepared.activeAction;
+    lod.userData.externalModel=true;
+    lod.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
+    lod.userData.animationRig='v4.6-skeleton-animation-clips';
+    lod.position.copy(position);
+    world.remove(low);world.add(lod);pedestrian.g=lod;
+  });
+  const prepared=prepareHumanAsset(template,23,cloneSkinnedModel);
+  for(const child of avatar.children)child.visible=false;
+  avatar.add(prepared.model);
+  avatar.userData.highDetailModel=prepared.model;
+  avatar.userData.highDetailMixer=prepared.mixer;
+  avatar.userData.highDetailActions=prepared.actions;
+  avatar.userData.highDetailActiveAction=prepared.activeAction;
+  avatar.userData.externalModel=true;
+  avatar.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
+  avatar.userData.animationRig='v4.6-skeleton-animation-clips';
+}
+
+function prepareVehicleAsset(source,color){
+  const model=source.scene.clone(true),initial=new THREE.Box3().setFromObject(source.scene);
+  const size=initial.getSize(new THREE.Vector3());
+  model.rotation.y=size.x>size.z?Math.PI/2:Math.PI;
+  model.scale.setScalar(4.48/Math.max(size.x,size.z,.001));model.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
+  model.position.set(-center.x,-bounds.min.y,-center.z);
+  const wheels=[];
+  model.traverse(node=>{
+    if(node.name&&/(wheel|tire|tyre|rim)/i.test(node.name))wheels.push(node);
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
+    const materials=sourceMaterials.map(material=>{
+      const cloned=material.clone(),tag=(node.name+' '+(material.name||'')).toLowerCase();
+      if(cloned.color&&!/glass|window|tire|tyre|rubber|chrome|metal|trim|lamp|light|seat|interior/.test(tag))
+        cloned.color.setHex(color);
+      return cloned;
+    });
+    node.material=Array.isArray(node.material)?materials:materials[0];
+  });
+  return {model,wheels};
+}
+function installVehicleAsset(target,template,color,detailedInterior=false){
+  const oldWheels=target.userData.wheels||[],lowBody=new THREE.Group(),lowWheels=new THREE.Group();
+  for(const child of [...target.children]){
+    target.remove(child);
+    (oldWheels.includes(child)?lowWheels:lowBody).add(child);
+  }
+  const prepared=prepareVehicleAsset(template,color),high=prepared.model;
+  if(detailedInterior){
+    const cabin=new THREE.Group(),upholstery=new THREE.MeshStandardMaterial({color:0x252a2c,roughness:.88});
+    const dash=new THREE.Mesh(new THREE.BoxGeometry(1.48,.18,.34),upholstery);
+    dash.position.set(0,1.02,-.89);cabin.add(dash);
+    for(const x of [-.43,.43]){
+      const seat=new THREE.Mesh(new THREE.CapsuleGeometry(.28,.42,7,14),upholstery);
+      seat.scale.set(1,.88,.72);seat.position.set(x,.78,.36);cabin.add(seat);
+      const back=new THREE.Mesh(new THREE.CapsuleGeometry(.25,.46,7,14),upholstery);
+      back.scale.set(1,.94,.5);back.position.set(x,1.12,.62);cabin.add(back);
+    }
+    const steering=new THREE.Mesh(new THREE.TorusGeometry(.2,.025,8,24),new THREE.MeshStandardMaterial({color:0x202426,roughness:.58}));
+    steering.position.set(.43,1.25,-.92);steering.rotation.x=.86;cabin.add(steering);high.add(cabin);
+  }
+  target.add(lowBody,lowWheels,high);
+  const modelWheels=prepared.wheels.filter(node=>node!==high&&node.parent);
+  target.userData.wheels=modelWheels.length>=4?modelWheels:oldWheels;
+  target.userData.modelLod={high,lowBody,lowWheels,hasModelWheels:modelWheels.length>=4};
+  target.userData.externalModel=true;target.userData.visualQuality='v4.6-cc0-realistic-vehicle-glb';
+  target.userData.paintFinish='cc0-pbr-glb';target.userData.glassFinish='cc0-glb-pbr-glazing';
+  target.userData.interiorType=detailedInterior?'enhanced-player-cabin':'glb-exterior';
+}
+function updateVehicleAssetLods(){
+  for(const vehicle of [playerCar,...traffic.map(item=>item.g)]){
+    const lod=vehicle.userData.modelLod;if(!lod)continue;
+    const near=camera.position.distanceTo(vehicle.position)<78;
+    lod.high.visible=near;lod.lowBody.visible=!near;lod.lowWheels.visible=!near||!lod.hasModelWheels;
+  }
+}
+async function loadV46Models(){
+  if(automationMode)return;
+  let loaded;
+  try{
+    loaded=await loadModelAssets();
+  }catch(error){
+    modelAssetStatus.errors.loader=String(error?.stack||error);
+    modelAssetStatus.pedestrian='procedural-fallback';
+    modelAssetStatus.vehicle='procedural-fallback';
+    console.warn('V4.6 GLB loader initialization failed.',error);
+    return;
+  }
+  if(loaded.pedestrian?.scene){
+    try{
+      installHumanAssets(loaded.pedestrian,loaded.cloneSkinnedModel);
+      modelAssetStatus.pedestrian='loaded-cc0-rigged-animated-glb';
+    }catch(error){
+      modelAssetStatus.pedestrian='procedural-fallback';
+      modelAssetStatus.errors.pedestrian=String(error?.stack||error);
+      console.warn('V4.6 human model installation failed.',error);
+    }
+  }else{
+    modelAssetStatus.pedestrian='procedural-fallback';
+    modelAssetStatus.errors.pedestrian=loaded.errors?.pedestrian||'No human scene returned from GLTFLoader.';
+  }
+  if(loaded.vehicle?.scene){
+    try{
+      installVehicleAsset(playerCar,loaded.vehicle,0x315e83,true);
+      const colors=[0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92];
+      traffic.forEach((item,index)=>installVehicleAsset(item.g,loaded.vehicle,colors[index%colors.length],false));
+      modelAssetStatus.vehicle='loaded-cc0-glb';
+    }catch(error){
+      modelAssetStatus.vehicle='procedural-fallback';
+      modelAssetStatus.errors.vehicle=String(error?.stack||error);
+      console.warn('V4.6 vehicle model installation failed.',error);
+    }
+  }else{
+    modelAssetStatus.vehicle='procedural-fallback';
+    modelAssetStatus.errors.vehicle=loaded.errors?.vehicle||'No vehicle scene returned from GLTFLoader.';
+  }
+  const label=$('brand')?.querySelector('small');
+  if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
+    ?'HIGH-FIDELITY 3D MODELS · V4.6':'V4.6 MODEL FALLBACK ACTIVE';
+}
+if(!automationMode)void loadV46Models();
+
 let started=false,inCar=false,firstPerson=false,yaw=0,pitch=-.08,velocity=0;
 let gameHours=14+20/60,lastToast=0,dragging=false,lastPointer={x:0,y:0};
 let weatherMode='clear';
@@ -1743,6 +1926,14 @@ $('playButton').addEventListener('click',()=>{
   requestLookLock();
 });
 
+function updateAvatarAssetAnimation(dt){
+  const rig=avatar.userData;
+  if(!rig.highDetailMixer)return;
+  const moving=!inCar&&(input('w')||input('a')||input('s')||input('d')||
+    input('arrowup')||input('arrowdown')||input('arrowleft')||input('arrowright'));
+  switchHumanAnimation(rig,moving?'walk':'idle');
+  rig.highDetailMixer.update(dt);
+}
 function walkNPCs(dt,time){
   for(const p of pedestrians){
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
@@ -1753,6 +1944,8 @@ function walkNPCs(dt,time){
       p.g.rotation.y=Math.atan2(dx,dz);
     }
     const phase=time*(6.1+p.speed*.48)+p.phase;
+    if(p.g.userData.highDetailModel?.visible){p.g.userData.highDetailMixer?.update(dt);continue;}
+    p.g.position.y=0;
     const swing=Math.sin(phase)*.31;
     const liftLeft=Math.max(0,Math.sin(phase))*.58;
     const liftRight=Math.max(0,Math.sin(phase+Math.PI))*.58;
@@ -1880,18 +2073,21 @@ function updateZone(){
 }
 const timer=new THREE.Clock();let elapsed=0,automationRenderCounter=0;
 function frame(){
-  requestAnimationFrame(frame);const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
-  if(started){
-    elapsed+=dt;movePlayer(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
-    deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
-    for(let i=0;i<landmarks.length;i++){
-      const marker=landmarks[i].marker;
-      if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
-    }
-    if(elapsed%0.22<dt){updateMap();updateZone();}
-    if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
+  requestAnimationFrame(frame);
+  const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
+  // The title screen fully covers the 3D scene. Skip simulation and WebGL draws until
+  // the player starts, avoiding unnecessary GPU work while large models load.
+  if(!started)return;
+  elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+  deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
+  for(let i=0;i<landmarks.length;i++){
+    const marker=landmarks[i].marker;
+    if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
   }
-  adaptiveResolution.update(dt,started&&!document.hidden);
+  if(elapsed%0.22<dt){updateMap();updateZone();}
+  if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
+  updateVehicleAssetLods();
+  adaptiveResolution.update(dt,!document.hidden);
   // CI's software renderer draws less often; normal players render every frame.
   if(++automationRenderCounter%renderProfile.renderEveryNthFrame===0)renderer.render(scene,camera);
 }
@@ -1904,7 +2100,7 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
     qualityProfile:renderProfile.name,
-    externalPbrStatus:{...externalPbrStatus}
+    externalPbrStatus:{...externalPbrStatus},modelAssets:{...modelAssetStatus}
   })
 }),configurable:false});
 if(automationMode){
@@ -1932,6 +2128,7 @@ if(automationMode){
         return {forward:f,side:s,dx,dz,positionBlocked:blocked(player.x,player.z),nextPositionBlocked:blocked(player.x+dx,player.z+dz),yaw};
       })(),
       elapsed,
+      modelAssets:{...modelAssetStatus},
       simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
       npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
@@ -1959,4 +2156,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul';
