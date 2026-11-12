@@ -46,9 +46,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
   page.on('pageerror', error => pageErrors.push(error.message));
   try {
     await waitForReady(page);
-    // Model loading and installation are the scope of this test. The desktop/mobile
-    // playthroughs above already cover interaction; avoid hit-testing a live WebGL
-    // canvas here because software-rendered CI can make UI stability waits flaky.
+    await page.locator('#playButton').click();
     await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     const initial = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
     await page.waitForFunction(() =>
