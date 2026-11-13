@@ -4,6 +4,7 @@ import { createAdaptiveResolutionController, createGraphicsProfile } from './ren
 import { getAtmosphereState } from './atmosphere.js';
 import { loadModelAssets } from './model-assets.js';
 import { addWorldEnvironmentDetails } from './environment-details.js';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1651,6 +1652,22 @@ const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue,23);world.add(avatar);
 
 const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading',errors:{pedestrian:null,vehicle:null,loader:null}};
+function applySurfaceProfile(material,profile){
+  let tuned=material.clone();
+  if((profile.clearcoat!==undefined||profile.sheen!==undefined)&&!tuned.isMeshPhysicalMaterial){
+    // MeshPhysicalMaterial.copy expects physical-only vectors (for example
+    // sheenColor) that a MeshStandardMaterial does not define. Copy the
+    // standard PBR fields explicitly through the parent implementation so
+    // source textures, color, maps and common settings remain intact.
+    const physical=new THREE.MeshPhysicalMaterial();
+    THREE.MeshStandardMaterial.prototype.copy.call(physical,tuned);
+    tuned.dispose();tuned=physical;
+  }
+  for(const key of ['roughness','metalness','envMapIntensity','clearcoat','clearcoatRoughness','sheen','sheenRoughness']){
+    if(profile[key]!==undefined)tuned[key]=profile[key];
+  }
+  return tuned;
+}
 function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
   const model=cloneSkinnedModel(source.scene);
   const boundsBeforeScale=new THREE.Box3().setFromObject(model);
@@ -1658,43 +1675,41 @@ function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
   model.scale.setScalar(1.74/Math.max(sizeBeforeScale.y,.001));model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
   model.position.set(-center.x,-bounds.min.y,-center.z);
+  const surfaceCounts={};
   model.traverse(node=>{
     if(!node.isMesh)return;
     node.castShadow=true;node.receiveShadow=true;
     const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
     const materials=sourceMaterials.map(material=>{
-      const cloned=material.clone(),tag=(node.name+' '+(material.name||'')).toLowerCase();
-      if(/shirt|trouser|jacket|coat|fabric|clothing|jean|sweater|top/.test(tag)&&cloned.color)
-        cloned.color.multiplyScalar([.94,1.04,.98,1.08,.9][appearance%5]);
-      return cloned;
+      const profile=getHumanSurfaceProfile(node.name,material.name,appearance);
+      surfaceCounts[profile.kind]=(surfaceCounts[profile.kind]||0)+1;
+      const tuned=applySurfaceProfile(material,profile);
+      if(profile.colorMultiplier!==undefined&&tuned.color)tuned.color.multiplyScalar(profile.colorMultiplier);
+      return tuned;
     });
     node.material=Array.isArray(node.material)?materials:materials[0];
   });
+  model.userData.visualProfileCounts=surfaceCounts;
   const mixer=new THREE.AnimationMixer(model);
   const clips=source.animations||[];
-  const findClip=patterns=>clips.find(clip=>patterns.some(pattern=>clip.name.toLowerCase().includes(pattern)));
-  const idleClip=findClip(['idle','stand']);
-  const walkClip=findClip(['relaxed walk','walk']);
-  const briskClip=findClip(['brisk walk','jog']);
-  const actions={
-    idle:idleClip?mixer.clipAction(idleClip):null,
-    walk:walkClip?mixer.clipAction(walkClip):null,
-    brisk:briskClip?mixer.clipAction(briskClip):null
-  };
-  const initialAction=actions.walk||actions.idle||actions.brisk;
+  const clipMap=mapHumanAnimationClips(clips);
+  const actions=Object.fromEntries(Object.entries(clipMap).map(([name,clip])=>[name,clip?mixer.clipAction(clip):null]));
+  const initialAction=actions.idle||actions.walk||actions.brisk||actions.jog||actions.run;
   if(initialAction)initialAction.play();
-  return {model,mixer,actions,activeAction:initialAction};
+  return {model,mixer,actions,activeAction:initialAction,availableClips:Object.keys(clipMap).filter(name=>clipMap[name])};
 }
 function switchHumanAnimation(rig,name){
   if(!rig)return;
   const actions=rig.highDetailActions||rig.actions;
   const active=rig.highDetailActiveAction||rig.activeAction;
-  const next=actions?.[name]||actions?.walk||actions?.idle||actions?.brisk;
+  const fallbackOrder=name==='run'?['run','jog','brisk','walk','idle']
+    :name==='jog'?['jog','brisk','walk','idle']
+    :name==='brisk'?['brisk','walk','jog','idle']
+    :name==='walk'?['walk','brisk','jog','run','idle']:['idle','walk','brisk','jog'];
+  const next=fallbackOrder.map(key=>actions?.[key]).find(Boolean);
   if(!next||next===active)return;
-  active?.fadeOut(.18);
-  next.reset().fadeIn(.18).play();
-  if(rig.highDetailActions)rig.highDetailActiveAction=next;
-  else rig.activeAction=next;
+  active?.fadeOut(.22);next.reset().fadeIn(.22).play();
+  if(rig.highDetailActions)rig.highDetailActiveAction=next;else rig.activeAction=next;
 }
 function installHumanAssets(template,cloneSkinnedModel){
   pedestrians.forEach((pedestrian,index)=>{
@@ -1709,10 +1724,15 @@ function installHumanAssets(template,cloneSkinnedModel){
     lod.userData.highDetailMixer=prepared.mixer;
     lod.userData.highDetailActions=prepared.actions;
     lod.userData.highDetailActiveAction=prepared.activeAction;
+    lod.userData.highDetailAvailableClips=prepared.availableClips;
+    lod.userData.surfaceProfileCounts=prepared.model.userData.visualProfileCounts;
     lod.userData.externalModel=true;
-    lod.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
-    lod.userData.animationRig='v4.6-skeleton-animation-clips';
+    lod.userData.visualQuality='v4.8-surface-refined-rigged-human-glb';
+    lod.userData.animationRig='v4.8-full-locomotion-clip-set';
     lod.position.copy(position);
+    const preferredAnimation=pedestrian.speed>1.29?'brisk':'walk';
+    switchHumanAnimation(lod.userData,preferredAnimation);
+    lod.userData.locomotionStyle=preferredAnimation;
     world.remove(low);world.add(lod);pedestrian.g=lod;
   });
   const prepared=prepareHumanAsset(template,23,cloneSkinnedModel);
@@ -1722,9 +1742,11 @@ function installHumanAssets(template,cloneSkinnedModel){
   avatar.userData.highDetailMixer=prepared.mixer;
   avatar.userData.highDetailActions=prepared.actions;
   avatar.userData.highDetailActiveAction=prepared.activeAction;
+  avatar.userData.highDetailAvailableClips=prepared.availableClips;
+  avatar.userData.surfaceProfileCounts=prepared.model.userData.visualProfileCounts;
   avatar.userData.externalModel=true;
-  avatar.userData.visualQuality='v4.6-cc0-rigged-animated-human-glb';
-  avatar.userData.animationRig='v4.6-skeleton-animation-clips';
+  avatar.userData.visualQuality='v4.8-surface-refined-rigged-human-glb';
+  avatar.userData.animationRig='v4.8-full-locomotion-clip-set';
 }
 
 function prepareVehicleAsset(source,color){
@@ -1734,21 +1756,23 @@ function prepareVehicleAsset(source,color){
   model.scale.setScalar(4.48/Math.max(size.x,size.z,.001));model.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(model),center=bounds.getCenter(new THREE.Vector3());
   model.position.set(-center.x,-bounds.min.y,-center.z);
-  const wheels=[];
+  const wheels=[],surfaceCounts={};
   model.traverse(node=>{
     if(node.name&&/(wheel|tire|tyre|rim)/i.test(node.name))wheels.push(node);
     if(!node.isMesh)return;
     node.castShadow=true;node.receiveShadow=true;
     const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
     const materials=sourceMaterials.map(material=>{
-      const cloned=material.clone(),tag=(node.name+' '+(material.name||'')).toLowerCase();
-      if(cloned.color&&!/glass|window|tire|tyre|rubber|chrome|metal|trim|lamp|light|seat|interior/.test(tag))
-        cloned.color.setHex(color);
-      return cloned;
+      const profile=getVehicleSurfaceProfile(node.name,material.name);
+      surfaceCounts[profile.kind]=(surfaceCounts[profile.kind]||0)+1;
+      const tuned=applySurfaceProfile(material,profile);
+      if(profile.kind==='body'&&tuned.color)tuned.color.setHex(color);
+      return tuned;
     });
     node.material=Array.isArray(node.material)?materials:materials[0];
   });
-  return {model,wheels};
+  model.userData.surfaceProfileCounts=surfaceCounts;
+  return {model,wheels,surfaceCounts};
 }
 function installVehicleAsset(target,template,color,detailedInterior=false){
   const oldWheels=target.userData.wheels||[],lowBody=new THREE.Group(),lowWheels=new THREE.Group();
@@ -1758,25 +1782,45 @@ function installVehicleAsset(target,template,color,detailedInterior=false){
   }
   const prepared=prepareVehicleAsset(template,color),high=prepared.model;
   if(detailedInterior){
-    const cabin=new THREE.Group(),upholstery=new THREE.MeshStandardMaterial({color:0x252a2c,roughness:.88});
-    const dash=new THREE.Mesh(new THREE.BoxGeometry(1.48,.18,.34),upholstery);
+    const cabin=new THREE.Group();
+    const upholstery=new THREE.MeshPhysicalMaterial({color:0x252a2c,roughness:.86,metalness:.01,sheen:.1,sheenRoughness:.9});
+    const trim=new THREE.MeshPhysicalMaterial({color:0x111719,roughness:.5,metalness:.22,clearcoat:.24});
+    const brushedMetal=new THREE.MeshStandardMaterial({color:0x626a6c,roughness:.34,metalness:.76});
+    const dash=new THREE.Mesh(new THREE.BoxGeometry(1.48,.18,.34),trim);
     dash.position.set(0,1.02,-.89);cabin.add(dash);
+    const instrumentHood=new THREE.Mesh(new THREE.BoxGeometry(.52,.12,.22),trim);
+    instrumentHood.position.set(.43,1.15,-.78);cabin.add(instrumentHood);
+    const instrumentGlass=new THREE.Mesh(new THREE.BoxGeometry(.39,.075,.012),new THREE.MeshPhysicalMaterial({color:0x14232a,roughness:.18,metalness:.12,clearcoat:.65,emissive:0x0c2026,emissiveIntensity:.18}));
+    instrumentGlass.position.set(.43,1.145,-.665);cabin.add(instrumentGlass);
     for(const x of [-.43,.43]){
       const seat=new THREE.Mesh(new THREE.CapsuleGeometry(.28,.42,7,14),upholstery);
       seat.scale.set(1,.88,.72);seat.position.set(x,.78,.36);cabin.add(seat);
       const back=new THREE.Mesh(new THREE.CapsuleGeometry(.25,.46,7,14),upholstery);
       back.scale.set(1,.94,.5);back.position.set(x,1.12,.62);cabin.add(back);
+      const headrest=new THREE.Mesh(new THREE.CapsuleGeometry(.13,.16,6,12),upholstery);
+      headrest.scale.set(1,.9,.7);headrest.position.set(x,1.48,.76);cabin.add(headrest);
     }
-    const steering=new THREE.Mesh(new THREE.TorusGeometry(.2,.025,8,24),new THREE.MeshStandardMaterial({color:0x202426,roughness:.58}));
+    const console=new THREE.Mesh(new THREE.BoxGeometry(.3,.12,.76),upholstery);
+    console.position.set(0,.69,.05);cabin.add(console);
+    const consoleTrim=new THREE.Mesh(new THREE.BoxGeometry(.19,.018,.42),brushedMetal);
+    consoleTrim.position.set(0,.76,-.02);cabin.add(consoleTrim);
+    const gearStem=new THREE.Mesh(new THREE.CylinderGeometry(.022,.03,.16,10),brushedMetal);
+    gearStem.position.set(.09,.83,-.24);cabin.add(gearStem);
+    const gearKnob=new THREE.Mesh(new THREE.SphereGeometry(.065,12,10),trim);
+    gearKnob.position.set(.09,.92,-.24);cabin.add(gearKnob);
+    const steering=new THREE.Mesh(new THREE.TorusGeometry(.2,.025,8,24),trim);
     steering.position.set(.43,1.25,-.92);steering.rotation.x=.86;cabin.add(steering);high.add(cabin);
+    target.userData.interiorDetailCount=cabin.children.length;
   }
   target.add(lowBody,lowWheels,high);
   const modelWheels=prepared.wheels.filter(node=>node!==high&&node.parent);
   target.userData.wheels=modelWheels.length>=4?modelWheels:oldWheels;
   target.userData.modelLod={high,lowBody,lowWheels,hasModelWheels:modelWheels.length>=4};
-  target.userData.externalModel=true;target.userData.visualQuality='v4.6-cc0-realistic-vehicle-glb';
-  target.userData.paintFinish='cc0-pbr-glb';target.userData.glassFinish='cc0-glb-pbr-glazing';
-  target.userData.interiorType=detailedInterior?'enhanced-player-cabin':'glb-exterior';
+  target.userData.externalModel=true;target.userData.visualQuality='v4.8-pbr-refined-vehicle-glb';
+  target.userData.paintFinish='v4.8-classified-clearcoat-pbr';target.userData.glassFinish='v4.8-refined-glazing';
+  target.userData.surfaceProfileCounts=prepared.surfaceCounts;
+  target.userData.interiorType=detailedInterior?'v4.8-enhanced-player-cabin':'glb-exterior';
+  target.userData.interiorDetails=target.userData.interiorDetailCount||0;
 }
 function updateVehicleAssetLods(){
   for(const vehicle of [playerCar,...traffic.map(item=>item.g)]){
@@ -1827,7 +1871,7 @@ async function loadV46Models(){
   }
   const label=$('brand')?.querySelector('small');
   if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
-    ?'WORLD REALISM · V4.7':'V4.7 ENVIRONMENT PASS · MODEL FALLBACK ACTIVE';
+    ?'CHARACTER & VEHICLE REALISM · V4.8':'V4.8 CHARACTER & VEHICLE PASS · MODEL FALLBACK ACTIVE';
 }
 if(!automationMode)void loadV46Models();
 
@@ -1996,7 +2040,9 @@ function updateAvatarAssetAnimation(dt){
   if(!rig.highDetailMixer)return;
   const moving=!inCar&&(input('w')||input('a')||input('s')||input('d')||
     input('arrowup')||input('arrowdown')||input('arrowleft')||input('arrowright'));
-  switchHumanAnimation(rig,moving?'walk':'idle');
+  const sprinting=Boolean(moving&&input('shift'));
+  switchHumanAnimation(rig,getHumanAnimationState(Boolean(moving),sprinting));
+  rig.highDetailMixer.timeScale=sprinting?1.12:1;
   rig.highDetailMixer.update(dt);
 }
 function walkNPCs(dt,time){
@@ -2165,7 +2211,12 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
     qualityProfile:renderProfile.name,
-    externalPbrStatus:{...externalPbrStatus},modelAssets:{...modelAssetStatus}
+    externalPbrStatus:{...externalPbrStatus},modelAssets:{...modelAssetStatus},
+    visuals:{
+      avatar:avatar.userData.visualQuality,avatarAnimationClips:avatar.userData.highDetailAvailableClips||[],
+      avatarSurfaceProfiles:avatar.userData.surfaceProfileCounts||{},vehicle:playerCar.userData.visualQuality,
+      vehicleSurfaceProfiles:playerCar.userData.surfaceProfileCounts||{},interiorDetails:playerCar.userData.interiorDetails||0
+    }
   })
 }),configurable:false});
 if(automationMode){
@@ -2179,7 +2230,9 @@ if(automationMode){
       visualQuality:{
         avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,headScale:avatar.userData.headScale,proportionProfile:avatar.userData.proportionProfile,
         avatarHairStyle:avatar.userData.hairStyle,pedestrianHairStyles:[...new Set(pedestrians.map(p=>p.g.userData.hairStyle))],
-        animationRig:pedestrians[0]?.g.userData.animationRig,grassInstances:world.userData.grassInstances,treeCanopies:world.userData.treeCanopies||0,leafPodsPerTree:world.userData.leafPodsPerTree||0
+        animationRig:pedestrians[0]?.g.userData.animationRig,avatarAnimationClips:avatar.userData.highDetailAvailableClips||[],
+        avatarSurfaceProfiles:avatar.userData.surfaceProfileCounts||{},pedestrianSurfaceProfiles:pedestrians[0]?.g.userData.surfaceProfileCounts||{},
+        grassInstances:world.userData.grassInstances,treeCanopies:world.userData.treeCanopies||0,leafPodsPerTree:world.userData.leafPodsPerTree||0
       },
       trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs,bodyStyle:item.g.userData.bodyStyle,silhouette:item.g.userData.silhouette,tireProfile:item.g.userData.tireProfile})),
       architecturalDetails:{...architecturalDetailCounts},

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getCarSteeringInput } from '../controls.js';
 import { buildEnvironmentDetailLayout } from '../environment-details.js';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from '../visual-profiles.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -15,9 +16,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.7 · WORLD & ENVIRONMENT REALISM/);
-  assert.match(html, /World & Environment Realism \(V4\.7\)/);
-  assert.match(html, /WORLD & ENVIRONMENT REALISM · V4\.7/);
+  assert.match(html, /UPDATE 4\.8 · CHARACTER & VEHICLE REALISM/);
+  assert.match(html, /Character & Vehicle Realism \(V4\.8\)/);
+  assert.match(html, /refined rigged characters/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -96,7 +97,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.7 World & Environment Realism/);
+  assert.match(readme, /V4\.8 Character & Vehicle Realism/);
   assert.match(readme, /V4\.6 high-fidelity people and vehicles/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
@@ -161,18 +162,21 @@ test('V4.5 vehicles use rounded silhouettes, soft wheel geometry and distinct tr
   assert.match(readme, /four distinct traffic body-size variants/);
 });
 
-test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fallbacks', async () => {
+test('V4.8 refines the existing CC0 human and vehicle GLB assets with safe procedural fallbacks', async () => {
   const { V46_MODEL_ASSET_URLS } = await import('../model-assets.js');
   assert.ok(new URL(V46_MODEL_ASSET_URLS.pedestrian).pathname.endsWith('/assets/models/human-locomotion.glb'));
   assert.ok(new URL(V46_MODEL_ASSET_URLS.vehicle).pathname.endsWith('/assets/models/sedan-exterior.glb'));
   for (const feature of [
     'loadModelAssets','new THREE.LOD()','installHumanAssets','installVehicleAsset',
     'updateVehicleAssetLods','procedural-fallback','automation-fallback',
-    'v4.6-cc0-rigged-animated-human-glb','v4.6-cc0-realistic-vehicle-glb'
+    'v4.8-surface-refined-rigged-human-glb','v4.8-pbr-refined-vehicle-glb','v4.8-full-locomotion-clip-set','v4.8-enhanced-player-cabin'
   ]) assert.ok(game.includes(feature)||modelAssetsJs.includes(feature),'Missing V4.6 feature: '+feature);
   assert.match(readme,/skinned skeleton and seven named locomotion clips/);
   assert.match(game,/new THREE.AnimationMixer\(model\)/);
   assert.match(game,/switchHumanAnimation/);
+  assert.match(game,/highDetailAvailableClips/);
+  assert.match(game,/getHumanAnimationState/);
+  assert.match(readme,/seven-clip human animation set/);
   assert.match(licenses,/CC0/);
 });
 
@@ -206,4 +210,31 @@ test('V4.7 adds deterministic street wear, tactile curb details and natural grou
   }
   assert.ok(game.includes('addWorldEnvironmentDetails'));
   assert.match(readme, /tactile curb-warning pads/);
+});
+
+test('V4.8 selects contextual locomotion clips and classifies character and vehicle surfaces', () => {
+  const sourceClips = [
+    'Idle', 'Relaxed Walk', 'Brisk Walk', 'Jog', 'Run',
+    'Walk Carrying Phone', 'Sit Down and Stand Up'
+  ].map(name => ({ name }));
+  const mappedClips = mapHumanAnimationClips(sourceClips);
+  assert.deepEqual(Object.keys(mappedClips), ['idle', 'walk', 'brisk', 'jog', 'run', 'carry', 'sitStand']);
+  assert.deepEqual(Object.values(mappedClips), sourceClips, 'all seven documented GLB clips should map to their gameplay states');
+  assert.equal(getHumanAnimationState(false), 'idle');
+  assert.equal(getHumanAnimationState(true), 'walk');
+  assert.equal(getHumanAnimationState(true, true), 'run');
+  assert.equal(getHumanSurfaceProfile('BodyMesh', 'Skin.001').kind, 'skin');
+  assert.equal(getHumanSurfaceProfile('Jacket', 'Fabric_Cloth', 2).kind, 'fabric');
+  assert.equal(getHumanSurfaceProfile('Hair', 'HairMaterial').kind, 'hair');
+  assert.equal(getHumanSurfaceProfile('Boot', 'ShoeLeather').kind, 'footwear');
+  assert.equal(getVehicleSurfaceProfile('Body', 'Paint').kind, 'body');
+  assert.equal(getVehicleSurfaceProfile('Window', 'Glass').kind, 'glass');
+  assert.equal(getVehicleSurfaceProfile('Tire', 'Rubber').kind, 'rubber');
+  assert.equal(getVehicleSurfaceProfile('Wheel', 'WheelMesh').kind, 'wheel');
+  assert.equal(getVehicleSurfaceProfile('ChromeTrim', 'Metal').kind, 'trim');
+  assert.equal(getVehicleSurfaceProfile('Headlight', 'Lamp').kind, 'lamp');
+  assert.equal(mappedClips.sitStand?.name,'Sit Down and Stand Up');
+  assert.equal(mappedClips.carry?.name,'Walk Carrying Phone');
+  assert.match(game,/v4\.8-classified-clearcoat-pbr/);
+  assert.match(game,/interiorDetailCount/);
 });
