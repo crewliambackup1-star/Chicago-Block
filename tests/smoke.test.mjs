@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getCarSteeringInput } from '../controls.js';
 import { buildEnvironmentDetailLayout } from '../environment-details.js';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile } from '../visual-profiles.js';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from '../visual-profiles.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -213,6 +213,13 @@ test('V4.7 adds deterministic street wear, tactile curb details and natural grou
 });
 
 test('V4.8 selects contextual locomotion clips and classifies character and vehicle surfaces', () => {
+  const sourceClips = [
+    'Idle', 'Relaxed Walk', 'Brisk Walk', 'Jog', 'Run',
+    'Walk Carrying Phone', 'Sit Down and Stand Up'
+  ].map(name => ({ name }));
+  const mappedClips = mapHumanAnimationClips(sourceClips);
+  assert.deepEqual(Object.keys(mappedClips), ['idle', 'walk', 'brisk', 'jog', 'run', 'carry', 'sitStand']);
+  assert.deepEqual(Object.values(mappedClips), sourceClips, 'all seven documented GLB clips should map to their gameplay states');
   assert.equal(getHumanAnimationState(false), 'idle');
   assert.equal(getHumanAnimationState(true), 'walk');
   assert.equal(getHumanAnimationState(true, true), 'run');
