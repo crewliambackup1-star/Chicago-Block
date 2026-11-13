@@ -1,6 +1,16 @@
-# Chicago Block — V4.7 World & Environment Realism
+# Chicago Block — V4.8 Character & Vehicle Realism
 
-V4.7 strengthens the visual identity of the playable neighborhood with authored environmental detail rather than a blanket increase in rendering cost.
+V4.8 builds on the existing CC0 character and sedan assets with more carefully tuned surface response, the complete locomotion clip set, and a more complete player cockpit. It is a focused model-quality pass that preserves the established world and controls.
+
+## V4.8 character and vehicle realism
+
+- Classifies human meshes into skin, hair, fabric and footwear surfaces, tuning roughness, subtle sheen and environment response while retaining each source texture.
+- Applies per-character fabric variation without replacing the underlying clothing textures.
+- Activates the existing seven-clip human animation set: idle, relaxed walk, brisk walk, jog, run, carry walk and sit/stand. The player transitions from idle to walking and to a run when sprint is held; faster pedestrians use the brisk walk clip.
+- Refines vehicle materials by surface type: clear-coated body paint, more reflective glazing, matte rubber, restrained metal trim, and softer interior materials.
+- Adds headrests, a clearer instrument cluster, center-console trim and a gear selector to the player sedan's cockpit.
+- Exposes available character clips, material-profile counts and cockpit-detail counts through diagnostics.
+- Keeps original model dimensions, pedestrian routes, car handling, vehicle routes, LOD fallbacks and asset-loading behavior intact.
 
 ## V4.7 world and environment realism
 - Adds varied mid-rise balcony assemblies, raised stoops with short stair runs and metal handrails, and wall-mounted utility meter/conduit details to selected building façades.
@@ -80,9 +90,10 @@ V4.6 introduces an actual asset-based model path instead of relying exclusively 
 - V4.5: smooth, naturally proportioned people and varied vehicle models.
 - V4.6: real CC0 human and vehicle GLB assets, distance-based fallback and non-blocking loading.
 - V4.7: more varied building façades, balconies, raised entrances, utility details and fuller street-tree canopies.
+- V4.8: refined human surface materials, full locomotion-clip selection, refined vehicle PBR materials and a more detailed player cockpit.
 
 ## Validation
-`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement, façade-detail counts, tree-canopy density, road-surface detail, curb-warning pads and landscaping diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
+`npm run check` validates the game, visual-profile helpers, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring, material classification and locomotion selection. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement, façade-detail counts, tree-canopy density, road-surface detail, curb-warning pads and landscaping diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
