@@ -1661,15 +1661,16 @@ const contactShadowBatch=createContactShadowBatch(THREE,{
   texture:contactShadowTexture
 });
 world.add(contactShadowBatch);
-const contactShadowTargets=()=>[
-  ...pedestrians.map(pedestrian=>({object:pedestrian.g,kind:'pedestrian'})),
+const contactShadowTargets=[
+  ...pedestrians.map(pedestrian=>({get object(){return pedestrian.g;},kind:'pedestrian'})),
   {object:avatar,kind:'avatar'},
   {object:playerCar,kind:'vehicle'},
   ...traffic.map(item=>({object:item.g,kind:'vehicle'}))
 ];
+const contactShadowCoarsePointer=isCoarsePointer();
 function updateContactShadows(){
-  updateContactShadowBatch(THREE,contactShadowBatch,contactShadowTargets(),{
-    coarsePointer:isCoarsePointer()
+  updateContactShadowBatch(THREE,contactShadowBatch,contactShadowTargets,{
+    coarsePointer:contactShadowCoarsePointer
   });
 }
 
