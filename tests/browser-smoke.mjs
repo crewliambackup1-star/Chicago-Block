@@ -323,6 +323,10 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
   landscapePage.on('pageerror', error => landscapeErrors.push(error.message));
   try {
     await waitForReady(landscapePage);
+    const landscapeStartBounds = await landscapePage.locator('#playButton').boundingBox();
+    assert.ok(landscapeStartBounds, 'landscape start button should be visible');
+    assert.ok(landscapeStartBounds.y >= 0 && landscapeStartBounds.y + landscapeStartBounds.height <= 390,
+      'landscape start button should fit inside the viewport and remain tappable');
     await landscapePage.locator('#playButton').tap();
     await landscapePage.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
     assert.equal(await landscapePage.locator('#mobile').isVisible(), true, 'landscape touch controls should be visible');
