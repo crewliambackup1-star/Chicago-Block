@@ -1,4 +1,15 @@
-# Chicago Block — V4.8 Character & Vehicle Realism
+# Chicago Block — V4.9 Final Graphics Polish
+
+V4.9 is the closing graphics-only pass before the roadmap shifts toward deeper gameplay. It adds a soft, instanced contact-shadow layer to ground characters and vehicles visually while preserving the established world, rendering budget, movement, driving and activities.
+
+## V4.9 final graphics polish
+
+- Adds a radial soft-shadow texture and one dynamic instanced mesh beneath all 20 pedestrians, the player avatar, the player sedan and seven traffic vehicles: 29 moving subjects total.
+- Updates each shadow from its subject's current position and heading, follows pedestrian LOD swaps, and hides the avatar shadow in first-person or while driving.
+- Uses one instanced draw call rather than one mesh draw per character or vehicle, with a slightly tighter footprint on touch devices.
+- Keeps the existing real-time sun shadows, day/night lighting, fog, rain reflections, PBR surfaces, model assets, routes, collisions, controls and activities unchanged.
+
+## V4.8 character and vehicle realism
 
 V4.8 builds on the existing CC0 character and sedan assets with more carefully tuned surface response, the complete locomotion clip set, and a more complete player cockpit. It is a focused model-quality pass that preserves the established world and controls.
 
@@ -91,11 +102,12 @@ V4.6 introduces an actual asset-based model path instead of relying exclusively 
 - V4.6: real CC0 human and vehicle GLB assets, distance-based fallback and non-blocking loading.
 - V4.7: more varied building façades, balconies, raised entrances, utility details and fuller street-tree canopies.
 - V4.8: refined human surface materials, full locomotion-clip selection, refined vehicle PBR materials and a more detailed player cockpit.
+- V4.9: final graphics polish with soft instanced contact shadows beneath people and vehicles.
 
 ## Validation
 `npm run check` validates the game, visual-profile helpers, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring, material classification and locomotion selection. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement, façade-detail counts, tree-canopy density, road-surface detail, curb-warning pads and landscaping diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
-Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
+Automated screenshots are saved as GitHub Actions artifacts. V4.9 browser checks also verify that the 29 contact-shadow subjects remain combined into a single instanced draw call. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 
 ## Run locally
 
