@@ -70,6 +70,12 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.ok(initial.architecturalDetails.balconies >= 3, 'selected buildings should include raised metal balconies');
     assert.ok(initial.architecturalDetails.stoops >= 4, 'selected entrances should include raised steps and handrails');
     assert.ok(initial.architecturalDetails.utilityMeters >= 3, 'selected façades should include utility meter details');
+    assert.ok(initial.environmentDetails.roadRepairPatches >= 24, 'street surfaces should include instanced repair patches');
+    assert.ok(initial.environmentDetails.roadCrackSegments >= 70, 'road repairs should include fine crack seams');
+    assert.ok(initial.environmentDetails.gutterWearSegments >= 100, 'road edges should show subtle gutter wear');
+    assert.equal(initial.environmentDetails.curbWarningPads, 36, 'all street corners should include tactile curb-warning pads');
+    assert.equal(initial.environmentDetails.treeMulchBeds, 6, 'all six trees should have finished ground beds');
+    assert.ok(initial.environmentDetails.understoryShrubs >= 25, 'tree beds should have low understory planting');
     assert.equal(Object.keys(renderProfile?.externalPbrStatus || {}).length, 3, 'three optional CC0 PBR sources should be registered');
     assert.equal(renderProfile?.qualityProfile, 'automation', 'headless desktop tests should use the lightweight automation profile');
     assert.equal(renderProfile?.shadowMapSize, 0, 'automation should not allocate a real-time shadow map');
