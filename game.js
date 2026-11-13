@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { getCarSteeringInput } from './controls.js';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
-import { getAtmosphereState } from './atmosphere.js';
-import { loadModelAssets } from './model-assets.js';
-import { addWorldEnvironmentDetails } from './environment-details.js';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js';
+import { getCarSteeringInput } from './controls.js?v=4.10.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=4.10.0';
+import { getAtmosphereState } from './atmosphere.js?v=4.10.0';
+import { loadModelAssets } from './model-assets.js?v=4.10.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=4.10.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=4.10.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=4.10.0';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();

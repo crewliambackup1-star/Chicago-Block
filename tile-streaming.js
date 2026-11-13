@@ -1,4 +1,4 @@
-import { DEFAULT_CITY_TILE_SIZE_METERS, getVisibleTileKeys } from './geodata.js';
+import { DEFAULT_CITY_TILE_SIZE_METERS, getVisibleTileKeys } from './geodata.js?v=4.10.0';
 
 const TILE_KEY_PATTERN = /^-?\d+:-?\d+$/;
 

@@ -1,6 +1,6 @@
 {
   "name": "chicago-block",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "private": true,
   "type": "module",
   "description": "A browser-based Chicago-inspired open-world game with detailed characters, vehicles, soft contact shadows and cinematic urban environments",

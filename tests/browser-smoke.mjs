@@ -14,6 +14,9 @@ async function sendKey(page, key, type = 'keydown') {
 
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
+  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '4.10.0', 'startup should resolve the current release manifest');
+  assert.match(await page.title(), /V4\.10/, 'the document title should show the current release');
+  assert.match(await page.locator('#brand small').textContent(), /V4\.10/, 'the in-game version label should show the current release');
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
     null,

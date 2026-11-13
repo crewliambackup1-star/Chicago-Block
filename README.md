@@ -1,4 +1,18 @@
-# Chicago Block — V4.9 Final Graphics Polish
+# Chicago Block — V4.10 Instant Update Delivery
+
+V4.10 makes the latest published build appear as soon as the game opens, rather than waiting for a browser's cached page or module URLs to expire.
+
+- Checks a tiny `version.json` release manifest on every opening with a cache-bypassing request.
+- If the open page is stale, performs one cache-busted navigation to the latest published HTML before starting the game.
+- Loads the game entry module and each local JavaScript dependency with the current release version in its URL.
+- Carries the same release key into pedestrian and vehicle GLB requests, preventing Safari from reusing an older cached model after a model update.
+- Updates the visible page title and in-game version label from the live manifest.
+- Falls back to the bundled version when offline or when the version check cannot complete.
+
+The first opening after this release should use the cache-busting link supplied with the release. After that, the live version check handles later releases automatically.
+
+## Previous release: V4.9 Final Graphics Polish
+
 
 V4.9 is the closing graphics-only pass before the roadmap shifts toward deeper gameplay. It adds a soft, instanced contact-shadow layer to ground characters and vehicles visually while preserving the established world, rendering budget, movement, driving and activities.
 
