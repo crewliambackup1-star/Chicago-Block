@@ -17,13 +17,13 @@ const releaseInfo = JSON.parse(readFileSync(new URL('../version.json', import.me
 
 test('page checks the latest release before loading versioned game assets', () => {
   assert.equal(releaseInfo.version, packageInfo.version, 'the release manifest and package version must match');
-  assert.match(html, /fetch\\(versionUrl, \\{ cache: 'no-store' \\}\\)/, 'startup must bypass cached version metadata');
-  assert.match(html, /moduleScript\\.src = '\\.\\/game\\.js\\?v=' \\+ encodeURIComponent\\(version\\)/, 'the game entry module must use the current release cache key');
+  assert.match(html, /fetch\(versionUrl, \{ cache: 'no-store' \}\)/, 'startup must bypass cached version metadata');
+  assert.match(html, /moduleScript\.src = '\.\/game\.js\?v=' \+ encodeURIComponent\(version\)/, 'the game entry module must use the current release cache key');
   assert.match(html, /_release_refresh/, 'stale HTML must perform one cache-busted navigation to the current release');
-  const imports = [...game.matchAll(/from ['"](\\.\\/[^'"]+\\.js)\\?v=([^'"]+)['"]/g)];
+  const imports = [...game.matchAll(/from ['"](\.\/[^'"]+\.js)\?v=([^'"]+)['"]/g)];
   assert.ok(imports.length >= 7, 'all main local modules should have release-specific URLs');
   for (const match of imports) assert.equal(match[2], packageInfo.version, match[1] + ' must use the current release cache key');
-  assert.match(modelAssetsJs, /searchParams\\.get\\('v'\\)/, 'GLB models must inherit the model module release cache key');
+  assert.match(modelAssetsJs, /searchParams\.get\('v'\)/, 'GLB models must inherit the model module release cache key');
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
