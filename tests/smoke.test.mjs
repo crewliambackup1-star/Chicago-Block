@@ -11,6 +11,7 @@ const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
 const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 const licenses = readFileSync(new URL('../assets/ASSET_LICENSES.md', import.meta.url), 'utf8');
 const modelAssetsJs = readFileSync(new URL('../model-assets.js', import.meta.url), 'utf8');
+const contactShadows = readFileSync(new URL('../contact-shadows.js', import.meta.url), 'utf8');
 
 test('page loads the game module and includes essential controls', () => {
   assert.match(html, /<script type="module" src="\.\/game\.js"><\/script>/);
@@ -98,7 +99,8 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.8 Character & Vehicle Realism/);
+  assert.match(readme, /V4\.9 Final Graphics Polish/);
+  assert.match(readme, /V4\.8 character and vehicle realism/i);
   assert.match(readme, /V4\.6 high-fidelity people and vehicles/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
@@ -229,7 +231,7 @@ test('V4.9 adds a lightweight instanced contact-shadow pass without changing gam
     'createContactShadowTexture','createContactShadowBatch','updateContactShadowBatch',
     'contactShadowTargets','contactShadowBatch.count','updateContactShadows()',
     'v4.9-instanced-soft-contact-shadows'
-  ]) assert.ok(game.includes(feature), 'Missing V4.9 visual feature: ' + feature);
+  ]) assert.ok(game.includes(feature) || contactShadows.includes(feature), 'Missing V4.9 visual feature: ' + feature);
   assert.match(readme, /29 moving subjects/);
   assert.match(readme, /one instanced draw call/);
 });
