@@ -5,16 +5,22 @@ const CONTACT_SHADOW_PROFILES = Object.freeze({
   avatar: Object.freeze({ width: 0.88, depth: 1.26, height: -0.012 }),
   vehicle: Object.freeze({ width: 2.72, depth: 5.2, height: -0.073 })
 });
+const CONTACT_SHADOW_PROFILE_CACHE = new Map();
 
 export function getContactShadowProfile(kind, { coarsePointer = false } = {}) {
   const profile = CONTACT_SHADOW_PROFILES[kind];
   if (!profile) throw new RangeError(`Unknown contact shadow subject: ${kind}`);
+  const cacheKey = `${kind}:${coarsePointer ? 'touch' : 'fine'}`;
+  const cached = CONTACT_SHADOW_PROFILE_CACHE.get(cacheKey);
+  if (cached) return cached;
   const densityScale = coarsePointer ? 0.94 : 1;
-  return Object.freeze({
+  const resolved = Object.freeze({
     width: profile.width * densityScale,
     depth: profile.depth * densityScale,
     height: profile.height
   });
+  CONTACT_SHADOW_PROFILE_CACHE.set(cacheKey, resolved);
+  return resolved;
 }
 
 export function createContactShadowTexture(THREE) {
