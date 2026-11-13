@@ -94,7 +94,8 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.6 Realistic 3D Model Overhaul/);
+  assert.match(readme, /V4\.7 World & Environment Realism/);
+  assert.match(readme, /V4\.6 high-fidelity people and vehicles/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -171,4 +172,17 @@ test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fall
   assert.match(game,/new THREE.AnimationMixer\(model\)/);
   assert.match(game,/switchHumanAnimation/);
   assert.match(licenses,/CC0/);
+});
+
+
+test('V4.7 adds efficient architectural variety and fuller tree canopies', () => {
+  for (const feature of [
+    'buildingDetailInstances', 'flushBuildingDetailInstances',
+    'architecturalDetailCounts.balconies++', 'architecturalDetailCounts.stoops++',
+    'architecturalDetailCounts.utilityMeters++', 'v4.7-layered-canopy',
+    'new THREE.IcosahedronGeometry(.075,1),foliageLight,128',
+    'treeCanopies:world.userData.treeCanopies', 'leafPodsPerTree:world.userData.leafPodsPerTree'
+  ]) assert.ok(game.includes(feature), 'Missing V4.7 environment feature: ' + feature);
+  assert.match(readme, /128 small instanced foliage clusters per tree/);
+  assert.match(readme, /material-grouped instanced meshes/);
 });
