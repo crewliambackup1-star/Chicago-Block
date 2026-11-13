@@ -78,6 +78,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.ok(initial.environmentDetails.understoryShrubs >= 25, 'tree beds should have low understory planting');
     assert.equal(Object.keys(renderProfile?.externalPbrStatus || {}).length, 3, 'three optional CC0 PBR sources should be registered');
     assert.equal(renderProfile?.qualityProfile, 'automation', 'headless desktop tests should use the lightweight automation profile');
+    assert.equal(renderProfile?.contactShadows?.visualQuality, 'v4.9-instanced-soft-contact-shadows', 'the final graphics pass should enable the instanced contact-shadow layer');
+    assert.equal(renderProfile?.contactShadows?.instances, 29, 'all 20 pedestrians, the avatar and eight vehicles should receive contact shadows');
+    assert.equal(renderProfile?.contactShadows?.drawCalls, 1, 'contact shadows should remain a single instanced draw call');
     assert.equal(renderProfile?.shadowMapSize, 0, 'automation should not allocate a real-time shadow map');
     assert.ok(renderProfile?.atmosphere?.daylight >= 0, 'V4.3 atmosphere diagnostics should be available');
     assert.ok(renderProfile?.atmosphere?.fogFar > renderProfile?.atmosphere?.fogNear, 'clear atmosphere should retain a valid fog range');

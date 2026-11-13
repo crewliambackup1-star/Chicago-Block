@@ -5,6 +5,7 @@ import { getAtmosphereState } from './atmosphere.js';
 import { loadModelAssets } from './model-assets.js';
 import { addWorldEnvironmentDetails } from './environment-details.js';
 import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1651,6 +1652,28 @@ for(let i=0;i<7;i++){
 const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
 const avatar=person(M.blue,23);world.add(avatar);
 
+// One instanced draw call adds soft grounding shadows for the player, pedestrians
+// and every vehicle. Target objects are resolved each frame so pedestrian LOD
+// swaps keep their shadows attached without creating per-character draw calls.
+const contactShadowTexture=createContactShadowTexture(THREE);
+const contactShadowBatch=createContactShadowBatch(THREE,{
+  count:pedestrians.length+1+traffic.length+1,
+  texture:contactShadowTexture
+});
+world.add(contactShadowBatch);
+const contactShadowTargets=[
+  ...pedestrians.map(pedestrian=>({get object(){return pedestrian.g;},kind:'pedestrian'})),
+  {object:avatar,kind:'avatar'},
+  {object:playerCar,kind:'vehicle'},
+  ...traffic.map(item=>({object:item.g,kind:'vehicle'}))
+];
+const contactShadowCoarsePointer=isCoarsePointer();
+function updateContactShadows(){
+  updateContactShadowBatch(THREE,contactShadowBatch,contactShadowTargets,{
+    coarsePointer:contactShadowCoarsePointer
+  });
+}
+
 const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading',vehicle:automationMode?'automation-fallback':'loading',errors:{pedestrian:null,vehicle:null,loader:null}};
 function applySurfaceProfile(material,profile){
   let tuned=material.clone();
@@ -2198,6 +2221,7 @@ function frame(){
   if(elapsed%0.22<dt){updateMap();updateZone();}
   if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   updateVehicleAssetLods();
+  updateContactShadows();
   adaptiveResolution.update(dt,!document.hidden);
   // CI's software renderer draws less often; normal players render every frame.
   if(++automationRenderCounter%renderProfile.renderEveryNthFrame===0)renderer.render(scene,camera);
@@ -2208,6 +2232,7 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     ...adaptiveResolution.getSnapshot(),
     atmosphere:getAtmosphereState(gameHours,weatherMode),
     reflectionQuality:{wetRoadClearcoat:M.road.clearcoat,wetRoadEnvironment:M.road.envMapIntensity,puddleEnvironment:puddleMaterial.envMapIntensity},
+    contactShadows:{visualQuality:contactShadowBatch.userData.visualQuality,instances:contactShadowBatch.count,drawCalls:1},
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
     qualityProfile:renderProfile.name,
@@ -2275,4 +2300,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows';
