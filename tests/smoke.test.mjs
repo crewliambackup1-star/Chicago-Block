@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getCarSteeringInput } from '../controls.js';
+import { buildEnvironmentDetailLayout } from '../environment-details.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -186,4 +187,23 @@ test('V4.7 adds efficient architectural variety and fuller tree canopies', () =>
   ]) assert.ok(game.includes(feature), 'Missing V4.7 environment feature: ' + feature);
   assert.match(readme, /128 small instanced foliage clusters per tree/);
   assert.match(readme, /material-grouped instanced meshes/);
+});
+
+
+test('V4.7 adds deterministic street wear, tactile curb details and natural ground cover', () => {
+  const desktop = buildEnvironmentDetailLayout();
+  const mobile = buildEnvironmentDetailLayout({ coarsePointer: true });
+  assert.ok(desktop.roadRepairPatches.length >= 24, 'road surfaces should include irregular repair patches');
+  assert.equal(desktop.gutterWearSegments.length > 100, true, 'road edges should include gutter wear');
+  assert.equal(desktop.curbWarningPads.length, 36, 'all nine intersections should have four tactile curb-warning pads');
+  assert.equal(desktop.treeMulchBeds.length, 6, 'each street tree should have a mulch bed');
+  assert.ok(desktop.groundLeafLitter.length >= 70, 'tree beds should include scattered leaf litter');
+  assert.ok(desktop.understoryShrubs.length >= 25, 'tree beds should include low shrubs');
+  assert.ok(mobile.roadRepairPatches.length < desktop.roadRepairPatches.length, 'coarse-pointer layouts should reduce decorative surface density');
+  assert.equal(mobile.curbWarningPads.length, desktop.curbWarningPads.length, 'accessibility details should remain on mobile');
+  for (const item of desktop.roadRepairPatches) {
+    assert.ok(Number.isFinite(item.x) && Number.isFinite(item.z) && item.width > 0 && item.depth > 0);
+  }
+  assert.ok(game.includes('addWorldEnvironmentDetails'));
+  assert.match(readme, /tactile curb-warning pads/);
 });
