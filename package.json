@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A browser-based Chicago-inspired game with detailed urban environments, high-fidelity human and vehicle assets, adaptive rendering and cinematic atmosphere",
   "scripts": {
-    "check": "node --check game.js && node --check model-assets.js && node --check scripts/download-model-assets.mjs && node --check controls.js && node --check rendering.js && node --check atmosphere.js && node --check geodata.js && node --check tile-streaming.js && node --check scripts/build-city-tiles.mjs",
+    "check": "node --check game.js && node --check environment-details.js && node --check model-assets.js && node --check scripts/download-model-assets.mjs && node --check controls.js && node --check rendering.js && node --check atmosphere.js && node --check geodata.js && node --check tile-streaming.js && node --check scripts/build-city-tiles.mjs",
     "assets:download": "node scripts/download-model-assets.mjs",
     "test": "node --test",
     "test:browser": "node tests/browser-smoke.mjs",
