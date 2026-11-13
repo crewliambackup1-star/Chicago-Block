@@ -4,7 +4,7 @@ import { createAdaptiveResolutionController, createGraphicsProfile } from './ren
 import { getAtmosphereState } from './atmosphere.js';
 import { loadModelAssets } from './model-assets.js';
 import { addWorldEnvironmentDetails } from './environment-details.js';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile } from './visual-profiles.js';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1692,12 +1692,7 @@ function prepareHumanAsset(source,appearance=0,cloneSkinnedModel){
   model.userData.visualProfileCounts=surfaceCounts;
   const mixer=new THREE.AnimationMixer(model);
   const clips=source.animations||[];
-  const findClip=patterns=>clips.find(clip=>patterns.some(pattern=>clip.name.toLowerCase().includes(pattern)));
-  const clipMap={
-    idle:findClip(['idle','stand']),walk:findClip(['relaxed walk','walk']),
-    brisk:findClip(['brisk walk']),jog:findClip(['jog']),run:findClip(['run']),
-    carry:findClip(['carry walk','carry']),sitStand:findClip(['sit/stand','sit stand','sitstand'])
-  };
+  const clipMap=mapHumanAnimationClips(clips);
   const actions=Object.fromEntries(Object.entries(clipMap).map(([name,clip])=>[name,clip?mixer.clipAction(clip):null]));
   const initialAction=actions.idle||actions.walk||actions.brisk||actions.jog||actions.run;
   if(initialAction)initialAction.play();
