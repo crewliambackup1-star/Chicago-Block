@@ -83,7 +83,8 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-7-world-environment-realism/);\n  assert.match(game, /getAtmosphereState\(gameHours,weatherMode\)/);
+  assert.match(game, /v4-7-world-environment-realism/);
+  assert.match(game, /getAtmosphereState\(gameHours,weatherMode\)/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
