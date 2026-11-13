@@ -233,8 +233,8 @@ test('V4.8 selects contextual locomotion clips and classifies character and vehi
   assert.equal(getVehicleSurfaceProfile('Wheel', 'WheelMesh').kind, 'wheel');
   assert.equal(getVehicleSurfaceProfile('ChromeTrim', 'Metal').kind, 'trim');
   assert.equal(getVehicleSurfaceProfile('Headlight', 'Lamp').kind, 'lamp');
-  assert.match(game,/sitStand:findClip/);
-  assert.match(game,/carry:findClip/);
+  assert.equal(mappedClips.sitStand?.name,'Sit Down and Stand Up');
+  assert.equal(mappedClips.carry?.name,'Walk Carrying Phone');
   assert.match(game,/v4\.8-classified-clearcoat-pbr/);
   assert.match(game,/interiorDetailCount/);
 });
