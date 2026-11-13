@@ -2211,7 +2211,12 @@ Object.defineProperty(window,'__CHICAGO_BLOCK_RENDER__',{value:Object.freeze({
     shadowsEnabled:renderer.shadowMap.enabled,
     shadowMapSize:renderProfile.shadowMapSize,
     qualityProfile:renderProfile.name,
-    externalPbrStatus:{...externalPbrStatus},modelAssets:{...modelAssetStatus}
+    externalPbrStatus:{...externalPbrStatus},modelAssets:{...modelAssetStatus},
+    visuals:{
+      avatar:avatar.userData.visualQuality,avatarAnimationClips:avatar.userData.highDetailAvailableClips||[],
+      avatarSurfaceProfiles:avatar.userData.surfaceProfileCounts||{},vehicle:playerCar.userData.visualQuality,
+      vehicleSurfaceProfiles:playerCar.userData.surfaceProfileCounts||{},interiorDetails:playerCar.userData.interiorDetails||0
+    }
   })
 }),configurable:false});
 if(automationMode){
