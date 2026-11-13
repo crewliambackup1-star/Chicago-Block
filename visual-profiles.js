@@ -12,10 +12,10 @@ export function getHumanSurfaceProfile(meshName='',materialName='',appearance=0)
   if(/hair|beard|eyebrow|brow/.test(tag)){
     return {kind:'hair',roughness:0.74,metalness:0,envMapIntensity:0.68};
   }
-  if(/skin|face|flesh|hand|finger|ear|nose|lip|neck/.test(tag)){
+  if(/skin|face|flesh|body|hand|finger|ear|nose|lip|neck/.test(tag)){
     return {kind:'skin',roughness:0.66,metalness:0,envMapIntensity:0.82,sheen:0.10,sheenRoughness:0.82};
   }
-  if(/shirt|trouser|jacket|coat|fabric|clothing|jean|sweater|top|hoodie|sleeve/.test(tag)){
+  if(/shirt|trouser|jacket|coat|fabric|cloth|clothing|jean|sweater|top|hoodie|sleeve/.test(tag)){
     return {
       kind:'fabric',roughness:0.88,metalness:0,envMapIntensity:0.62,
       sheen:0.14,sheenRoughness:0.9,colorMultiplier:HUMAN_COLOR_VARIATION[Math.abs(Number(appearance)||0)%HUMAN_COLOR_VARIATION.length]
@@ -34,6 +34,9 @@ export function getVehicleSurfaceProfile(meshName='',materialName=''){
   }
   if(/tire|tyre|rubber/.test(tag)){
     return {kind:'rubber',roughness:0.92,metalness:0.015,envMapIntensity:0.38};
+  }
+  if(/wheel/.test(tag)){
+    return {kind:'wheel',roughness:0.66,metalness:0.28,envMapIntensity:0.9};
   }
   if(/lamp|light|headlight|taillight|indicator/.test(tag)){
     return {kind:'lamp',roughness:0.28,metalness:0.16,envMapIntensity:1.1};
