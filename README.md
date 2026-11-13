@@ -1,4 +1,17 @@
-# Chicago Block — V4.6 Realistic 3D Model Overhaul
+# Chicago Block — V4.7 World & Environment Realism
+
+V4.7 strengthens the visual identity of the playable neighborhood with authored environmental detail rather than a blanket increase in rendering cost.
+
+## V4.7 world and environment realism
+- Adds varied mid-rise balcony assemblies, raised stoops with short stair runs and metal handrails, and wall-mounted utility meter/conduit details to selected building façades.
+- Builds repeated façade details as material-grouped instanced meshes, keeping the new geometry batched instead of creating a large number of separate draw calls.
+- Gives existing street trees fuller, layered crowns with 128 small instanced foliage clusters per tree and a more irregular silhouette.
+- Adds asphalt repair patches, fine crack lines, and subdued grime along the road gutters using batched geometry.
+- Adds tactile curb-warning pads at all 36 street corners, plus mulch beds, scattered fallen leaves and low understory shrubs around the six existing trees.
+- Exposes balcony, stoop, utility-meter, tree-canopy and foliage counts to browser diagnostics.
+- Preserves the existing street grid, building footprints, collision boundaries, pedestrian routes, traffic, vehicles, camera, weather, lighting and activities.
+
+
 
 V4.6 introduces an actual asset-based model path instead of relying exclusively on procedural primitive assemblies. Nearby pedestrians and the player avatar can use a textured, clothed CC0 human GLB; the player car and traffic can use a separate CC0 sedan GLB with PBR coachwork, glazing, lamps, wheels and trim. Existing procedural models remain as graceful fallbacks and as lower-detail pedestrian models at distance. Existing movement, pedestrian routes, vehicle physics, traffic routes, weather, cameras and activities are preserved.
 
@@ -66,9 +79,10 @@ V4.6 introduces an actual asset-based model path instead of relying exclusively 
 - V4.4: geographic data foundation and streamed city sections.
 - V4.5: smooth, naturally proportioned people and varied vehicle models.
 - V4.6: real CC0 human and vehicle GLB assets, distance-based fallback and non-blocking loading.
+- V4.7: more varied building façades, balconies, raised entrances, utility details and fuller street-tree canopies.
 
 ## Validation
-`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement and environment diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
+`npm run check` validates the game, controls, renderer and atmosphere model. `npm test` covers source behavior, adaptive-resolution rules, day/night/weather atmosphere curves, architecture/PBR wiring and V4.5 model/animation code. Browser automation checks Chromium on desktop and touch-enabled mobile viewport sizes, including runtime character proportions, vehicle body styles, driving, movement, façade-detail counts, tree-canopy density, road-surface detail, curb-warning pads and landscaping diagnostics. This covers responsive touch controls; a separate Safari/WebKit engine pass remains a later validation item.
 
 Automated screenshots are saved as GitHub Actions artifacts. Tests use the local `?automation=1` mode; normal player graphics are not reduced by those headless-test settings.
 

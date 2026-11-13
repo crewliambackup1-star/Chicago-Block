@@ -3,6 +3,7 @@ import { getCarSteeringInput } from './controls.js';
 import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
 import { getAtmosphereState } from './atmosphere.js';
 import { loadModelAssets } from './model-assets.js';
+import { addWorldEnvironmentDetails } from './environment-details.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -498,7 +499,28 @@ const vehiclePaintHeight=makeDataTexture((ctx,w,h)=>{
 
 const world = new THREE.Group(); scene.add(world);
 const colliders = [], pedestrians = [], traffic = [], keys = Object.create(null), touch = Object.create(null), windows = [];
-const architecturalDetailCounts={buildings:0,rooftopPenthouses:0,sidewalkJoints:0,windowRecesses:0,windowLintels:0,fireEscapeStairFlights:0};
+const architecturalDetailCounts={buildings:0,rooftopPenthouses:0,sidewalkJoints:0,windowRecesses:0,windowLintels:0,fireEscapeStairFlights:0,balconies:0,stoops:0,utilityMeters:0};
+const buildingDetailInstances=new Map();
+function addBuildingDetailInstance(material,x,y,z,width,height,depth,rotationX=0,rotationY=0,rotationZ=0){
+  if(!buildingDetailInstances.has(material))buildingDetailInstances.set(material,[]);
+  buildingDetailInstances.get(material).push({x,y,z,width,height,depth,rotationX,rotationY,rotationZ});
+}
+function flushBuildingDetailInstances(){
+  const geometry=new THREE.BoxGeometry(1,1,1),transform=new THREE.Object3D();
+  for(const [material,items] of buildingDetailInstances){
+    const mesh=new THREE.InstancedMesh(geometry,material,items.length);
+    items.forEach((item,index)=>{
+      transform.position.set(item.x,item.y,item.z);
+      transform.rotation.set(item.rotationX,item.rotationY,item.rotationZ);
+      transform.scale.set(item.width,item.height,item.depth);
+      transform.updateMatrix();mesh.setMatrixAt(index,transform.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate=true;
+    mesh.castShadow=false;mesh.receiveShadow=false;
+    mesh.computeBoundingBox();mesh.computeBoundingSphere();
+    world.add(mesh);
+  }
+}
 function cube(parent,x,y,z,w,h,d,material,shadow=true) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
   mesh.position.set(x,y,z); mesh.castShadow=shadow; mesh.receiveShadow=true; parent.add(mesh); return mesh;
@@ -638,6 +660,42 @@ function building(x,z,w,d,h,color,side=true){
 
   // Framed entry, glazed door panel and a stone threshold at street level.
   const front=d/2;
+  const detailSeed=Math.abs(Math.round(x*17+z*11))%97;
+  if((style===1||style===3)&&rows>1){
+    const balconyColumn=Math.min(cols-1,Math.floor(cols/2)+(detailSeed%2));
+    const px=-w/2+(balconyColumn+.5)*w/cols;
+    const py=1.4+Math.min(1,rows-1)*(h-2.2)/rows;
+    const sign=detailSeed%2===0?1:-1;
+    const balconyY=py-.78;
+    addBuildingDetailInstance(M.limestone,x+px,balconyY,z+sign*(d/2+.56),1.82,.14,.88);
+    addBuildingDetailInstance(M.metal,x+px,balconyY+.39,z+sign*(d/2+.98),1.82,.06,.06);
+    addBuildingDetailInstance(M.metal,x+px-.88,balconyY+.39,z+sign*(d/2+.56),.06,.78,.88);
+    addBuildingDetailInstance(M.metal,x+px+.88,balconyY+.39,z+sign*(d/2+.56),.06,.78,.88);
+    addBuildingDetailInstance(M.silver,x+px,balconyY+.78,z+sign*(d/2+.98),1.82,.065,.075);
+    for(let post=0;post<8;post++){
+      addBuildingDetailInstance(M.silver,x+px-.82+post*.234,balconyY+.39,z+sign*(d/2+.98),.035,.72,.035);
+    }
+    architecturalDetailCounts.balconies++;
+  }
+  if(style===0||style===2){
+    for(let step=0;step<3;step++){
+      addBuildingDetailInstance(M.limestone,x,.11+step*.14,z+front+.34+step*.29,1.72,.16,.36);
+    }
+    for(const side of [-1,1]){
+      addBuildingDetailInstance(M.metal,x+side*.98,.36,z+front+.37,.055,.72,.055);
+      addBuildingDetailInstance(M.metal,x+side*.98,.69,z+front+1.1,.055,.72,.055);
+      addBuildingDetailInstance(M.silver,x+side*.98,.73,z+front+.73,.055,.055,.82,-Math.atan2(.33,.73));
+    }
+    architecturalDetailCounts.stoops++;
+  }
+  if(detailSeed%3===0){
+    const meterX=x-w/2+.52,meterZ=z+front+.14;
+    addBuildingDetailInstance(M.metal,meterX,.98,meterZ,.46,.78,.19);
+    addBuildingDetailInstance(M.silver,meterX,.98,meterZ+.105,.29,.48,.025);
+    addBuildingDetailInstance(M.trim,meterX,.53,meterZ+.12,.36,.055,.035);
+    addBuildingDetailInstance(M.metal,meterX+.3,1.55,meterZ-.01,.04,1.12,.04);
+    architecturalDetailCounts.utilityMeters++;
+  }
   cube(g,0,.16,front+.43,2.05,.24,.82,M.limestone,false);
   cube(g,-.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
   cube(g,.66,1.08,front+.15,.12,2.28,.16,M.limestone,false);
@@ -690,6 +748,7 @@ function building(x,z,w,d,h,color,side=true){
  [-35,120,35,30,15,M.brick],[42,120,39,31,15,M.dark],
  [119,120,40,31,17,M.cream]
 ].forEach(args=>building(...args));
+flushBuildingDetailInstances();
 
 function rooftopUnit(x,z,roofHeight,rotation=0){
   const group=new THREE.Group();group.position.set(x,roofHeight,z);group.rotation.y=rotation;world.add(group);
@@ -838,6 +897,9 @@ block(39,-38,27,12);
 ground(-35,38,58,54,M.leaf,-.01);ground(-35,38,4.5,54,M.walk,.012);ground(-35,38,58,4.5,M.walk,.013);
 function tree(x,z){
   const g=new THREE.Group();g.position.set(x,0,z);world.add(g);
+  world.userData.treeCanopies=(world.userData.treeCanopies||0)+1;
+  world.userData.leafPodsPerTree=128;
+  g.userData.visualQuality='v4.7-layered-canopy';
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.2,.34,4.1,14),M.wood);trunk.position.y=2.05;trunk.castShadow=true;g.add(trunk);
   const branchMaterial=M.wood;
   const branchPoints=[[-.9,2.4,0,.85], [.82,2.65,.12,.92], [.1,3.05,-.72,.78],[-.2,3.2,.7,.72]];
@@ -848,21 +910,23 @@ function tree(x,z){
   const foliage=new THREE.MeshStandardMaterial({color:0x496d4b,roughness:.96});
   const foliageLight=new THREE.MeshStandardMaterial({color:0x638258,roughness:.97});
   const foliageDark=new THREE.MeshStandardMaterial({color:0x36583e,roughness:.99});
-  const clusters=[[-.92,3.45,0,1.05],[-.28,4.18,.2,1.08],[.66,3.72,.1,1.02],[.12,4.55,-.55,.92],[-.12,3.65,.78,.96],[.72,4.42,-.42,.68],[-.72,4.22,.48,.72]];
+  const clusters=[[-.92,3.45,0,1.02],[-.28,4.18,.2,1.08],[.66,3.72,.1,.98],[.12,4.55,-.55,.9],[-.12,3.65,.78,.94],[.72,4.42,-.42,.68],[-.72,4.22,.48,.72],[-.55,3.55,-.62,.72],[.35,3.28,.7,.74]];
   clusters.forEach(([cx,cy,cz,r],index)=>{
     const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(r,2),index%3===0?foliageDark:index%2?foliage:foliageLight);
-    crown.position.set(cx,cy,cz);crown.scale.set(1.12,.9,1);crown.castShadow=true;crown.receiveShadow=true;g.add(crown);
+    crown.position.set(cx,cy,cz);crown.scale.set(1.08+(index%3)*.08,.86+(index%2)*.1,.94+(index%4)*.035);
+    crown.castShadow=true;crown.receiveShadow=true;g.add(crown);
   });
-  // One instanced leaf cluster layer supplies fine canopy breakup without hundreds of draw calls.
-  const leafPods=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.105,1),foliageLight,64);
+  // Fine instanced leaf clusters break up the crown silhouette while keeping draw calls low.
+  const leafPods=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.075,1),foliageLight,128);
   const leafDummy=new THREE.Object3D();
-  for(let leaf=0;leaf<64;leaf++){
-    const angle=leaf*2.399963,ring=.35+(leaf%7)*.115;
-    leafDummy.position.set(Math.cos(angle)*ring,3.35+(leaf%11)*.115,Math.sin(angle)*ring);
-    leafDummy.scale.set(.8+(leaf%4)*.12,.72+(leaf%3)*.16,1);
-    leafDummy.rotation.set((leaf%5)*.16,angle,(leaf%7)*.09);leafDummy.updateMatrix();
+  for(let leaf=0;leaf<128;leaf++){
+    const angle=leaf*2.399963,ring=.22+(leaf%13)*.075;
+    const height=3.18+(leaf%19)*.075;
+    leafDummy.position.set(Math.cos(angle)*ring,height,Math.sin(angle)*ring);
+    leafDummy.scale.set(.72+(leaf%5)*.13,.62+(leaf%4)*.14,.78+(leaf%3)*.13);
+    leafDummy.rotation.set((leaf%7)*.16,angle,(leaf%9)*.08);leafDummy.updateMatrix();
     leafPods.setMatrixAt(leaf,leafDummy.matrix);
-    leafPods.setColorAt(leaf,new THREE.Color(leaf%4===0?0x365a3c:leaf%3===0?0x6e8d55:0x4e7549));
+    leafPods.setColorAt(leaf,new THREE.Color(leaf%5===0?0x365a3c:leaf%3===0?0x6e8d55:leaf%4===0?0x73905b:0x4e7549));
   }
   leafPods.instanceMatrix.needsUpdate=true;leafPods.castShadow=true;leafPods.receiveShadow=true;g.add(leafPods);
 }
@@ -1086,6 +1150,7 @@ for(const z of [-95,-69,-14,14,69,95])for(const x of [-95,95]){
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),M.lampGlow);bulb.position.set(x+.65,6.66,z);world.add(bulb);
   const glow=new THREE.PointLight(0xffc77b,0,23,2);glow.position.set(x+.65,6.35,z);world.add(glow);nightLights.push({glow,bulb});
 }
+const environmentDetailCounts = addWorldEnvironmentDetails(THREE,{world,coarsePointer:isCoarsePointer()});
 function person(material,appearance=0){
   const g=new THREE.Group();
   const skinTones=[0x714d3e,0x8d624d,0xa87558,0xc18e6d,0xd1a17d,0x986d52];
@@ -1762,7 +1827,7 @@ async function loadV46Models(){
   }
   const label=$('brand')?.querySelector('small');
   if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
-    ?'HIGH-FIDELITY 3D MODELS · V4.6':'V4.6 MODEL FALLBACK ACTIVE';
+    ?'WORLD REALISM · V4.7':'V4.7 ENVIRONMENT PASS · MODEL FALLBACK ACTIVE';
 }
 if(!automationMode)void loadV46Models();
 
@@ -2114,10 +2179,11 @@ if(automationMode){
       visualQuality:{
         avatar:avatar.userData.visualQuality,pedestrian:pedestrians[0]?.g.userData.visualQuality,headScale:avatar.userData.headScale,proportionProfile:avatar.userData.proportionProfile,
         avatarHairStyle:avatar.userData.hairStyle,pedestrianHairStyles:[...new Set(pedestrians.map(p=>p.g.userData.hairStyle))],
-        animationRig:pedestrians[0]?.g.userData.animationRig,grassInstances:world.userData.grassInstances
+        animationRig:pedestrians[0]?.g.userData.animationRig,grassInstances:world.userData.grassInstances,treeCanopies:world.userData.treeCanopies||0,leafPodsPerTree:world.userData.leafPodsPerTree||0
       },
       trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs,bodyStyle:item.g.userData.bodyStyle,silhouette:item.g.userData.silhouette,tireProfile:item.g.userData.tireProfile})),
       architecturalDetails:{...architecturalDetailCounts},
+      environmentDetails:{...environmentDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
@@ -2156,4 +2222,4 @@ window.addEventListener('resize',()=>{
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism';

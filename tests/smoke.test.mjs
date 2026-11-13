@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getCarSteeringInput } from '../controls.js';
+import { buildEnvironmentDetailLayout } from '../environment-details.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -14,9 +15,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.6 · REALISTIC 3D PEOPLE & VEHICLES/);
-  assert.match(html, /Realistic 3D Model Overhaul \(V4\.6\)/);
-  assert.match(html, /REALISTIC 3D PEOPLE & VEHICLES · V4\.6/);
+  assert.match(html, /UPDATE 4\.7 · WORLD & ENVIRONMENT REALISM/);
+  assert.match(html, /World & Environment Realism \(V4\.7\)/);
+  assert.match(html, /WORLD & ENVIRONMENT REALISM · V4\.7/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -83,7 +84,8 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-3-lighting-atmosphere/);
+  assert.match(game, /v4-7-world-environment-realism/);
+  assert.match(game, /getAtmosphereState\(gameHours,weatherMode\)/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
@@ -94,7 +96,8 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.6 Realistic 3D Model Overhaul/);
+  assert.match(readme, /V4\.7 World & Environment Realism/);
+  assert.match(readme, /V4\.6 high-fidelity people and vehicles/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
   assert.match(readme, /npm run check/);
@@ -171,4 +174,36 @@ test('V4.6 loads real CC0 human and vehicle GLB assets with safe procedural fall
   assert.match(game,/new THREE.AnimationMixer\(model\)/);
   assert.match(game,/switchHumanAnimation/);
   assert.match(licenses,/CC0/);
+});
+
+
+test('V4.7 adds efficient architectural variety and fuller tree canopies', () => {
+  for (const feature of [
+    'buildingDetailInstances', 'flushBuildingDetailInstances',
+    'architecturalDetailCounts.balconies++', 'architecturalDetailCounts.stoops++',
+    'architecturalDetailCounts.utilityMeters++', 'v4.7-layered-canopy',
+    'new THREE.IcosahedronGeometry(.075,1),foliageLight,128',
+    'treeCanopies:world.userData.treeCanopies', 'leafPodsPerTree:world.userData.leafPodsPerTree'
+  ]) assert.ok(game.includes(feature), 'Missing V4.7 environment feature: ' + feature);
+  assert.match(readme, /128 small instanced foliage clusters per tree/);
+  assert.match(readme, /material-grouped instanced meshes/);
+});
+
+
+test('V4.7 adds deterministic street wear, tactile curb details and natural ground cover', () => {
+  const desktop = buildEnvironmentDetailLayout();
+  const mobile = buildEnvironmentDetailLayout({ coarsePointer: true });
+  assert.ok(desktop.roadRepairPatches.length >= 24, 'road surfaces should include irregular repair patches');
+  assert.equal(desktop.gutterWearSegments.length > 100, true, 'road edges should include gutter wear');
+  assert.equal(desktop.curbWarningPads.length, 36, 'all nine intersections should have four tactile curb-warning pads');
+  assert.equal(desktop.treeMulchBeds.length, 6, 'each street tree should have a mulch bed');
+  assert.ok(desktop.groundLeafLitter.length >= 70, 'tree beds should include scattered leaf litter');
+  assert.ok(desktop.understoryShrubs.length >= 25, 'tree beds should include low shrubs');
+  assert.ok(mobile.roadRepairPatches.length < desktop.roadRepairPatches.length, 'coarse-pointer layouts should reduce decorative surface density');
+  assert.equal(mobile.curbWarningPads.length, desktop.curbWarningPads.length, 'accessibility details should remain on mobile');
+  for (const item of desktop.roadRepairPatches) {
+    assert.ok(Number.isFinite(item.x) && Number.isFinite(item.z) && item.width > 0 && item.depth > 0);
+  }
+  assert.ok(game.includes('addWorldEnvironmentDetails'));
+  assert.match(readme, /tactile curb-warning pads/);
 });
