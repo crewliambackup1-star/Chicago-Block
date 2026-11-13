@@ -14,9 +14,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.6 · REALISTIC 3D PEOPLE & VEHICLES/);
-  assert.match(html, /Realistic 3D Model Overhaul \(V4\.6\)/);
-  assert.match(html, /REALISTIC 3D PEOPLE & VEHICLES · V4\.6/);
+  assert.match(html, /UPDATE 4\.7 · WORLD & ENVIRONMENT REALISM/);
+  assert.match(html, /World & Environment Realism \(V4\.7\)/);
+  assert.match(html, /WORLD & ENVIRONMENT REALISM · V4\.7/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -83,7 +83,7 @@ test('V4 render foundation uses adaptive quality and focused shadows', () => {
   assert.match(game, /adaptiveResolution\.resize/);
   assert.match(game, /sun\.target\.position\.set\(player\.x,0,player\.z\)/);
   assert.match(game, /sun\.shadow\.camera\.left=-100/);
-  assert.match(game, /v4-3-lighting-atmosphere/);
+  assert.match(game, /v4-7-world-environment-realism/);\n  assert.match(game, /getAtmosphereState\(gameHours,weatherMode\)/);
 });
 
 test('car steering maps A/left to left and D/right to right', () => {
