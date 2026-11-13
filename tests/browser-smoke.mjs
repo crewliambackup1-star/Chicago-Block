@@ -67,6 +67,9 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.ok(initial.architecturalDetails.windowLintels > 0, 'selected windows should have stone lintels');
     assert.ok(initial.architecturalDetails.sidewalkJoints >= 300, 'sidewalk slabs should use instanced expansion joints');
     assert.equal(initial.architecturalDetails.fireEscapeStairFlights, 7, 'existing fire escapes should have connected switchback stairs');
+    assert.ok(initial.architecturalDetails.balconies >= 3, 'selected buildings should include raised metal balconies');
+    assert.ok(initial.architecturalDetails.stoops >= 4, 'selected entrances should include raised steps and handrails');
+    assert.ok(initial.architecturalDetails.utilityMeters >= 3, 'selected façades should include utility meter details');
     assert.equal(Object.keys(renderProfile?.externalPbrStatus || {}).length, 3, 'three optional CC0 PBR sources should be registered');
     assert.equal(renderProfile?.qualityProfile, 'automation', 'headless desktop tests should use the lightweight automation profile');
     assert.equal(renderProfile?.shadowMapSize, 0, 'automation should not allocate a real-time shadow map');
@@ -77,6 +80,8 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(renderProfile?.pixelRatio, 0.55, 'automation should use its fixed low-resolution scale');
     assert.equal(initial.visualQuality.pedestrian, 'v4.5-smooth-anatomy', 'pedestrians should use the smoother natural-proportion character rig');
     assert.ok(initial.visualQuality.grassInstances >= 1200, 'desktop lawns should use instanced grass cover');
+    assert.equal(initial.visualQuality.treeCanopies, 6, 'all six existing street trees should use the fuller V4.7 canopy pass');
+    assert.equal(initial.visualQuality.leafPodsPerTree, 128, 'each tree should use 128 instanced leaf clusters');
     assert.equal(initial.visualQuality.avatar, 'v4.5-smooth-anatomy', 'player model should use the V4.5 smooth anatomical rig');
     assert.equal(initial.visualQuality.headScale, .78, 'player head proportions should use the V4.5 human-scale profile');
     assert.equal(initial.visualQuality.proportionProfile, 'adult-human-v4.5', 'player model should use the revised proportion profile');
@@ -225,7 +230,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v4-5-chromium-desktop-after-play.png');
+    await captureScreenshot(page, 'artifacts/v4-7-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -300,7 +305,7 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
       test.setYaw(0);
     });
     await page.waitForTimeout(2200);
-    await page.screenshot({ path: 'artifacts/v4-5-chromium-mobile-portrait.png' });
+    await page.screenshot({ path: 'artifacts/v4-7-chromium-mobile-portrait.png' });
     assert.deepEqual(pageErrors, [], 'mobile Chromium page should not throw runtime exceptions');
   } finally {
     await context.close();
@@ -318,7 +323,7 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
     assert.equal(await landscapePage.locator('#mapWrap').isVisible(), false, 'landscape minimap should hide to preserve space');
     await landscapePage.locator('#weatherButton').tap();
     assert.equal((await landscapePage.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).weatherMode, 'rain');
-    await landscapePage.screenshot({ path: 'artifacts/v4-5-chromium-mobile-landscape.png' });
+    await landscapePage.screenshot({ path: 'artifacts/v4-7-chromium-mobile-landscape.png' });
     assert.deepEqual(landscapeErrors, [], 'landscape mobile Chromium page should not throw runtime exceptions');
   } finally {
     await landscapeContext.close();
