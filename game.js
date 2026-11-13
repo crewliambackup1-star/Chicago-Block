@@ -3,6 +3,7 @@ import { getCarSteeringInput } from './controls.js';
 import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js';
 import { getAtmosphereState } from './atmosphere.js';
 import { loadModelAssets } from './model-assets.js';
+import { addWorldEnvironmentDetails } from './environment-details.js';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1149,6 +1150,7 @@ for(const z of [-95,-69,-14,14,69,95])for(const x of [-95,95]){
   const bulb=new THREE.Mesh(new THREE.SphereGeometry(.19,10,8),M.lampGlow);bulb.position.set(x+.65,6.66,z);world.add(bulb);
   const glow=new THREE.PointLight(0xffc77b,0,23,2);glow.position.set(x+.65,6.35,z);world.add(glow);nightLights.push({glow,bulb});
 }
+const environmentDetailCounts = addWorldEnvironmentDetails(THREE,{world,coarsePointer:isCoarsePointer()});
 function person(material,appearance=0){
   const g=new THREE.Group();
   const skinTones=[0x714d3e,0x8d624d,0xa87558,0xc18e6d,0xd1a17d,0x986d52];
@@ -2181,6 +2183,7 @@ if(automationMode){
       },
       trafficVisuals:traffic.map(item=>({visualQuality:item.g.userData.visualQuality,paintFinish:item.g.userData.paintFinish,interiorType:item.g.userData.interiorType,wheelLugs:item.g.userData.wheelLugs,bodyStyle:item.g.userData.bodyStyle,silhouette:item.g.userData.silhouette,tireProfile:item.g.userData.tireProfile})),
       architecturalDetails:{...architecturalDetailCounts},
+      environmentDetails:{...environmentDetailCounts},
       velocity,yaw,braking:!!touch.space,keys:{w:!!keys.w,a:!!keys.a,d:!!keys.d},
       movementDebug:(()=>{
         const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
