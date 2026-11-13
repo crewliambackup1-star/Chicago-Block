@@ -361,6 +361,15 @@ test('V4.6 normal player mode loads the real human and vehicle GLB assets', asyn
     const assets = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__.getState().modelAssets);
     assert.equal(assets.pedestrian, 'loaded-cc0-rigged-animated-glb', 'the skinned animated human model should load in normal player mode: '+JSON.stringify(assets));
     assert.equal(assets.vehicle, 'loaded-cc0-glb', 'the detailed sedan model should load in normal player mode: '+JSON.stringify(assets));
+    const visuals = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__.getState().visuals);
+    assert.equal(visuals.avatar, 'v4.8-surface-refined-rigged-human-glb');
+    assert.equal(visuals.vehicle, 'v4.8-pbr-refined-vehicle-glb');
+    for (const clip of ['idle', 'walk', 'brisk', 'jog', 'run', 'carry', 'sitStand']) {
+      assert.ok(visuals.avatarAnimationClips.includes(clip), 'missing loaded human animation clip: '+clip);
+    }
+    assert.ok(Object.values(visuals.avatarSurfaceProfiles).reduce((sum, count) => sum + count, 0) > 0, 'human GLB materials should receive surface profiles');
+    assert.ok(Object.values(visuals.vehicleSurfaceProfiles).reduce((sum, count) => sum + count, 0) > 0, 'vehicle GLB materials should receive surface profiles');
+    assert.ok(visuals.interiorDetails >= 10, 'the player sedan should include the V4.8 cockpit detail pass');
     // Model loading and installation are the scope of this test. The desktop/mobile
     // playthroughs above already cover interaction; avoid hit-testing a live WebGL
     // canvas here because software-rendered CI can make UI stability waits flaky.
