@@ -1655,7 +1655,12 @@ const modelAssetStatus={pedestrian:automationMode?'automation-fallback':'loading
 function applySurfaceProfile(material,profile){
   let tuned=material.clone();
   if((profile.clearcoat!==undefined||profile.sheen!==undefined)&&!tuned.isMeshPhysicalMaterial){
-    const physical=new THREE.MeshPhysicalMaterial().copy(tuned);
+    // MeshPhysicalMaterial.copy expects physical-only vectors (for example
+    // sheenColor) that a MeshStandardMaterial does not define. Copy the
+    // standard PBR fields explicitly through the parent implementation so
+    // source textures, color, maps and common settings remain intact.
+    const physical=new THREE.MeshPhysicalMaterial();
+    THREE.MeshStandardMaterial.prototype.copy.call(physical,tuned);
     tuned.dispose();tuned=physical;
   }
   for(const key of ['roughness','metalness','envMapIntensity','clearcoat','clearcoatRoughness','sheen','sheenRoughness']){
