@@ -49,3 +49,30 @@ export function getVehicleSurfaceProfile(meshName='',materialName=''){
   }
   return {kind:'body',roughness:0.31,metalness:0.58,envMapIntensity:1.34,clearcoat:0.78,clearcoatRoughness:0.2};
 }
+
+
+// Map the source GLB's descriptive animation names to stable gameplay states.
+// Prefer precise names first, then use forgiving partial-name aliases because
+// exporters may normalize punctuation or add character-name suffixes.
+export function mapHumanAnimationClips(clips=[]){
+  const named=clips.map(clip=>({
+    clip,
+    name:String(clip?.name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()
+  }));
+  const find=(...terms)=>{
+    for(const term of terms){
+      const match=named.find(entry=>entry.name.includes(term));
+      if(match)return match.clip;
+    }
+    return null;
+  };
+  return {
+    idle:find('idle'),
+    walk:find('relaxed walk','walk'),
+    brisk:find('brisk'),
+    jog:find('jog'),
+    run:find('run'),
+    carry:find('carry'),
+    sitStand:find('sit down','sit stand','sit')
+  };
+}
