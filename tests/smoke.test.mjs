@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { getCarSteeringInput } from '../controls.js';
 import { buildEnvironmentDetailLayout } from '../environment-details.js';
 import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from '../visual-profiles.js';
+import { getContactShadowProfile } from '../contact-shadows.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -16,9 +17,9 @@ test('page loads the game module and includes essential controls', () => {
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.8 · CHARACTER & VEHICLE REALISM/);
-  assert.match(html, /Character & Vehicle Realism \(V4\.8\)/);
-  assert.match(html, /refined rigged characters/);
+  assert.match(html, /UPDATE 4\.9 · FINAL GRAPHICS POLISH/);
+  assert.match(html, /Final Graphics Polish \(V4\.9\)/);
+  assert.match(html, /soft grounding shadows beneath people and traffic/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
@@ -210,6 +211,27 @@ test('V4.7 adds deterministic street wear, tactile curb details and natural grou
   }
   assert.ok(game.includes('addWorldEnvironmentDetails'));
   assert.match(readme, /tactile curb-warning pads/);
+});
+
+test('V4.9 adds a lightweight instanced contact-shadow pass without changing gameplay systems', () => {
+  const pedestrian = getContactShadowProfile('pedestrian');
+  const avatar = getContactShadowProfile('avatar');
+  const vehicle = getContactShadowProfile('vehicle');
+  const mobileVehicle = getContactShadowProfile('vehicle', { coarsePointer: true });
+  for (const profile of [pedestrian, avatar, vehicle, mobileVehicle]) {
+    assert.ok(profile.width > 0 && profile.depth > 0);
+    assert.ok(Number.isFinite(profile.height));
+  }
+  assert.ok(vehicle.width > avatar.width && vehicle.depth > pedestrian.depth);
+  assert.ok(mobileVehicle.width < vehicle.width && mobileVehicle.depth < vehicle.depth);
+  assert.throws(() => getContactShadowProfile('unknown'), /Unknown contact shadow subject/);
+  for (const feature of [
+    'createContactShadowTexture','createContactShadowBatch','updateContactShadowBatch',
+    'contactShadowTargets','contactShadowBatch.count','updateContactShadows()',
+    'v4.9-instanced-soft-contact-shadows'
+  ]) assert.ok(game.includes(feature), 'Missing V4.9 visual feature: ' + feature);
+  assert.match(readme, /29 moving subjects/);
+  assert.match(readme, /one instanced draw call/);
 });
 
 test('V4.8 selects contextual locomotion clips and classifies character and vehicle surfaces', () => {
