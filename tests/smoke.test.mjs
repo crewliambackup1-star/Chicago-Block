@@ -97,7 +97,7 @@ test('car steering maps A/left to left and D/right to right', () => {
 });
 
 test('README documents V4 scope, preserved gameplay and validation commands', () => {
-  assert.match(readme, /V4\.7 World & Environment Realism/);
+  assert.match(readme, /V4\.8 Character & Vehicle Realism/);
   assert.match(readme, /V4\.6 high-fidelity people and vehicles/);
   assert.match(readme, /V4\.3 lighting and atmosphere/);
   assert.match(readme, /npm test/);
@@ -226,8 +226,8 @@ test('V4.8 selects contextual locomotion clips and classifies character and vehi
   assert.equal(getVehicleSurfaceProfile('Wheel', 'WheelMesh').kind, 'wheel');
   assert.equal(getVehicleSurfaceProfile('ChromeTrim', 'Metal').kind, 'trim');
   assert.equal(getVehicleSurfaceProfile('Headlight', 'Lamp').kind, 'lamp');
-  assert.match(game,/actions\.sitStand/);
-  assert.match(game,/actions\.carry/);
+  assert.match(game,/sitStand:findClip/);
+  assert.match(game,/carry:findClip/);
   assert.match(game,/v4\.8-classified-clearcoat-pbr/);
   assert.match(game,/interiorDetailCount/);
 });
