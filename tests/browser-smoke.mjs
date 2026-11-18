@@ -14,9 +14,9 @@ async function sendKey(page, key, type = 'keydown') {
 
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
-  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '4.10.0', 'startup should resolve the current release manifest');
-  assert.match(await page.title(), /V4\.10/, 'the document title should show the current release');
-  assert.match(await page.locator('#brand small').textContent(), /V4\.10/, 'the in-game version label should show the current release');
+  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '5.0.0', 'startup should resolve the current release manifest');
+  assert.match(await page.title(), /V5\.0/, 'the document title should show the current release');
+  assert.match(await page.locator('#brand small').textContent(), /V5\.0/, 'the in-game version label should show the current release');
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
     null,
@@ -39,7 +39,7 @@ async function captureScreenshot(page, path) {
   }
 }
 
-test('desktop browser playthrough: movement, camera, weather, snapshots, delivery, and driving', async () => {
+test('desktop browser playthrough: story missions, movement, side activities, camera, weather, and driving', async () => {
   const browser = await chromium.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader']
@@ -62,6 +62,30 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    assert.equal(initial.campaign.currentObjectiveId, 'meet-maya', 'V5 should start with an optional neighborhood story objective');
+    assert.equal(await page.locator('#missionHeading').textContent(), 'MAIN MISSION · A NEIGHBORLY WELCOME');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
+    await page.waitForFunction(() => document.querySelector('#interactionPrompt')?.textContent === 'F · MAYA');
+    await sendKey(page, 'f');
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).campaign.currentObjectiveId, 'collect-supplies', 'meeting Maya should begin the second mission');
+    for (const [x, z] of [[55, -27], [-91, -55], [-46, 62]]) {
+      await page.evaluate(([nextX, nextZ]) => window.__CHICAGO_BLOCK_TEST__.teleport(nextX, nextZ), [x, z]);
+      await sendKey(page, 'f');
+    }
+    const suppliesState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(suppliesState.campaign.suppliesFound, 3, 'all three supply crates should be collectible in any order');
+    assert.equal(suppliesState.campaign.currentObjectiveId, 'report-to-maya');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
+    await sendKey(page, 'f');
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).campaign.currentObjectiveId, 'collect-decorations');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(55, -27));
+    await sendKey(page, 'f');
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).campaign.currentObjectiveId, 'deliver-decorations');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
+    await sendKey(page, 'f');
+    const completedCampaign = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().campaign);
+    assert.equal(completedCampaign.completed, true, 'the optional V5 story should be completable end to end');
+    assert.equal(completedCampaign.completedMissions, 3, 'all three story missions should be recorded as completed');
     assert.equal(initial.streetSigns, 4, 'four sidewalk street signs should be present');
     const renderProfile = await page.evaluate(() => window.__CHICAGO_BLOCK_RENDER__?.getState());
     assert.equal(initial.architecturalDetails.buildings, 13, 'all 13 existing buildings should use the V4.1 architecture pass');
@@ -242,7 +266,7 @@ test('desktop browser playthrough: movement, camera, weather, snapshots, deliver
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v4-7-chromium-desktop-after-play.png');
+    await captureScreenshot(page, 'artifacts/v5-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();

@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { getCarSteeringInput } from './controls.js?v=4.10.0';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=4.10.0';
-import { getAtmosphereState } from './atmosphere.js?v=4.10.0';
-import { loadModelAssets } from './model-assets.js?v=4.10.0';
-import { addWorldEnvironmentDetails } from './environment-details.js?v=4.10.0';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=4.10.0';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=4.10.0';
+import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=5.0.0';
+import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress } from './missions.js?v=5.0.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=5.0.0';
+import { getAtmosphereState } from './atmosphere.js?v=5.0.0';
+import { loadModelAssets } from './model-assets.js?v=5.0.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=5.0.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=5.0.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=5.0.0';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1642,6 +1643,23 @@ const landmarks=landmarkSpots.map(spot=>{
   marker.position.set(spot.x,0,spot.z);world.add(marker);
   return {...spot,marker,discovered:false};
 });
+// V5's optional neighborhood story uses the existing district and interaction key.
+let campaignState=createCampaignState();
+const maya=person(M.green,42);maya.position.set(-38,0,38);maya.rotation.y=Math.PI;maya.userData.characterName='Maya';world.add(maya);
+const campaignTargetSpecs=[
+  ['maya','Maya',-35,38],['supply-market','Market supply crate',55,-27],
+  ['supply-west','West-side supply crate',-91,-55],['supply-garden','Garden supply crate',-46,62],
+  ['market-decorations','Courtyard decorations',55,-27],['courtyard-dropoff','Courtyard drop-off',-35,38]
+];
+const campaignTargets=new Map(campaignTargetSpecs.map(([id,label,x,z])=>{
+  const marker=activityBeacon(0xe5b96d);marker.scale.setScalar(.82);marker.position.set(x,0,z);world.add(marker);
+  return [id,{id,label,x,z,marker}];
+}));
+function updateCampaignMarkers(){
+  const objective=getCampaignObjective(campaignState);
+  const activeTargets=new Set(objective?.targetIds||[]);
+  for(const [id,target] of campaignTargets)target.marker.visible=activeTargets.has(id);
+}
 const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-82,-75]].map(p=>new THREE.Vector3(p[0],0,p[1]));
 const trafficStyles=['sedan','suv','wagon','compact','suv','sedan','wagon'];
 for(let i=0;i<7;i++){
@@ -1953,8 +1971,49 @@ function updateActivityHud(){
   const found=landmarks.filter(item=>item.discovered).length;
   $('collectionLabel').textContent='SNAPSHOTS '+found+'/'+landmarks.length+' · DELIVERIES '+deliveriesCompleted;
 }
+function updateCampaignHud(){
+  const objective=getCampaignObjective(campaignState),progress=getCampaignProgress(campaignState);
+  $('missionHeading').textContent=objective?'MAIN MISSION · '+objective.missionTitle.toUpperCase():'MAIN STORY COMPLETE';
+  $('missionText').textContent=objective
+    ?objective.description+(objective.requiredCount?' ('+progress.suppliesFound+'/'+progress.suppliesRequired+' collected)':'')
+    :'The courtyard gathering is ready. Explore the neighborhood or keep enjoying the side activities.';
+}
+function getNearbyCampaignTarget(){
+  const objective=getCampaignObjective(campaignState);
+  if(!objective)return null;
+  return objective.targetIds.map(id=>campaignTargets.get(id)).filter(Boolean)
+    .map(target=>({...target,distance:Math.hypot(player.x-target.x,player.z-target.z)}))
+    .filter(target=>target.distance<5.8).sort((a,b)=>a.distance-b.distance)[0]||null;
+}
+function updateInteractionPrompt(){
+  const prompt=$('interactionPrompt');let message='';
+  if(inCar)message='E · EXIT BLUE SEDAN';
+  else if(nearCar())message='E · ENTER BLUE SEDAN';
+  else{
+    const campaignTarget=getNearbyCampaignTarget();
+    if(campaignTarget)message='F · '+campaignTarget.label.toUpperCase();
+    else{
+      const landmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
+      if(landmark)message='F · DISCOVER SNAPSHOT';
+      else{
+        const deliveryTarget=carryingPackage?deliveryDropoff:deliveryPickup;
+        if(Math.hypot(player.x-deliveryTarget.x,player.z-deliveryTarget.z)<7)
+          message=carryingPackage?'F · COMPLETE DELIVERY':'F · START DELIVERY';
+      }
+    }
+  }
+  prompt.textContent=message;prompt.style.display=message?'block':'none';
+}
 function handleActivity(){
-  if(inCar){showToast('Exit the sedan to explore or deliver');return;}
+  if(inCar){showToast('Exit the sedan to explore or interact');return;}
+  const nearbyCampaignTarget=getNearbyCampaignTarget();
+  if(nearbyCampaignTarget){
+    const result=applyCampaignInteraction(campaignState,nearbyCampaignTarget.id);
+    if(result.accepted){
+      campaignState=result.state;updateCampaignMarkers();updateCampaignHud();showToast(result.message);
+    }
+    return;
+  }
   const nearbyLandmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
   if(nearbyLandmark){
     nearbyLandmark.discovered=true;nearbyLandmark.marker.visible=false;updateActivityHud();
@@ -1986,11 +2045,11 @@ function nearCar(){return Math.hypot(player.x-playerCar.position.x,player.z-play
 function carSteeringInput(){return getCarSteeringInput(input('a')||input('arrowleft'),input('d')||input('arrowright'));}
 function interact(){
   if(inCar){
+    const exit=findVehicleExitPosition(playerCar.position.x,playerCar.position.z,playerCar.rotation.y,(x,z)=>blocked(x,z,.58));
+    if(!exit){showToast('There is no clear space beside the sedan. Move it to an open area first.');return;}
     inCar=false;velocity=0;
-    let x=playerCar.position.x+Math.cos(playerCar.rotation.y)*3.2,z=playerCar.position.z-Math.sin(playerCar.rotation.y)*3.2;
-    if(blocked(x,z)){x=playerCar.position.x+3.3;z=playerCar.position.z;}
-    player.x=x;player.z=z;player.heading=playerCar.rotation.y;
-    $('objectiveText').textContent='Explore the expanded streets and courtyard. Press E near the blue sedan to drive again.';
+    player.x=exit.x;player.z=exit.z;player.heading=playerCar.rotation.y;
+    $('objectiveText').textContent='Explore the neighborhood, follow the main mission, or discover side activities.';
     showToast('You left the sedan');
   }else if(nearCar()){
     inCar=true;player.x=playerCar.position.x;player.z=playerCar.position.z;player.heading=playerCar.rotation.y;velocity=0;
@@ -2198,6 +2257,7 @@ function updateMap(){
   ctx.fillStyle='#416a49';ctx.fillRect(96*scale,171*scale,58*scale,54*scale);
   for(const item of traffic){ctx.fillStyle='#e0c17b';ctx.beginPath();ctx.arc((160+item.g.position.x)*scale,(160+item.g.position.z)*scale,2.5,0,Math.PI*2);ctx.fill();}
   for(const landmark of landmarks){if(!landmark.discovered){ctx.fillStyle='#63cbd2';ctx.beginPath();ctx.arc((160+landmark.x)*scale,(160+landmark.z)*scale,3.2,0,Math.PI*2);ctx.fill();}}
+  for(const target of campaignTargets.values())if(target.marker.visible){ctx.fillStyle='#e5b96d';ctx.beginPath();ctx.arc((160+target.x)*scale,(160+target.z)*scale,4,0,Math.PI*2);ctx.fill();}
   ctx.fillStyle='#e8b45f';ctx.beginPath();ctx.arc((160+player.x)*scale,(160+player.z)*scale,4.5,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.65)';ctx.lineWidth=2;ctx.strokeRect(1,1,246,246);
 }
@@ -2218,7 +2278,12 @@ function frame(){
     const marker=landmarks[i].marker;
     if(marker.visible){marker.position.y=.08+Math.sin(time*2.1+i*.73)*.13;marker.rotation.y+=dt*.55;}
   }
-  if(elapsed%0.22<dt){updateMap();updateZone();}
+  let campaignMarkerIndex=0;
+  for(const target of campaignTargets.values()){
+    if(target.marker.visible){target.marker.position.y=.08+Math.sin(time*2.15+campaignMarkerIndex*.67)*.14;target.marker.rotation.y+=dt*.6;}
+    campaignMarkerIndex++;
+  }
+  if(elapsed%0.22<dt){updateMap();updateZone();updateInteractionPrompt();}
   if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   updateVehicleAssetLods();
   updateContactShadows();
@@ -2248,6 +2313,8 @@ if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
+      campaign:getCampaignProgress(campaignState),
+      campaignTargets:[...campaignTargets.values()].map(({id,label,x,z})=>({id,label,x,z})),
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails,bodyStyle:playerCar.userData.bodyStyle,silhouette:playerCar.userData.silhouette,tireProfile:playerCar.userData.tireProfile,smoothProfileRadius:playerCar.userData.smoothProfileRadius}},
       streetSigns:streetSigns.length,
@@ -2294,10 +2361,10 @@ if(automationMode){
     }
   }),configurable:false});
 }
-updateActivityHud();
+updateActivityHud();updateCampaignMarkers();updateCampaignHud();
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows+v5-core-gameplay';
