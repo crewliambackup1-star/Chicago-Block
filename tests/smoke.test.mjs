@@ -5,6 +5,8 @@ import { getCarSteeringInput } from '../controls.js';
 import { buildEnvironmentDetailLayout } from '../environment-details.js';
 import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from '../visual-profiles.js';
 import { getContactShadowProfile } from '../contact-shadows.js';
+import { getProgressSummary, createDefaultProgress } from '../progression.js';
+import { getPedestrianReactionDuration, getPedestrianRoutineSpeed } from '../world-behavior.js';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const game = readFileSync(new URL('../game.js', import.meta.url), 'utf8');
@@ -24,10 +26,10 @@ test('page checks the latest release before loading versioned game assets', () =
   assert.ok(imports.length >= 7, 'all main local modules should have release-specific URLs');
   for (const match of imports) assert.equal(match[2], packageInfo.version, match[1] + ' must use the current release cache key');
   assert.match(modelAssetsJs, /searchParams\.get\('v'\)/, 'GLB models must inherit the model module release cache key');
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'paintLabel', 'saveLabel', 'styleButton', 'shopButton']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 5\.0 · CORE GAMEPLAY & ACTIVITIES/);
+  assert.match(html, /UPDATE 6\.0 · LIVING WORLD & PROGRESSION/);
   assert.match(html, /Core Gameplay & Activities \(V5\.0\)/);
   assert.match(html, /optional story missions/);
   assert.match(html, /Talk \/ activity/);
@@ -44,6 +46,28 @@ test('V5 adds an optional neighborhood story and contextual interaction prompts'
   assert.match(game, /campaignTargets\.values\(\)/);
   assert.match(readme, /optional three-mission neighborhood story/);
   assert.match(readme, /players can ignore the story and keep free-roaming/i);
+});
+
+test('V6 saves progression and adds responsive pedestrian behavior', () => {
+  assert.equal(packageInfo.version, '6.0.0');
+  assert.equal(releaseInfo.version, '6.0.0');
+  assert.equal(getProgressSummary(createDefaultProgress()).level, 1);
+  assert.equal(getPedestrianRoutineSpeed(2), .72, 'overnight movement should slow down');
+  assert.equal(getPedestrianRoutineSpeed(8), 1.12, 'morning movement should be brisker');
+  assert.equal(getPedestrianRoutineSpeed(17), .92, 'evening movement should have its own pace');
+  assert.equal(getPedestrianRoutineSpeed(12), 1, 'midday uses the standard pace');
+  assert.equal(getPedestrianReactionDuration(2), 1.2, 'close pedestrians should briefly acknowledge the player');
+  assert.equal(getPedestrianReactionDuration(5), .65, 'nearby pedestrians should still react without stopping as long');
+  assert.equal(getPedestrianReactionDuration(8), 0, 'pedestrians outside the response radius should keep moving');
+  for (const feature of [
+    'loadProgress', 'saveProgress', 'awardProgress', 'purchaseVehiclePaint',
+    'commitPlayerProgress', 'updateProgressHud', 'getNearbyNeighbor',
+    'purchaseNextVehiclePaint', 'changeVehiclePaint', 'npcReactions'
+  ]) assert.ok(game.includes(feature), 'Missing V6 integration: ' + feature);
+  assert.match(game, /playerDistance<6\.5/);
+  assert.match(game, /getPedestrianRoutineSpeed\(gameHours\)/);
+  assert.match(readme, /automatically in this browser/i);
+  assert.match(readme, /there is no account or cloud synchronization/i);
 });
 
 test('V1 gameplay systems remain present after the V2 visual pass', () => {
