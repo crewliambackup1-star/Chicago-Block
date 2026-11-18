@@ -64,7 +64,7 @@ test('V6 saves progression and adds responsive pedestrian behavior', () => {
     'commitPlayerProgress', 'updateProgressHud', 'getNearbyNeighbor',
     'purchaseNextVehiclePaint', 'changeVehiclePaint', 'npcReactions'
   ]) assert.ok(game.includes(feature), 'Missing V6 integration: ' + feature);
-  assert.match(game, /playerDistance<6\.5/);
+  assert.match(game, /getPedestrianReactionDuration\(playerDistance\)>0/);
   assert.match(game, /getPedestrianRoutineSpeed\(gameHours\)/);
   assert.match(readme, /automatically in this browser/i);
   assert.match(readme, /there is no account or cloud synchronization/i);
