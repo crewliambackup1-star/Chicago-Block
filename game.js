@@ -1670,7 +1670,7 @@ const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-
 const trafficStyles=['sedan','suv','wagon','compact','suv','sedan','wagon'];
 for(let i=0;i<7;i++){
   const g=car([0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92][i],false,trafficStyles[i]);world.add(g);
-  traffic.push({g,segment:i%roadLoop.length,t:(i/7)*.88,speed:5.8+(i%3)*.65});
+  traffic.push({g,segment:i%roadLoop.length,t:(i/7)*.88,speed:5.8+(i%3)*.65,currentSpeed:5.8+(i%3)*.65});
 }
 
 const player={x:-11,z:-12,y:0,heading:0,vertical:0,grounded:true};
@@ -2145,41 +2145,57 @@ function updateAvatarAssetAnimation(dt){
 function walkNPCs(dt,time){
   for(const p of pedestrians){
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
-    if(d<.9)p.target=(p.target+1)%p.route.length;
-    else{
-      const step=Math.min(d,p.speed*dt);
+    const arrivedAtWaypoint=p.mode==='walking'&&d<.9;
+    if(arrivedAtWaypoint){p.target=(p.target+1)%p.route.length;p.stopCount++;}
+    const distanceToPlayer=Math.hypot(player.x-p.g.position.x,player.z-p.g.position.z);
+    const interval=p.routeIndex%2===0?3:4;
+    const plannedPause=arrivedAtWaypoint&&p.stopCount%interval===0?0.8+(p.routeIndex%4)*.22:0;
+    Object.assign(p,advancePedestrianRoutine(p,{dt,distanceToPlayer,gameHours,arrivedAtWaypoint,plannedPause}));
+    if(p.mode==='walking'&&!arrivedAtWaypoint){
+      const eventMultiplier=currentNeighborhoodEvent?.pedestrianSpeed??1;
+      const step=Math.min(d,p.speed*p.speedMultiplier*eventMultiplier*dt);
       p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;
       p.g.rotation.y=Math.atan2(dx,dz);
+    }else if(p.mode==='noticing'){
+      p.g.rotation.y=Math.atan2(player.x-p.g.position.x,player.z-p.g.position.z);
     }
     const phase=time*(6.1+p.speed*.48)+p.phase;
-    if(p.g.userData.highDetailModel?.visible){p.g.userData.highDetailMixer?.update(dt);continue;}
+    if(p.g.userData.highDetailModel?.visible){
+      switchHumanAnimation(p.g.userData,p.mode==='walking'?'walk':'idle');
+      p.g.userData.highDetailMixer?.update(dt);continue;
+    }
     p.g.position.y=0;
-    const swing=Math.sin(phase)*.31;
-    const liftLeft=Math.max(0,Math.sin(phase))*.58;
-    const liftRight=Math.max(0,Math.sin(phase+Math.PI))*.58;
+    const gait=p.mode==='walking'?Math.sin(phase)*.31:0;
+    const liftLeft=p.mode==='walking'?Math.max(0,Math.sin(phase))*.58:0;
+    const liftRight=p.mode==='walking'?Math.max(0,Math.sin(phase+Math.PI))*.58:0;
     const legs=p.g.userData.legs,arms=p.g.userData.arms;
-    legs[0].rotation.x=swing;legs[1].rotation.x=-swing;
+    legs[0].rotation.x=gait;legs[1].rotation.x=-gait;
     legs[0].userData.shin.rotation.x=liftLeft;legs[1].userData.shin.rotation.x=liftRight;
-    legs[0].userData.shin.rotation.z=Math.sin(phase)*.018;
-    legs[1].userData.shin.rotation.z=-Math.sin(phase)*.018;
-    arms[0].rotation.x=-swing*.78;arms[1].rotation.x=swing*.78;
+    legs[0].userData.shin.rotation.z=p.mode==='walking'?Math.sin(phase)*.018:0;
+    legs[1].userData.shin.rotation.z=p.mode==='walking'?-Math.sin(phase)*.018:0;
+    arms[0].rotation.x=-gait*.78;arms[1].rotation.x=gait*.78;
     arms[0].userData.elbow.rotation.x=.12+liftRight*.25;
     arms[1].userData.elbow.rotation.x=.12+liftLeft*.25;
-    arms[0].rotation.z=-.08+Math.sin(phase)*.025;
-    arms[1].rotation.z=.08-Math.sin(phase)*.025;
-    p.g.userData.torso.position.y=1.18+Math.abs(Math.sin(phase*2))*.018;
-    p.g.userData.head.rotation.x=Math.sin(phase*.5+p.phase)*.018;
+    arms[0].rotation.z=-.08+(p.mode==='walking'?Math.sin(phase)*.025:0);
+    arms[1].rotation.z=.08-(p.mode==='walking'?Math.sin(phase)*.025:0);
+    p.g.userData.torso.position.y=1.18+(p.mode==='walking'?Math.abs(Math.sin(phase*2))*.018:0);
+    p.g.userData.head.rotation.x=p.mode==='noticing'?.04:Math.sin(phase*.5+p.phase)*.018;
     p.g.userData.head.rotation.z=Math.sin(phase*.35+p.phase)*.012;
   }
 }
 function moveTraffic(dt){
   for(const item of traffic){
     const a=roadLoop[item.segment],b=roadLoop[(item.segment+1)%roadLoop.length];
-    item.t+=item.speed*dt/a.distanceTo(b);
+    const distanceToPlayer=Math.hypot(item.g.position.x-player.x,item.g.position.z-player.z);
+    const eventSpeed=currentNeighborhoodEvent?.trafficSpeed??1;
+    const proximityFactor=distanceToPlayer<12?.68:1;
+    const desiredSpeed=item.speed*eventSpeed*proximityFactor;
+    item.currentSpeed+=(desiredSpeed-item.currentSpeed)*Math.min(1,dt*2.3);
+    item.t+=item.currentSpeed*dt/a.distanceTo(b);
     if(item.t>=1){item.t-=1;item.segment=(item.segment+1)%roadLoop.length;}
     const from=roadLoop[item.segment],to=roadLoop[(item.segment+1)%roadLoop.length];
     item.g.position.lerpVectors(from,to,item.t);item.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);
-    for(const wheel of item.g.userData.wheels||[])wheel.rotation.x+=item.speed*dt/.39;
+    for(const wheel of item.g.userData.wheels||[])wheel.rotation.x+=item.currentSpeed*dt/.39;
   }
 }
 function movePlayer(dt){
@@ -2220,7 +2236,8 @@ function updateCamera(dt){
   }
 }
 function updateClock(dt){
-  gameHours=(gameHours+dt*.015)%24;const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
+  gameHours=(gameHours+dt*.015)%24;updateNeighborhoodEvent(true);
+  const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const atmosphere=getAtmosphereState(gameHours,weatherMode);
   sun.intensity=atmosphere.sunIntensity;sun.color.setHex(atmosphere.sunColor);
@@ -2273,6 +2290,7 @@ function updateMap(){
   for(const item of traffic){ctx.fillStyle='#e0c17b';ctx.beginPath();ctx.arc((160+item.g.position.x)*scale,(160+item.g.position.z)*scale,2.5,0,Math.PI*2);ctx.fill();}
   for(const landmark of landmarks){if(!landmark.discovered){ctx.fillStyle='#63cbd2';ctx.beginPath();ctx.arc((160+landmark.x)*scale,(160+landmark.z)*scale,3.2,0,Math.PI*2);ctx.fill();}}
   for(const target of campaignTargets.values())if(target.marker.visible){ctx.fillStyle='#e5b96d';ctx.beginPath();ctx.arc((160+target.x)*scale,(160+target.z)*scale,4,0,Math.PI*2);ctx.fill();}
+  if(neighborhoodEventMarker.visible){ctx.fillStyle='#8db8b4';ctx.beginPath();ctx.arc((160+neighborhoodEventMarker.position.x)*scale,(160+neighborhoodEventMarker.position.z)*scale,3.6,0,Math.PI*2);ctx.fill();}
   ctx.fillStyle='#e8b45f';ctx.beginPath();ctx.arc((160+player.x)*scale,(160+player.z)*scale,4.5,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.65)';ctx.lineWidth=2;ctx.strokeRect(1,1,246,246);
 }
