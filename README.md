@@ -1,4 +1,20 @@
-# Chicago Block — V4.10 Instant Update Delivery
+# Chicago Block — V5 Core Gameplay & Activities
+
+V5 builds gameplay on top of the existing V4.10 visual baseline. The playable neighborhood, lighting, weather, character and vehicle assets, streets, and glass-panel HUD remain in place.
+
+## V5 gameplay
+
+- Adds an optional three-mission neighborhood story: meet Maya, help gather three supply crates, then prepare a courtyard gathering.
+- Mission objectives are tracked in the HUD, with gold world markers also shown on the minimap. Players can ignore the story and keep free-roaming.
+- Reuses the five cyan neighborhood snapshots and repeatable package-delivery activity as optional side activities.
+- Adds contextual interaction prompts for the car, story objectives, snapshots, and deliveries.
+- Makes vehicle exits collision-aware: the game tries several nearby exit positions and keeps the player in the car when no safe position is available.
+- Keeps A / Left Arrow as left steering and D / Right Arrow as right steering, with regression coverage for both directions.
+- Preserves the existing first- and third-person cameras, keyboard and touch controls, traffic routes, and graphics.
+
+V5 does not add a persistent save/progression economy or a wider dynamic NPC/traffic simulation. Those belong to the next gameplay release, after the core mission and activity loop is stable.
+
+## V4.10 Instant Update Delivery
 
 V4.10 makes the latest published build appear as soon as the game opens, rather than waiting for a browser's cached page or module URLs to expire.
 
