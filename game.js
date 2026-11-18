@@ -2426,6 +2426,12 @@ if(automationMode){
       if(!Number.isFinite(x)||!Number.isFinite(z))throw new TypeError('Test coordinates must be finite');
       if(inCar)throw new Error('Exit the car before teleporting the player');
       player.x=x;player.z=z;player.y=0;player.vertical=0;player.grounded=true;avatar.position.set(x,0,z);
+    },
+    saveNow:()=>saveGameProgress(),
+    clearSave:()=>localStorage.removeItem(SAVE_STORAGE_KEY),
+    setGameHours:(hour)=>{
+      if(!Number.isFinite(hour)||hour<0||hour>=24)throw new TypeError('Test game hour must be between 0 and 24');
+      gameHours=hour;updateNeighborhoodEvent(false);
     }
   }),configurable:false});
 }
