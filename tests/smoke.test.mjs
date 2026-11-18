@@ -24,13 +24,26 @@ test('page checks the latest release before loading versioned game assets', () =
   assert.ok(imports.length >= 7, 'all main local modules should have release-specific URLs');
   for (const match of imports) assert.equal(match[2], packageInfo.version, match[1] + ' must use the current release cache key');
   assert.match(modelAssetsJs, /searchParams\.get\('v'\)/, 'GLB models must inherit the model module release cache key');
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 4\.10 · INSTANT UPDATE DELIVERY/);
-  assert.match(html, /Instant Update Delivery \(V4\.10\)/);
-  assert.match(html, /soft grounding shadows beneath people and traffic/);
+  assert.match(html, /UPDATE 5\.0 · CORE GAMEPLAY & ACTIVITIES/);
+  assert.match(html, /Core Gameplay & Activities \(V5\.0\)/);
+  assert.match(html, /optional story missions/);
+  assert.match(html, /Talk \/ activity/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
+});
+
+test('V5 adds an optional neighborhood story and contextual interaction prompts', () => {
+  for (const feature of [
+    'applyCampaignInteraction', 'createCampaignState', 'getCampaignObjective',
+    'getCampaignProgress', 'updateCampaignHud', 'updateCampaignMarkers',
+    'updateInteractionPrompt', 'findVehicleExitPosition'
+  ]) assert.ok(game.includes(feature), 'Missing V5 gameplay feature: ' + feature);
+  assert.match(game, /const maya=person\(M\.green,42\)/);
+  assert.match(game, /campaignTargets\.values\(\)/);
+  assert.match(readme, /optional three-mission neighborhood story/);
+  assert.match(readme, /players can ignore the story and keep free-roaming/);
 });
 
 test('V1 gameplay systems remain present after the V2 visual pass', () => {
