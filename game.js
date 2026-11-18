@@ -8,6 +8,7 @@ import { addWorldEnvironmentDetails } from './environment-details.js?v=6.0.0';
 import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=6.0.0';
 import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=6.0.0';
 import { awardProgress, cycleVehiclePaint, getProgressSummary, loadProgress, purchaseVehiclePaint, saveProgress, VEHICLE_PAINTS, updateProgress } from './progression.js?v=6.0.0';
+import { getPedestrianReactionDuration, getPedestrianRoutineSpeed } from './world-behavior.js?v=6.0.0';
 
 const progressStorage=(()=>{try{return window.localStorage;}catch{return null;}})();
 const loadedProgress=loadProgress(progressStorage);
@@ -2224,8 +2225,8 @@ function walkNPCs(dt,time){
   for(const p of pedestrians){
     const playerDistance=Math.hypot(player.x-p.g.position.x,player.z-p.g.position.z);
     p.reactionCooldown=Math.max(0,p.reactionCooldown-dt);
-    if(!inCar&&playerDistance<6.5&&p.reactionCooldown<=0){
-      p.reactionTimer=playerDistance<3.9?1.2:.65;
+    if(!inCar&&getPedestrianReactionDuration(playerDistance)>0&&p.reactionCooldown<=0){
+      p.reactionTimer=getPedestrianReactionDuration(playerDistance);
       p.reactionCooldown=9;
     }
     if(p.reactionTimer>0){
@@ -2240,8 +2241,7 @@ function walkNPCs(dt,time){
       }
       continue;
     }
-    const hour=gameHours;
-    const routineSpeed=(hour<6||hour>=22)?.72:(hour>=7&&hour<10)?1.12:(hour>=16&&hour<20)?.92:1;
+    const routineSpeed=getPedestrianRoutineSpeed(gameHours);
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
     if(d<.9)p.target=(p.target+1)%p.route.length;
     else{
@@ -2456,7 +2456,8 @@ if(automationMode){
       modelAssets:{...modelAssetStatus},
       simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
-      npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
+      npcReactions:pedestrians.filter(p=>p.reactionCooldown>0).length,
+      npcPositions:pedestrians.map(p=>({id:p.id,x:p.g.position.x,z:p.g.position.z,target:p.target})),
       trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
     }),
     setKey:(key,pressed)=>{
