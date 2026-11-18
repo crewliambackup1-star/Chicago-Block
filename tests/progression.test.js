@@ -43,17 +43,17 @@ test('progress rewards update XP, credits and delivery totals safely', () => {
 test('vehicle paints require level and credits, then remain selectable', () => {
   const early = purchaseVehiclePaint(createDefaultProgress(), 'graphite');
   assert.equal(early.purchased, false);
-  let state = awardProgress(createDefaultProgress(), { xp: 250, credits: 300 });
+  let state = awardProgress(createDefaultProgress(), { xp: 250, credits: 400 });
   const graphite = purchaseVehiclePaint(state, 'graphite');
   assert.equal(graphite.purchased, true);
-  assert.equal(graphite.state.credits, 200);
+  assert.equal(graphite.state.credits, 300);
   assert.equal(graphite.state.selectedPaint, 'graphite');
   const burgundy = purchaseVehiclePaint(graphite.state, 'burgundy');
   assert.equal(burgundy.purchased, false, 'level three is required before buying burgundy');
   state = awardProgress(graphite.state, { xp: 250 });
   const unlocked = purchaseVehiclePaint(state, 'burgundy');
   assert.equal(unlocked.purchased, true);
-  assert.equal(unlocked.state.credits, 0);
+  assert.equal(unlocked.state.credits, 80);
   assert.equal(selectVehiclePaint(unlocked.state, 'blue').selected, true);
 });
 
