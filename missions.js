@@ -54,6 +54,28 @@ export function createCampaignState() {
   };
 }
 
+export function normalizeCampaignState(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return createCampaignState();
+  const validSupplyIds = new Set(['supply-market', 'supply-west', 'supply-garden']);
+  const validMissionIds = new Set(CAMPAIGN_MISSIONS.map(item => item.id));
+  const collectedSupplies = Array.isArray(value.collectedSupplies)
+    ? [...new Set(value.collectedSupplies.filter(id => validSupplyIds.has(id)))].slice(0, 3)
+    : [];
+  const completedMissionIds = Array.isArray(value.completedMissionIds)
+    ? [...new Set(value.completedMissionIds.filter(id => validMissionIds.has(id)))].slice(0, 3)
+    : [];
+  const objectiveIndex = Number.isSafeInteger(value.objectiveIndex)
+    ? Math.max(0, Math.min(OBJECTIVES.length, value.objectiveIndex))
+    : 0;
+  const completed = objectiveIndex === OBJECTIVES.length && Boolean(value.completed);
+  return {
+    objectiveIndex: completed ? OBJECTIVES.length : Math.min(objectiveIndex, OBJECTIVES.length - 1),
+    collectedSupplies,
+    completedMissionIds,
+    completed
+  };
+}
+
 export function getCampaignObjective(state) {
   if (!state || state.completed) return null;
   const objective = OBJECTIVES[state.objectiveIndex];
