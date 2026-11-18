@@ -1,6 +1,18 @@
-# Chicago Block — V5 Core Gameplay & Activities
+# Chicago Block — V6 Living World & Progression
 
-V5 builds gameplay on top of the existing V4.10 visual baseline. The playable neighborhood, lighting, weather, character and vehicle assets, streets, and glass-panel HUD remain in place.
+V6 builds on V5's three-mission story and free-roam activities with a responsive neighborhood and a persistent player profile.
+
+## V6 living world and progression
+
+- Saves campaign progress, discovered snapshots, delivery totals, greeted neighbors, XP, credits, unlocked vehicle paints and the selected paint automatically in this browser.
+- Progress is local to the browser profile; there is no account or cloud synchronization. Clearing browser site data can remove the save.
+- Awards XP and credits for completing story missions, discovering snapshots, finishing deliveries and greeting each neighbor for the first time.
+- Converts XP into levels (250 XP per level). The Corner Market sells Graphite and Burgundy vehicle paints after their level requirements are reached.
+- Use **P** near the Corner Market to purchase the next available paint and **C** while in or beside the blue sedan to cycle paints you own. Mobile players have STYLE and SHOP buttons.
+- Pedestrians briefly notice and face the player at close range, can pause to acknowledge them, and follow a day/night movement schedule. Their responses are rate-limited so they do not repeatedly interrupt the player.
+- Keeps the existing story, snapshots, deliveries, vehicles, first- and third-person cameras, and V4 graphics.
+
+## V5 core gameplay and activities
 
 ## V5 gameplay
 
@@ -11,8 +23,6 @@ V5 builds gameplay on top of the existing V4.10 visual baseline. The playable ne
 - Makes vehicle exits collision-aware: the game tries several nearby exit positions and keeps the player in the car when no safe position is available.
 - Keeps A / Left Arrow as left steering and D / Right Arrow as right steering, with regression coverage for both directions.
 - Preserves the existing first- and third-person cameras, keyboard and touch controls, traffic routes, and graphics.
-
-V5 does not add a persistent save/progression economy or a wider dynamic NPC/traffic simulation. Those belong to the next gameplay release, after the core mission and activity loop is stable.
 
 ## V4.10 Instant Update Delivery
 
