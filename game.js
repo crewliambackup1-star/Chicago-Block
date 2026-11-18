@@ -1,13 +1,26 @@
 import * as THREE from 'three';
-import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=5.0.0';
-import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress } from './missions.js?v=5.0.0';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=5.0.0';
-import { getAtmosphereState } from './atmosphere.js?v=5.0.0';
-import { loadModelAssets } from './model-assets.js?v=5.0.0';
-import { addWorldEnvironmentDetails } from './environment-details.js?v=5.0.0';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=5.0.0';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=5.0.0';
+import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=6.0.0';
+import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress } from './missions.js?v=6.0.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=6.0.0';
+import { getAtmosphereState } from './atmosphere.js?v=6.0.0';
+import { loadModelAssets } from './model-assets.js?v=6.0.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=6.0.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=6.0.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=6.0.0';
+import { awardProgress, cycleVehiclePaint, getProgressSummary, loadProgress, purchaseVehiclePaint, saveProgress, VEHICLE_PAINTS, updateProgress } from './progression.js?v=6.0.0';
 
+const progressStorage=(()=>{try{return window.localStorage;}catch{return null;}})();
+const loadedProgress=loadProgress(progressStorage);
+let playerProgress=loadedProgress.state;
+let saveStatus=loadedProgress.available?'AUTO-SAVE READY':'LOCAL SAVE UNAVAILABLE';
+function commitPlayerProgress(nextState){
+  playerProgress=nextState;
+  saveStatus=saveProgress(progressStorage,playerProgress)?'SAVED':'SAVE UNAVAILABLE';
+  updateProgressHud();
+}
+function awardPlayerProgress(reward){
+  commitPlayerProgress(awardProgress(playerProgress,reward));
+}
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9eafb4);
@@ -1352,7 +1365,7 @@ const routes=[
 for(let i=0;i<20;i++){
   const route=routes[i%routes.length].map(p=>new THREE.Vector3(p[0],0,p[1]));
   const g=person([M.blue,M.green,M.red][i%3],i);g.position.copy(route[i%route.length]);world.add(g);
-  pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8});
+  pedestrians.push({id:'neighbor-'+i,g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8,reactionTimer:0,reactionCooldown:0});
 }
 const plateCanvas=document.createElement('canvas');plateCanvas.width=512;plateCanvas.height=128;
 const plateContext=plateCanvas.getContext('2d');
@@ -1410,6 +1423,7 @@ function car(color=0x365b78,detailedInterior=false,vehicleStyle='sedan'){
   extrudedProfile([
     [-1.3,.88],[1.2,.88],[.78,1.48],[.48,1.62],[-.82,1.62],[-1.15,1.4]
   ],1.76,bodyMat);
+  bodyMat.userData.chicagoPaintBody=true;
   const windowMaterial=M.glass.clone();windowMaterial.side=THREE.DoubleSide;windowMaterial.roughness=.085;windowMaterial.metalness=.12;windowMaterial.clearcoat=1;windowMaterial.clearcoatRoughness=.045;windowMaterial.envMapIntensity=2.05;windowMaterial.transmission=.12;windowMaterial.ior=1.48;windowMaterial.thickness=.045;
   const addSideWindow=(points,side)=>{
     const shape=new THREE.Shape();
@@ -1617,6 +1631,20 @@ function car(color=0x365b78,detailedInterior=false,vehicleStyle='sedan'){
   return g;
 }
 const playerCar=car(0x315e83,true);playerCar.position.set(-7,0,-14);playerCar.rotation.y=Math.PI;world.add(playerCar);
+function applyVehiclePaint(paintId){
+  const paint=VEHICLE_PAINTS.find(item=>item.id===paintId)||VEHICLE_PAINTS[0];
+  let paintedMeshes=0;
+  playerCar.traverse(node=>{
+    if(!node.isMesh)return;
+    const materials=Array.isArray(node.material)?node.material:[node.material];
+    for(const material of materials){
+      if(material?.userData?.chicagoPaintBody&&material.color){material.color.set(paint.hex);paintedMeshes++;}
+    }
+  });
+  playerCar.userData.paintId=paint.id;
+  return paintedMeshes;
+}
+applyVehiclePaint(playerProgress.selectedPaint);
 function activityBeacon(color=0xf3bd62){
   const group=new THREE.Group();
   const glowColor=new THREE.Color(color);
@@ -1630,21 +1658,25 @@ function activityBeacon(color=0xf3bd62){
 const deliveryPickup=new THREE.Vector3(39,0,-27);
 const deliveryDropoff=new THREE.Vector3(-35,0,38);
 const deliveryMarker=activityBeacon();deliveryMarker.position.copy(deliveryPickup);world.add(deliveryMarker);
-let carryingPackage=false,deliveriesCompleted=0;
+let carryingPackage=false,deliveriesCompleted=playerProgress.deliveriesCompleted;
 const landmarkSpots=[
-  {name:'West Avenue Mural',x:-91,z:-40},
-  {name:'North Brick Row',x:-5,z:-92},
-  {name:'East Side Corner',x:92,z:44},
-  {name:'Courtyard Garden',x:-48,z:52},
-  {name:'South Street View',x:12,z:93}
+  {id:'west-avenue-mural',name:'West Avenue Mural',x:-91,z:-40},
+  {id:'north-brick-row',name:'North Brick Row',x:-5,z:-92},
+  {id:'east-side-corner',name:'East Side Corner',x:92,z:44},
+  {id:'courtyard-garden',name:'Courtyard Garden',x:-48,z:52},
+  {id:'south-street-view',name:'South Street View',x:12,z:93}
 ];
 const landmarks=landmarkSpots.map(spot=>{
   const marker=activityBeacon(0x63cbd2);marker.scale.setScalar(.78);
   marker.position.set(spot.x,0,spot.z);world.add(marker);
-  return {...spot,marker,discovered:false};
+  const discovered=playerProgress.discoveredLandmarks.includes(spot.id);
+  marker.visible=!discovered;
+  return {...spot,marker,discovered};
 });
-// V5's optional neighborhood story uses the existing district and interaction key.
-let campaignState=createCampaignState();
+// V5's optional neighborhood story is restored from the V6 local save.
+let campaignState={...createCampaignState(),...playerProgress.campaign,
+  collectedSupplies:[...playerProgress.campaign.collectedSupplies],
+  completedMissionIds:[...playerProgress.campaign.completedMissionIds]};
 const maya=person(M.green,42);maya.position.set(-38,0,38);maya.rotation.y=Math.PI;maya.userData.characterName='Maya';world.add(maya);
 const campaignTargetSpecs=[
   ['maya','Maya',-35,38],['supply-market','Market supply crate',55,-27],
@@ -1807,7 +1839,10 @@ function prepareVehicleAsset(source,color){
       const profile=getVehicleSurfaceProfile(node.name,material.name);
       surfaceCounts[profile.kind]=(surfaceCounts[profile.kind]||0)+1;
       const tuned=applySurfaceProfile(material,profile);
-      if(profile.kind==='body'&&tuned.color)tuned.color.setHex(color);
+      if(profile.kind==='body'){
+        tuned.userData.chicagoPaintBody=true;
+        if(tuned.color)tuned.color.setHex(color);
+      }
       return tuned;
     });
     node.material=Array.isArray(node.material)?materials:materials[0];
@@ -1898,6 +1933,7 @@ async function loadV46Models(){
   if(loaded.vehicle?.scene){
     try{
       installVehicleAsset(playerCar,loaded.vehicle,0x315e83,true);
+      applyVehiclePaint(playerProgress.selectedPaint);
       const colors=[0x777b7d,0x9b4d3e,0x4c665d,0xc2bba8,0x30383d,0x7d6b91,0x9a9a92];
       traffic.forEach((item,index)=>installVehicleAsset(item.g,loaded.vehicle,colors[index%colors.length],false));
       modelAssetStatus.vehicle='loaded-cc0-glb';
@@ -1971,6 +2007,39 @@ function updateActivityHud(){
   const found=landmarks.filter(item=>item.discovered).length;
   $('collectionLabel').textContent='SNAPSHOTS '+found+'/'+landmarks.length+' · DELIVERIES '+deliveriesCompleted;
 }
+function updateProgressHud(){
+  const progress=getProgressSummary(playerProgress);
+  $('progressLabel').textContent='LEVEL '+progress.level+' · '+progress.xp+' XP · '+progress.credits+' CREDITS';
+  $('saveLabel').textContent=saveStatus;
+  $('paintLabel').textContent='PAINT · '+(VEHICLE_PAINTS.find(item=>item.id===playerProgress.selectedPaint)?.label||'LAKE BLUE').toUpperCase();
+}
+function getNearbyNeighbor(){
+  return pedestrians.map(pedestrian=>({
+    pedestrian,
+    distance:Math.hypot(player.x-pedestrian.g.position.x,player.z-pedestrian.g.position.z)
+  })).filter(item=>item.distance<4.8).sort((a,b)=>a.distance-b.distance)[0]?.pedestrian||null;
+}
+function nearCornerMarket(){
+  return Math.hypot(player.x-55,player.z+27)<8;
+}
+function purchaseNextVehiclePaint(){
+  if(!nearCornerMarket()){showToast('Visit the Corner Market to unlock vehicle paint.');return;}
+  const nextPaint=VEHICLE_PAINTS.find(item=>item.id!=='blue'&&!playerProgress.unlockedPaints.includes(item.id));
+  if(!nextPaint){showToast('You own every available vehicle paint.');return;}
+  const result=purchaseVehiclePaint(playerProgress,nextPaint.id);
+  if(result.purchased){
+    commitPlayerProgress(result.state);applyVehiclePaint(playerProgress.selectedPaint);
+    showToast(result.message);
+  }else showToast(result.message);
+}
+function changeVehiclePaint(){
+  if(!inCar&&!nearCar()){showToast('Stand beside the blue sedan to change its paint.');return;}
+  const result=cycleVehiclePaint(playerProgress,1);
+  if(result.selected){
+    commitPlayerProgress(result.state);applyVehiclePaint(playerProgress.selectedPaint);
+    showToast(result.message);
+  }else showToast('Unlock another paint at the Corner Market first.');
+}
 function updateCampaignHud(){
   const objective=getCampaignObjective(campaignState),progress=getCampaignProgress(campaignState);
   $('missionHeading').textContent=objective?'MAIN MISSION · '+objective.missionTitle.toUpperCase():'MAIN STORY COMPLETE';
@@ -1993,6 +2062,8 @@ function updateInteractionPrompt(){
     const campaignTarget=getNearbyCampaignTarget();
     if(campaignTarget)message='F · '+campaignTarget.label.toUpperCase();
     else{
+      const neighbor=getNearbyNeighbor();
+      if(neighbor)message=playerProgress.greetedNeighbors.includes(neighbor.id)?'F · SAY HELLO AGAIN':'F · GREET NEIGHBOR';
       const landmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
       if(landmark)message='F · DISCOVER SNAPSHOT';
       else{
@@ -2010,27 +2081,46 @@ function handleActivity(){
   if(nearbyCampaignTarget){
     const result=applyCampaignInteraction(campaignState,nearbyCampaignTarget.id);
     if(result.accepted){
-      campaignState=result.state;updateCampaignMarkers();updateCampaignHud();showToast(result.message);
+      campaignState=result.state;
+      playerProgress=updateProgress(playerProgress,{campaign:campaignState,completedMissionIds:campaignState.completedMissionIds});
+      if(result.missionCompleted)playerProgress=awardProgress(playerProgress,{xp:100,credits:40});
+      commitPlayerProgress(playerProgress);
+      updateCampaignMarkers();updateCampaignHud();showToast(result.missionCompleted?result.message+' · +100 XP · +40 credits':result.message);
     }
     return;
   }
   const nearbyLandmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
   if(nearbyLandmark){
-    nearbyLandmark.discovered=true;nearbyLandmark.marker.visible=false;updateActivityHud();
+    nearbyLandmark.discovered=true;nearbyLandmark.marker.visible=false;
+    playerProgress=updateProgress(playerProgress,{discoveredLandmarks:[...playerProgress.discoveredLandmarks,nearbyLandmark.id]});
+    awardPlayerProgress({xp:35,credits:15});updateActivityHud();
     $('objectiveText').textContent=landmarks.every(item=>item.discovered)
       ?'All five neighborhood snapshots found! You can still deliver packages and explore the district.'
       :'Snapshot saved: '+nearbyLandmark.name+'. Find the remaining cyan beacons around the neighborhood.';
     showToast('Snapshot saved — '+nearbyLandmark.name);
     return;
   }
+  const nearbyNeighbor=getNearbyNeighbor();
+  if(nearbyNeighbor){
+    nearbyNeighbor.reactionTimer=1.5;nearbyNeighbor.reactionCooldown=8;
+    if(playerProgress.greetedNeighbors.includes(nearbyNeighbor.id))showToast('You already greeted this neighbor.');
+    else{
+      playerProgress=updateProgress(playerProgress,{greetedNeighbors:[...playerProgress.greetedNeighbors,nearbyNeighbor.id]});
+      playerProgress=awardProgress(playerProgress,{xp:10,credits:5});
+      commitPlayerProgress(playerProgress);
+      showToast('Friendly hello! +10 XP · +5 credits');
+    }
+    return;
+  }
   if(!carryingPackage){
-    if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find a cyan snapshot beacon or the gold market marker');return;}
+    if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find a snapshot beacon, a neighbor, or the Corner Market');return;}
     carryingPackage=true;deliveryMarker.position.copy(deliveryDropoff);
     $('objectiveText').textContent='Package collected! Take it to the gold marker in the courtyard and press F.';
     showToast('Package collected — deliver it to the courtyard');
   }else{
     if(Math.hypot(player.x-deliveryDropoff.x,player.z-deliveryDropoff.z)>7){showToast('Head to the courtyard delivery marker');return;}
-    carryingPackage=false;deliveriesCompleted++;deliveryMarker.position.copy(deliveryPickup);updateActivityHud();
+    carryingPackage=false;deliveriesCompleted++;deliveryMarker.position.copy(deliveryPickup);
+    awardPlayerProgress({xp:50,credits:25,deliveries:1});updateActivityHud();
     $('objectiveText').textContent='Delivery complete! Deliveries: '+deliveriesCompleted+'. Return to the market marker for another job.';
     showToast('Delivery complete! Total deliveries: '+deliveriesCompleted);
   }
@@ -2064,6 +2154,7 @@ function keyDown(event){
   keys[k]=true;if(event.repeat)return;
   if(k==='e')interact();if(k==='v')changeCamera();
   if(k==='f')handleActivity();if(k==='r')cycleWeather();
+  if(k==='c')changeVehiclePaint();if(k==='p')purchaseNextVehiclePaint();
   if(k==='n'){gameHours=(gameHours+4)%24;showToast('Time advanced');}
   if(k===' '&&!inCar&&player.grounded){player.vertical=5.5;player.grounded=false;}
 }
@@ -2080,6 +2171,8 @@ $('interactButton').addEventListener('click',interact);
 $('cameraButton').addEventListener('click',changeCamera);
 $('activityButton').addEventListener('click',handleActivity);
 $('weatherButton').addEventListener('click',cycleWeather);
+$('styleButton').addEventListener('click',changeVehiclePaint);
+$('shopButton').addEventListener('click',purchaseNextVehiclePaint);
 const brake=$('brakeButton');
 brake.addEventListener('pointerdown',e=>{e.preventDefault();brake.setPointerCapture?.(e.pointerId);touch.space=true;});
 for(const ev of ['pointerup','pointercancel','lostpointercapture'])brake.addEventListener(ev,()=>touch.space=false);
@@ -2129,10 +2222,30 @@ function updateAvatarAssetAnimation(dt){
 }
 function walkNPCs(dt,time){
   for(const p of pedestrians){
+    const playerDistance=Math.hypot(player.x-p.g.position.x,player.z-p.g.position.z);
+    p.reactionCooldown=Math.max(0,p.reactionCooldown-dt);
+    if(!inCar&&playerDistance<6.5&&p.reactionCooldown<=0){
+      p.reactionTimer=playerDistance<3.9?1.2:.65;
+      p.reactionCooldown=9;
+    }
+    if(p.reactionTimer>0){
+      p.reactionTimer=Math.max(0,p.reactionTimer-dt);
+      p.g.rotation.y=Math.atan2(player.x-p.g.position.x,player.z-p.g.position.z);
+      if(p.g.userData.highDetailMixer){
+        switchHumanAnimation(p.g.userData,'idle');
+        p.g.userData.highDetailMixer.update(dt);
+      }else{
+        p.g.userData.legs[0].rotation.x=0;p.g.userData.legs[1].rotation.x=0;
+        p.g.userData.arms[0].rotation.x=0;p.g.userData.arms[1].rotation.x=0;
+      }
+      continue;
+    }
+    const hour=gameHours;
+    const routineSpeed=(hour<6||hour>=22)?.72:(hour>=7&&hour<10)?1.12:(hour>=16&&hour<20)?.92:1;
     const target=p.route[p.target],dx=target.x-p.g.position.x,dz=target.z-p.g.position.z,d=Math.hypot(dx,dz);
     if(d<.9)p.target=(p.target+1)%p.route.length;
     else{
-      const step=Math.min(d,p.speed*dt);
+      const step=Math.min(d,p.speed*routineSpeed*dt);
       p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;
       p.g.rotation.y=Math.atan2(dx,dz);
     }
@@ -2313,6 +2426,7 @@ if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
+      progression:getProgressSummary(playerProgress),saveAvailable:saveStatus==='SAVED'||saveStatus==='AUTO-SAVE READY',greetedNeighbors:playerProgress.greetedNeighbors.length,
       campaign:getCampaignProgress(campaignState),
       campaignTargets:[...campaignTargets.values()].map(({id,label,x,z})=>({id,label,x,z})),
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
@@ -2361,7 +2475,7 @@ if(automationMode){
     }
   }),configurable:false});
 }
-updateActivityHud();updateCampaignMarkers();updateCampaignHud();
+updateActivityHud();updateCampaignMarkers();updateCampaignHud();updateProgressHud();
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   adaptiveResolution.resize();
