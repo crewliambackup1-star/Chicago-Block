@@ -2432,6 +2432,12 @@ if(automationMode){
     setGameHours:(hour)=>{
       if(!Number.isFinite(hour)||hour<0||hour>=24)throw new TypeError('Test game hour must be between 0 and 24');
       gameHours=hour;updateNeighborhoodEvent(false);
+    },
+    saveNow:()=>saveGameProgress(),
+    clearSave:()=>localStorage.removeItem(SAVE_STORAGE_KEY),
+    setGameHours:(hour)=>{
+      if(!Number.isFinite(hour)||hour<0||hour>=24)throw new TypeError('Test game hour must be between 0 and 24');
+      gameHours=hour;updateNeighborhoodEvent(false);
     }
   }),configurable:false});
 }
