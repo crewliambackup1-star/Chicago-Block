@@ -65,6 +65,7 @@ test('desktop browser playthrough: story missions, movement, side activities, ca
     assert.equal(initial.campaign.currentObjectiveId, 'meet-maya', 'V5 should start with an optional neighborhood story objective');
     assert.equal(await page.locator('#missionHeading').textContent(), 'MAIN MISSION · A NEIGHBORLY WELCOME');
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
+    await page.waitForFunction(() => document.querySelector('#interactionPrompt')?.textContent === 'F · MAYA');
     await sendKey(page, 'f');
     assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).campaign.currentObjectiveId, 'collect-supplies', 'meeting Maya should begin the second mission');
     for (const [x, z] of [[55, -27], [-91, -55], [-46, 62]]) {
