@@ -30,9 +30,9 @@ test('page checks the latest release before loading versioned game assets', () =
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
   assert.match(html, /UPDATE 6\.0 · LIVING WORLD & PROGRESSION/);
-  assert.match(html, /Core Gameplay & Activities \(V5\.0\)/);
+  assert.match(html, /Living World & Progression \(V6\.0\)/);
   assert.match(html, /optional story missions/);
-  assert.match(html, /Talk \/ activity/);
+  assert.match(html, /Greet \/ activity/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
 });
 
