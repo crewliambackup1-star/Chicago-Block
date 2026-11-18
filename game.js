@@ -2250,7 +2250,11 @@ function walkNPCs(dt,time){
       p.g.rotation.y=Math.atan2(dx,dz);
     }
     const phase=time*(6.1+p.speed*.48)+p.phase;
-    if(p.g.userData.highDetailModel?.visible){p.g.userData.highDetailMixer?.update(dt);continue;}
+    if(p.g.userData.highDetailModel?.visible){
+      switchHumanAnimation(p.g.userData,p.speed*routineSpeed>1.29?'brisk':'walk');
+      p.g.userData.highDetailMixer.timeScale=routineSpeed;
+      p.g.userData.highDetailMixer.update(dt);continue;
+    }
     p.g.position.y=0;
     const swing=Math.sin(phase)*.31;
     const liftLeft=Math.max(0,Math.sin(phase))*.58;
