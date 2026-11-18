@@ -1,5 +1,5 @@
 // Pure vehicle controls, kept separate so steering and exit placement can be tested without WebGL.
- // A / Left arrow = positive steering (left); D / Right arrow = negative steering (right).
+// A / Left arrow = positive steering (left); D / Right arrow = negative steering (right).
 export function getCarSteeringInput(leftPressed, rightPressed) {
   return Number(Boolean(leftPressed)) - Number(Boolean(rightPressed));
 }
