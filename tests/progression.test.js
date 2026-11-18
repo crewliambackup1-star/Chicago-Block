@@ -63,7 +63,7 @@ test('paint cycling only selects owned cosmetics and wraps in both directions', 
   state = purchaseVehiclePaint(state, 'burgundy').state;
   assert.equal(cycleVehiclePaint(state, 1).state.selectedPaint, 'blue');
   assert.equal(cycleVehiclePaint(state, -1).state.selectedPaint, 'graphite');
-  assert.equal(selectVehiclePaint(state, 'burgundy').selected, false);
+  assert.equal(selectVehiclePaint(state, 'unlocked-later').selected, false);
 });
 
 test('save data is sanitized and restores campaign, activities and unlocks', () => {
