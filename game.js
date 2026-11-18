@@ -1,12 +1,15 @@
 import * as THREE from 'three';
-import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=5.0.0';
-import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress } from './missions.js?v=5.0.0';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=5.0.0';
-import { getAtmosphereState } from './atmosphere.js?v=5.0.0';
-import { loadModelAssets } from './model-assets.js?v=5.0.0';
-import { addWorldEnvironmentDetails } from './environment-details.js?v=5.0.0';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=5.0.0';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=5.0.0';
+import { applyPlayerReward, createPlayerProfile, getPlayerLevel, normalizePlayerProfile } from './progression.js?v=6.0.0';
+import { parseSave, serializeSave, SAVE_STORAGE_KEY } from './save-system.js?v=6.0.0';
+import { advancePedestrianRoutine, getNeighborhoodSchedule } from './world-simulation.js?v=6.0.0';
+import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=6.0.0';
+import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress } from './missions.js?v=6.0.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=6.0.0';
+import { getAtmosphereState } from './atmosphere.js?v=6.0.0';
+import { loadModelAssets } from './model-assets.js?v=6.0.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=6.0.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=6.0.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=6.0.0';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1352,7 +1355,7 @@ const routes=[
 for(let i=0;i<20;i++){
   const route=routes[i%routes.length].map(p=>new THREE.Vector3(p[0],0,p[1]));
   const g=person([M.blue,M.green,M.red][i%3],i);g.position.copy(route[i%route.length]);world.add(g);
-  pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8});
+  pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8,routeIndex:i,mode:'walking',pauseTimer:0,reactionTimer:0,reactionCooldown:(i%5)*.35,stopCount:0});
 }
 const plateCanvas=document.createElement('canvas');plateCanvas.width=512;plateCanvas.height=128;
 const plateContext=plateCanvas.getContext('2d');
@@ -1660,6 +1663,9 @@ function updateCampaignMarkers(){
   const activeTargets=new Set(objective?.targetIds||[]);
   for(const [id,target] of campaignTargets)target.marker.visible=activeTargets.has(id);
 }
+const neighborhoodEventMarker=activityBeacon(0x8db8b4);
+neighborhoodEventMarker.scale.setScalar(.58);world.add(neighborhoodEventMarker);
+let currentNeighborhoodEvent=null;
 const roadLoop=[[-75,-82],[75,-82],[82,-75],[82,75],[75,82],[-75,82],[-82,75],[-82,-75]].map(p=>new THREE.Vector3(p[0],0,p[1]));
 const trafficStyles=['sedan','suv','wagon','compact','suv','sedan','wagon'];
 for(let i=0;i<7;i++){
@@ -1919,6 +1925,9 @@ if(!automationMode)void loadV46Models();
 let started=false,inCar=false,firstPerson=false,yaw=0,pitch=-.08,velocity=0;
 let gameHours=14+20/60,lastToast=0,dragging=false,lastPointer={x:0,y:0};
 let weatherMode='clear';
+let playerProfile=createPlayerProfile();
+let lastAutoSaveElapsed=0;
+let saveAvailable=true;
 const rainCount=380,rainPositions=new Float32Array(rainCount*6);
 for(let i=0;i<rainCount;i++){
   const j=i*6,x=(Math.random()-.5)*210,z=(Math.random()-.5)*210,y=6+Math.random()*42;
