@@ -14,8 +14,6 @@ V6 builds on V5's three-mission story and free-roam activities with a responsive
 
 ## V5 core gameplay and activities
 
-## V5 gameplay
-
 - Adds an optional three-mission neighborhood story: meet Maya, help gather three supply crates, then prepare a courtyard gathering.
 - Mission objectives are tracked in the HUD, with gold world markers also shown on the minimap. Players can ignore the story and keep free-roaming.
 - Reuses the five cyan neighborhood snapshots and repeatable package-delivery activity as optional side activities.
