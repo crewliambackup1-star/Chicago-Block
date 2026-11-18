@@ -14,7 +14,7 @@ async function sendKey(page, key, type = 'keydown') {
 
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
-  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '5.0.0', 'startup should resolve the current release manifest');
+  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '6.0.0', 'startup should resolve the current release manifest');
   assert.match(await page.title(), /V5\.0/, 'the document title should show the current release');
   assert.match(await page.locator('#brand small').textContent(), /V5\.0/, 'the in-game version label should show the current release');
   await page.waitForFunction(
@@ -62,6 +62,9 @@ test('desktop browser playthrough: story missions, movement, side activities, ca
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'the HUD should identify on-foot movement');
     assert.equal(initial.pedestrians, 20);
     assert.equal(initial.traffic, 7);
+    assert.equal(initial.progression.level, 1, 'new browser profiles should begin at level one');
+    assert.equal(initial.progression.credits, 0, 'a fresh profile should have no credits');
+    assert.equal(initial.saveAvailable, true, 'local browser storage should be available in the test context');
     assert.equal(initial.campaign.currentObjectiveId, 'meet-maya', 'V5 should start with an optional neighborhood story objective');
     assert.equal(await page.locator('#missionHeading').textContent(), 'MAIN MISSION · A NEIGHBORLY WELCOME');
     await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-35, 38));
@@ -266,7 +269,42 @@ test('desktop browser playthrough: story missions, movement, side activities, ca
       test.setYaw(0);
     });
     await page.waitForTimeout(1100);
-    await captureScreenshot(page, 'artifacts/v5-chromium-desktop-after-play.png');
+    await captureScreenshot(page, 'artifacts/v6-chromium-desktop-after-play.png');
+
+    const neighbor = (await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).npcPositions[0];
+    await page.evaluate(({ x, z }) => window.__CHICAGO_BLOCK_TEST__.teleport(x, z), neighbor);
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__.getState().npcReactions > 0, null, { timeout: 5000 });
+    await sendKey(page, 'f');
+    const greeted = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.ok(greeted.progression.greetedNeighbors >= 1, 'a first-time neighbor greeting should be recorded');
+    assert.ok(greeted.progression.xp >= 535, 'missions, snapshots, delivery and greeting should award XP');
+    assert.ok(greeted.progression.credits >= 225, 'the same activities should award credits');
+
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(55, -27));
+    await sendKey(page, 'p');
+    let paintState = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.ok(paintState.progression.unlockedPaints.includes('graphite'), 'level-three players with sufficient credits should buy Graphite paint');
+    assert.equal(paintState.progression.selectedPaint, 'graphite');
+    await page.evaluate(() => {
+      const state = window.__CHICAGO_BLOCK_TEST__.getState();
+      window.__CHICAGO_BLOCK_TEST__.teleport(state.car.x, state.car.z);
+    });
+    await sendKey(page, 'e');
+    await sendKey(page, 'c');
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).progression.selectedPaint, 'blue');
+    await sendKey(page, 'c');
+    await sendKey(page, 'e');
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).progression.selectedPaint, 'graphite');
+
+    await waitForReady(page);
+    const restored = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(restored.campaign.completed, true, 'campaign completion should survive a browser refresh');
+    assert.equal(restored.discoveredLandmarks, 5, 'snapshot discoveries should survive a browser refresh');
+    assert.equal(restored.deliveriesCompleted, 1, 'delivery totals should survive a browser refresh');
+    assert.ok(restored.progression.greetedNeighbors >= 1, 'neighbor greetings should survive a browser refresh');
+    assert.ok(restored.progression.unlockedPaints.includes('graphite'), 'purchased cosmetics should survive a browser refresh');
+    assert.equal(restored.progression.selectedPaint, 'graphite', 'the chosen vehicle paint should survive a browser refresh');
+    assert.equal(restored.saveAvailable, true, 'the restored profile should still be autosavable');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
   } finally {
     await browser.close();
@@ -295,6 +333,8 @@ test('mobile-size Chromium playthrough: responsive controls and touch buttons', 
     assert.equal(await page.locator('#mode').textContent(), 'THIRD PERSON', 'mobile on-foot mode should use the concise HUD label');
     assert.equal(await page.locator('#speed').textContent(), 'WALKING', 'mobile HUD should identify walking');
     assert.equal(await page.locator('#mobile').isVisible(), true, 'mobile control dock should be visible');
+    assert.equal(await page.locator('#styleButton').isVisible(), true, 'mobile players should have a vehicle style control');
+    assert.equal(await page.locator('#shopButton').isVisible(), true, 'mobile players should have a Corner Market control');
     const brandBox = await page.locator('#brand').boundingBox();
     const statsBox = await page.locator('#stats').boundingBox();
     const mapBox = await page.locator('#mapWrap').boundingBox();
