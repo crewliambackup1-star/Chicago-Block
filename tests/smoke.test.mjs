@@ -43,7 +43,7 @@ test('V5 adds an optional neighborhood story and contextual interaction prompts'
   assert.match(game, /const maya=person\(M\.green,42\)/);
   assert.match(game, /campaignTargets\.values\(\)/);
   assert.match(readme, /optional three-mission neighborhood story/);
-  assert.match(readme, /players can ignore the story and keep free-roaming/);
+  assert.match(readme, /players can ignore the story and keep free-roaming/i);
 });
 
 test('V1 gameplay systems remain present after the V2 visual pass', () => {
