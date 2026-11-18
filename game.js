@@ -2034,8 +2034,7 @@ function handleActivity(){
     $('objectiveText').textContent=landmarks.every(item=>item.discovered)
       ?'All five neighborhood snapshots found! You can still deliver packages and explore the district.'
       :'Snapshot saved: '+nearbyLandmark.name+'. Find the remaining cyan beacons around the neighborhood.';
-    awardPlayerReward(25,20,'Snapshot saved: '+nearbyLandmark.name);
-    return;
+    awardPlayerReward(25,20,'Snapshot saved: '+nearbyLandmark.name);return;
   }
   if(!carryingPackage){
     if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find a cyan snapshot beacon or the gold market marker');return;}
@@ -2154,16 +2153,10 @@ function walkNPCs(dt,time){
     if(p.mode==='walking'&&!arrivedAtWaypoint){
       const eventMultiplier=currentNeighborhoodEvent?.pedestrianSpeed??1;
       const step=Math.min(d,p.speed*p.speedMultiplier*eventMultiplier*dt);
-      p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;
-      p.g.rotation.y=Math.atan2(dx,dz);
-    }else if(p.mode==='noticing'){
-      p.g.rotation.y=Math.atan2(player.x-p.g.position.x,player.z-p.g.position.z);
-    }
+      p.g.position.x+=dx/d*step;p.g.position.z+=dz/d*step;p.g.rotation.y=Math.atan2(dx,dz);
+    }else if(p.mode==='noticing')p.g.rotation.y=Math.atan2(player.x-p.g.position.x,player.z-p.g.position.z);
     const phase=time*(6.1+p.speed*.48)+p.phase;
-    if(p.g.userData.highDetailModel?.visible){
-      switchHumanAnimation(p.g.userData,p.mode==='walking'?'walk':'idle');
-      p.g.userData.highDetailMixer?.update(dt);continue;
-    }
+    if(p.g.userData.highDetailModel?.visible){switchHumanAnimation(p.g.userData,p.mode==='walking'?'walk':'idle');p.g.userData.highDetailMixer?.update(dt);continue;}
     p.g.position.y=0;
     const gait=p.mode==='walking'?Math.sin(phase)*.31:0;
     const liftLeft=p.mode==='walking'?Math.max(0,Math.sin(phase))*.58:0;
@@ -2174,8 +2167,7 @@ function walkNPCs(dt,time){
     legs[0].userData.shin.rotation.z=p.mode==='walking'?Math.sin(phase)*.018:0;
     legs[1].userData.shin.rotation.z=p.mode==='walking'?-Math.sin(phase)*.018:0;
     arms[0].rotation.x=-gait*.78;arms[1].rotation.x=gait*.78;
-    arms[0].userData.elbow.rotation.x=.12+liftRight*.25;
-    arms[1].userData.elbow.rotation.x=.12+liftLeft*.25;
+    arms[0].userData.elbow.rotation.x=.12+liftRight*.25;arms[1].userData.elbow.rotation.x=.12+liftLeft*.25;
     arms[0].rotation.z=-.08+(p.mode==='walking'?Math.sin(phase)*.025:0);
     arms[1].rotation.z=.08-(p.mode==='walking'?Math.sin(phase)*.025:0);
     p.g.userData.torso.position.y=1.18+(p.mode==='walking'?Math.abs(Math.sin(phase*2))*.018:0);
@@ -2187,9 +2179,7 @@ function moveTraffic(dt){
   for(const item of traffic){
     const a=roadLoop[item.segment],b=roadLoop[(item.segment+1)%roadLoop.length];
     const distanceToPlayer=Math.hypot(item.g.position.x-player.x,item.g.position.z-player.z);
-    const eventSpeed=currentNeighborhoodEvent?.trafficSpeed??1;
-    const proximityFactor=distanceToPlayer<12?.68:1;
-    const desiredSpeed=item.speed*eventSpeed*proximityFactor;
+    const desiredSpeed=item.speed*(currentNeighborhoodEvent?.trafficSpeed??1)*(distanceToPlayer<12?.68:1);
     item.currentSpeed+=(desiredSpeed-item.currentSpeed)*Math.min(1,dt*2.3);
     item.t+=item.currentSpeed*dt/a.distanceTo(b);
     if(item.t>=1){item.t-=1;item.segment=(item.segment+1)%roadLoop.length;}
@@ -2236,8 +2226,8 @@ function updateCamera(dt){
   }
 }
 function updateClock(dt){
-  gameHours=(gameHours+dt*.015)%24;updateNeighborhoodEvent(true);
-  const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
+  gameHours=(gameHours+dt*.015)%24;
+  updateNeighborhoodEvent(true);const hour=Math.floor(gameHours),minute=Math.floor((gameHours-hour)*60);
   $('clock').textContent=String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
   const atmosphere=getAtmosphereState(gameHours,weatherMode);
   sun.intensity=atmosphere.sunIntensity;sun.color.setHex(atmosphere.sunColor);
@@ -2306,6 +2296,7 @@ function frame(){
   // the player starts, avoiding unnecessary GPU work while large models load.
   if(!started)return;
   elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+  if(elapsed-lastAutoSaveElapsed>=8){saveGameProgress();lastAutoSaveElapsed=elapsed;}
   deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
   for(let i=0;i<landmarks.length;i++){
     const marker=landmarks[i].marker;
@@ -2346,6 +2337,7 @@ if(automationMode){
   Object.defineProperty(window,'__CHICAGO_BLOCK_TEST__',{value:Object.freeze({
     getState:()=>({
       started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
+      profile:{...playerProfile,level:getPlayerLevel(playerProfile.xp)},neighborhoodEvent:currentNeighborhoodEvent?.id||null,pedestrianStates:pedestrians.map(p=>p.mode),saveStatus:localStorage.getItem(SAVE_STORAGE_KEY)!==null,
       campaign:getCampaignProgress(campaignState),
       campaignTargets:[...campaignTargets.values()].map(({id,label,x,z})=>({id,label,x,z})),
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
@@ -2403,25 +2395,15 @@ $('loading').textContent='Neighborhood ready';
 document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows+v5-core-gameplay';
 +playerProfile.cash.toLocaleString('en-US')+' · '+levelInfo.title.toUpperCase()+' · '+playerProfile.xp+' XP';
 }
-function setSaveStatus(message){
-  const node=$('saveStatus');if(node)node.textContent=message;
-}
+function setSaveStatus(message){const node=$('saveStatus');if(node)node.textContent=message;}
 function saveGameProgress(){
   if(!saveAvailable)return false;
   try{
-    const snapshot={
-      savedAt:Date.now(),profile:playerProfile,campaignState,deliveriesCompleted,carryingPackage,
+    const snapshot={savedAt:Date.now(),profile:playerProfile,campaignState,deliveriesCompleted,carryingPackage,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).map(item=>item.name),
-      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z},gameHours,weatherMode
-    };
-    localStorage.setItem(SAVE_STORAGE_KEY,serializeSave(snapshot));
-    setSaveStatus('AUTO-SAVED TO THIS DEVICE');
-    return true;
-  }catch(error){
-    saveAvailable=false;setSaveStatus('LOCAL SAVE UNAVAILABLE');
-    console.warn('Chicago Block could not save local progress.',error);
-    return false;
-  }
+      player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z},gameHours,weatherMode};
+    localStorage.setItem(SAVE_STORAGE_KEY,serializeSave(snapshot));setSaveStatus('AUTO-SAVED TO THIS DEVICE');return true;
+  }catch(error){saveAvailable=false;setSaveStatus('LOCAL SAVE UNAVAILABLE');console.warn('Chicago Block could not save local progress.',error);return false;}
 }
 function restoreGameProgress(){
   let serialized=null;
@@ -2430,26 +2412,20 @@ function restoreGameProgress(){
   if(!serialized){setSaveStatus('NEW LOCAL SAVE');updateProgressHud();return false;}
   const saved=parseSave(serialized);
   if(!saved){setSaveStatus('SAVE DATA INVALID · STARTING FRESH');updateProgressHud();return false;}
-  playerProfile=normalizePlayerProfile(saved.profile);
-  campaignState=normalizeCampaignState(saved.campaignState);
-  deliveriesCompleted=saved.deliveriesCompleted;playerProfile.deliveriesCompleted=deliveriesCompleted;
-  carryingPackage=saved.carryingPackage;
+  playerProfile=normalizePlayerProfile(saved.profile);campaignState=normalizeCampaignState(saved.campaignState);
+  deliveriesCompleted=saved.deliveriesCompleted;playerProfile.deliveriesCompleted=deliveriesCompleted;carryingPackage=saved.carryingPackage;
   const discovered=new Set(saved.discoveredLandmarks);
   for(const landmark of landmarks){landmark.discovered=discovered.has(landmark.name);landmark.marker.visible=!landmark.discovered;}
   playerProfile.snapshotsFound=landmarks.filter(item=>item.discovered).length;
   if(!blocked(saved.player.x,saved.player.z,.48)){player.x=saved.player.x;player.z=saved.player.z;avatar.position.set(player.x,0,player.z);}
   if(!blocked(saved.car.x,saved.car.z,1.35))playerCar.position.set(saved.car.x,0,saved.car.z);
-  gameHours=saved.gameHours;weatherMode=saved.weatherMode;
-  rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
+  gameHours=saved.gameHours;weatherMode=saved.weatherMode;rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
   deliveryMarker.position.copy(carryingPackage?deliveryDropoff:deliveryPickup);
-  $('weatherLabel').textContent='· '+weatherMode.toUpperCase();
-  setSaveStatus('LOCAL PROGRESS RESTORED');updateProgressHud();
-  return true;
+  $('weatherLabel').textContent='· '+weatherMode.toUpperCase();setSaveStatus('LOCAL PROGRESS RESTORED');updateProgressHud();return true;
 }
 function awardPlayerReward(cash,xp,label){
-  const result=applyPlayerReward(playerProfile,{cash,xp});
-  playerProfile=result.profile;updateProgressHud();
-  const rewardText=label+' · +
+  const result=applyPlayerReward(playerProfile,{cash,xp});playerProfile=result.profile;updateProgressHud();
+  const message=label+' · +
   const found=landmarks.filter(item=>item.discovered).length;
   $('collectionLabel').textContent='SNAPSHOTS '+found+'/'+landmarks.length+' · DELIVERIES '+deliveriesCompleted;
 }
@@ -2851,16 +2827,12 @@ window.addEventListener('resize',()=>{
 $('loading').textContent='Neighborhood ready';
 document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows+v5-core-gameplay';
 +result.reward.cash+' · +'+result.reward.xp+' XP';
-  showToast(result.leveledUp?rewardText+' · LEVEL UP! '+result.levelInfo.title:rewardText);
-  saveGameProgress();
+  showToast(result.leveledUp?message+' · LEVEL UP! '+result.levelInfo.title:message);saveGameProgress();
 }
 function updateNeighborhoodEvent(notify=false){
-  const next=getNeighborhoodSchedule(gameHours);
-  if(currentNeighborhoodEvent?.id===next.id)return;
-  const hadPrevious=Boolean(currentNeighborhoodEvent);
-  currentNeighborhoodEvent=next;
-  neighborhoodEventMarker.position.set(next.x,.02,next.z);
-  $('eventLabel').textContent='· '+next.label.toUpperCase();
+  const next=getNeighborhoodSchedule(gameHours);if(currentNeighborhoodEvent?.id===next.id)return;
+  const hadPrevious=Boolean(currentNeighborhoodEvent);currentNeighborhoodEvent=next;
+  neighborhoodEventMarker.position.set(next.x,.02,next.z);$('eventLabel').textContent='· '+next.label.toUpperCase();
   if(notify&&hadPrevious)showToast('Neighborhood event: '+next.label);
 }
 window.addEventListener('pagehide',saveGameProgress);
@@ -3259,7 +3231,7 @@ if(automationMode){
     }
   }),configurable:false});
 }
-updateActivityHud();updateCampaignMarkers();updateCampaignHud();
+restoreGameProgress();updateActivityHud();updateCampaignMarkers();updateCampaignHud();updateProgressHud();updateNeighborhoodEvent(false);
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   adaptiveResolution.resize();
