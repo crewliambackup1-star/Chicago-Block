@@ -58,8 +58,9 @@ test('vehicle paints require level and credits, then remain selectable', () => {
 });
 
 test('paint cycling only selects owned cosmetics and wraps in both directions', () => {
-  let state = awardProgress(createDefaultProgress(), { xp: 250, credits: 100 });
+  let state = awardProgress(createDefaultProgress(), { xp: 500, credits: 320 });
   state = purchaseVehiclePaint(state, 'graphite').state;
+  state = purchaseVehiclePaint(state, 'burgundy').state;
   assert.equal(cycleVehiclePaint(state, 1).state.selectedPaint, 'blue');
   assert.equal(cycleVehiclePaint(state, -1).state.selectedPaint, 'graphite');
   assert.equal(selectVehiclePaint(state, 'burgundy').selected, false);
@@ -91,7 +92,7 @@ test('malformed save data falls back to safe defaults', () => {
     [SAVE_KEY]: JSON.stringify({
       xp: -100,
       credits: '999',
-      unlockedPaints: ['burgundy', 'blue', 'unknown'],
+      unlockedPaints: ['blue', 'unknown'],
       selectedPaint: 'burgundy',
       campaign: { objectiveIndex: 999, collectedSupplies: ['unknown'] }
     })
