@@ -27,8 +27,8 @@ test('page checks the latest release before loading versioned game assets', () =
   for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'saveStatus', 'eventLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 6\.0 · LIVING WORLD & PROGRESSION/);
-  assert.match(html, /Living World & Progression \(V6\.0\)/);
+  assert.match(html, /UPDATE 7\.0 · CORE GAMEPLAY & STABILITY/);
+  assert.match(html, /Core Gameplay & Stability \(V7\.0\)/);
   assert.match(html, /automatic local saves/);
   assert.match(html, /Talk \/ activity/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
