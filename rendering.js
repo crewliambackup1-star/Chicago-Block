@@ -27,26 +27,26 @@ export function createGraphicsProfile({
   }
 
   if (isCoarsePointer) {
-    const maximumPixelRatio = Math.min(dpr, 1.45);
+    const maximumPixelRatio = Math.min(dpr, 1.2);
     return Object.freeze({
       name: 'mobile-high',
       initialPixelRatio: maximumPixelRatio,
-      minimumPixelRatio: Math.min(1.0, maximumPixelRatio),
+      minimumPixelRatio: Math.min(0.85, maximumPixelRatio),
       maximumPixelRatio,
-      shadowMapSize: Math.min(maxTextureSize, 1024),
+      shadowMapSize: Math.min(maxTextureSize, 768),
       shadowsEnabled: true,
       adaptiveResolution: true,
       renderEveryNthFrame: 1
     });
   }
 
-  const maximumPixelRatio = Math.min(dpr, 2.0);
+  const maximumPixelRatio = Math.min(dpr, 1.6);
   return Object.freeze({
     name: 'desktop-ultra',
     initialPixelRatio: maximumPixelRatio,
-    minimumPixelRatio: Math.min(1.25, maximumPixelRatio),
+    minimumPixelRatio: Math.min(0.85, maximumPixelRatio),
     maximumPixelRatio,
-    shadowMapSize: Math.min(maxTextureSize, 3072),
+    shadowMapSize: Math.min(maxTextureSize, 1536),
     shadowsEnabled: true,
     adaptiveResolution: true,
     renderEveryNthFrame: 1
@@ -105,26 +105,26 @@ export function createAdaptiveResolutionController(
     sampleTotal = 0;
     sampleCount = 0;
 
-    if (lastAverageFrameMs > 20.5) {
+    if (lastAverageFrameMs > 18.5) {
       slowWindows += 1;
       fastWindows = 0;
-      if (slowWindows >= 2) {
+      if (slowWindows >= 1) {
         slowWindows = 0;
         return apply(
-          Math.max(profile.minimumPixelRatio, pixelRatio - 0.08),
+          Math.max(profile.minimumPixelRatio, pixelRatio - 0.12),
           'sustained frame time above 20.5ms'
         );
       }
       return false;
     }
 
-    if (lastAverageFrameMs < 15.5) {
+    if (lastAverageFrameMs < 14.5) {
       fastWindows += 1;
       slowWindows = 0;
-      if (fastWindows >= 4) {
+      if (fastWindows >= 5) {
         fastWindows = 0;
         return apply(
-          Math.min(profile.maximumPixelRatio, pixelRatio + 0.04),
+          Math.min(profile.maximumPixelRatio, pixelRatio + 0.03),
           'sustained frame time below 15.5ms'
         );
       }

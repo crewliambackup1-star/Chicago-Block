@@ -1,8 +1,18 @@
-# Chicago Block — V7 Core Gameplay & Stability
+# Chicago Block — V8 Performance & Optimization
 
 V6 builds a more reactive neighborhood and adds player progression with automatic local saves, while preserving the V5 mission framework and V4 visual baseline.
 
-V7 strengthens the release pipeline and expands the activities available around the neighborhood, building on V6 progression and local saves.
+V8 focuses on reducing frame drops and GPU load while preserving V7 gameplay and the V4 visual baseline.
+
+## V8 performance and optimization
+
+- Desktop pixel ratio starts at a balanced cap of 1.6, with adaptive downscaling to 0.85 under sustained frame-time pressure.
+- Shadow-map resolution is reduced to 1536 and refreshed on a controlled cadence instead of every rendered frame.
+- Contact-shadow transforms are updated at 20 Hz rather than every frame.
+- Adaptive resolution responds sooner to sustained slow frames and recovers more cautiously.
+- A lightweight HUD monitor reports measured FPS and average frame time once per second.
+- Gameplay, driving, world layout, and visuals remain intact; the changes target GPU and CPU overhead.
+
 
 ## V7 core gameplay and stability
 

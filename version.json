@@ -1,8 +1,8 @@
 {
-  "version": "7.0.0",
-  "shortVersion": "7.0",
-  "title": "Core Gameplay & Stability",
-  "eyebrow": "UPDATE 7.0 · CORE GAMEPLAY & STABILITY",
-  "brand": "CORE GAMEPLAY & STABILITY · V7.0",
-  "description": "Make the neighborhood more fun to explore with improved driving, conversations with neighbors, new community side missions, clearer progress tracking, and a release label that verifies the exact game build running."
+  "version": "8.0.0",
+  "shortVersion": "8.0",
+  "title": "Performance & Optimization",
+  "eyebrow": "UPDATE 8.0 · PERFORMANCE & OPTIMIZATION",
+  "brand": "PERFORMANCE & OPTIMIZATION · V8.0",
+  "description": "Reduce frame drops and GPU load while preserving the current neighborhood visuals, gameplay systems, and verified release identity."
 }

@@ -1,9 +1,9 @@
 {
   "name": "chicago-block",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "private": true,
   "type": "module",
-  "description": "A browser-based Chicago-inspired open-world game with community side missions, improved driving and a verified release identity",
+  "description": "A browser-based Chicago-inspired open-world game focused on performance, community missions, and verified release identity",
   "scripts": {
     "check": "node --check game.js && node --check visual-profiles.js && node --check contact-shadows.js && node --check environment-details.js && node --check model-assets.js && node --check scripts/download-model-assets.mjs && node --check progression.js && node --check save-system.js && node --check world-simulation.js && node --check missions.js && node --check controls.js && node --check vehicle-physics.js && node --check community-activities.js && node --check rendering.js && node --check atmosphere.js && node --check geodata.js && node --check tile-streaming.js && node --check scripts/build-city-tiles.mjs",
     "assets:download": "node scripts/download-model-assets.mjs",

@@ -13,8 +13,8 @@ test('desktop profile starts at high pixel density with a larger shadow map', ()
     maxTextureSize: 8192
   });
   assert.equal(profile.name, 'desktop-ultra');
-  assert.equal(profile.initialPixelRatio, 2);
-  assert.equal(profile.shadowMapSize, 3072);
+  assert.equal(profile.initialPixelRatio, 1.6);
+  assert.equal(profile.shadowMapSize, 1536);
   assert.equal(profile.shadowsEnabled, true);
   assert.equal(profile.adaptiveResolution, true);
 });
@@ -26,8 +26,8 @@ test('mobile profile keeps touch rendering within a practical budget', () => {
     maxTextureSize: 4096
   });
   assert.equal(profile.name, 'mobile-high');
-  assert.equal(profile.initialPixelRatio, 1.45);
-  assert.equal(profile.shadowMapSize, 1024);
+  assert.equal(profile.initialPixelRatio, 1.2);
+  assert.equal(profile.shadowMapSize, 768);
   assert.equal(profile.renderEveryNthFrame, 1);
 });
 
@@ -67,10 +67,10 @@ test('adaptive resolution recovers cautiously after sustained headroom', () => {
   const renderer = { setPixelRatio() {}, setSize() {} };
   const profile = createGraphicsProfile({ devicePixelRatio: 2 });
   const controller = createAdaptiveResolutionController(renderer, profile);
-  for (let window = 0; window < 4; window++) {
+  for (let window = 0; window < 5; window++) {
     for (let i = 0; i < 90; i++) controller.update(0.014, true);
   }
-  assert.ok(controller.pixelRatio > 2 - 0.001);
+  assert.ok(controller.pixelRatio > 1.6 - 0.001);
 });
 
 test('adaptive controller ignores suspended-tab deltas and disabled updates', () => {
@@ -79,7 +79,7 @@ test('adaptive controller ignores suspended-tab deltas and disabled updates', ()
   const controller = createAdaptiveResolutionController(renderer, profile);
   for (let i = 0; i < 120; i++) controller.update(0.5, true);
   for (let i = 0; i < 120; i++) controller.update(0.01, false);
-  assert.equal(controller.pixelRatio, 2);
+  assert.equal(controller.pixelRatio, profile.initialPixelRatio);
 });
 
 test('V4.3 atmosphere model separates day, golden hour, night and weather', () => {
@@ -97,4 +97,12 @@ test('V4.3 atmosphere model separates day, golden hour, night and weather', () =
   assert.ok(rain.cloudOpacity > noon.cloudOpacity);
   assert.ok(noon.environmentIntensity > night.environmentIntensity);
   assert.equal(getAtmosphereState(-6, 'clear').hour, 18);
+});
+
+
+test('desktop graphics profile caps resolution and shadows for performance', () => {
+  const profile = createGraphicsProfile({ devicePixelRatio: 2.5, maxTextureSize: 8192 });
+  assert.equal(profile.initialPixelRatio, 1.6);
+  assert.equal(profile.minimumPixelRatio, 0.85);
+  assert.equal(profile.shadowMapSize, 1536);
 });
