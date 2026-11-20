@@ -14,9 +14,10 @@ async function sendKey(page, key, type = 'keydown') {
 
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
-  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '6.0.0', 'startup should resolve the current release manifest');
-  assert.match(await page.title(), /V6\.0/, 'the document title should show the current release');
-  assert.match(await page.locator('#brand small').textContent(), /V6\.0/, 'the in-game version label should show the current release');
+  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '7.0.0', 'startup should resolve the current release manifest');
+  assert.deepEqual(await page.evaluate(() => window.__CHICAGO_BLOCK_BUILD__), { version: '7.0.0', manifestVersion: '7.0.0', manifestVerified: true, matched: true }, 'the loaded game module should match the verified release manifest');
+  assert.match(await page.title(), /V7\.0/, 'the document title should show the current release');
+  assert.match(await page.locator('#brand small').textContent(), /V7\.0/, 'the in-game version label should show the current release');
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
     null,
@@ -268,6 +269,57 @@ test('desktop browser playthrough: story missions, movement, side activities, ca
     await page.waitForTimeout(1100);
     await captureScreenshot(page, 'artifacts/v5-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('V7 community side activities reward first-time help and persist progress', async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader']
+  });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  try {
+    await waitForReady(page);
+    await page.locator('#playButton').click();
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.clearSave());
+
+    for (const index of [0, 1, 2]) {
+      await page.evaluate(index => {
+        const api = window.__CHICAGO_BLOCK_TEST__;
+        const neighbor = api.getState().npcPositions[index];
+        api.teleport(neighbor.x, neighbor.z);
+        api.interact();
+      }, index);
+    }
+    let state = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(state.community.neighborsGreeted, 3, 'three different pedestrians should complete the introductions activity');
+    assert.equal(state.community.introductionsComplete, true);
+
+    for (const index of [0, 1, 2]) {
+      await page.evaluate(index => {
+        const api = window.__CHICAGO_BLOCK_TEST__;
+        const spot = api.getState().cleanupTargets[index];
+        api.teleport(spot.x, spot.z);
+        api.interact();
+      }, index);
+    }
+    state = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(state.community.cleanupSpotsCleared, 3, 'all three cleanup markers should be collectable');
+    assert.equal(state.community.cleanupComplete, true);
+    assert.ok(state.profile.cash > 0 && state.profile.xp > 0, 'community activities should award progression rewards');
+    assert.deepEqual(pageErrors, [], 'community activities should not produce runtime errors');
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().community.neighborsGreeted === 3);
+    const restored = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().community);
+    assert.equal(restored.cleanupSpotsCleared, 3, 'side activity progress should restore from the local save');
+    assert.equal(restored.introductionsComplete, true);
+    assert.equal(restored.cleanupComplete, true);
   } finally {
     await browser.close();
   }
