@@ -10,6 +10,7 @@ export function createSavePayload(snapshot) {
     savedAt: Number.isFinite(snapshot.savedAt) ? snapshot.savedAt : Date.now(),
     profile: snapshot.profile,
     campaignState: snapshot.campaignState,
+    communityState: snapshot.communityState && typeof snapshot.communityState === 'object' && !Array.isArray(snapshot.communityState) ? snapshot.communityState : null,
     deliveriesCompleted: snapshot.deliveriesCompleted,
     carryingPackage: Boolean(snapshot.carryingPackage),
     discoveredLandmarks: Array.isArray(snapshot.discoveredLandmarks) ? snapshot.discoveredLandmarks : [],
