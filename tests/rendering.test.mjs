@@ -12,7 +12,7 @@ test('desktop profile starts at high pixel density with a larger shadow map', ()
     isCoarsePointer: false,
     maxTextureSize: 8192
   });
-  assert.equal(profile.name, 'desktop-ultra');
+  assert.equal(profile.name, 'desktop-balanced');
   assert.equal(profile.initialPixelRatio, 1.6);
   assert.equal(profile.shadowMapSize, 1536);
   assert.equal(profile.shadowsEnabled, true);

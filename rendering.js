@@ -42,7 +42,7 @@ export function createGraphicsProfile({
 
   const maximumPixelRatio = Math.min(dpr, 1.6);
   return Object.freeze({
-    name: 'desktop-ultra',
+    name: 'desktop-balanced',
     initialPixelRatio: maximumPixelRatio,
     minimumPixelRatio: Math.min(0.85, maximumPixelRatio),
     maximumPixelRatio,
@@ -112,7 +112,7 @@ export function createAdaptiveResolutionController(
         slowWindows = 0;
         return apply(
           Math.max(profile.minimumPixelRatio, pixelRatio - 0.12),
-          'sustained frame time above 20.5ms'
+          'sustained frame time above 18.5ms'
         );
       }
       return false;
@@ -125,7 +125,7 @@ export function createAdaptiveResolutionController(
         fastWindows = 0;
         return apply(
           Math.min(profile.maximumPixelRatio, pixelRatio + 0.03),
-          'sustained frame time below 15.5ms'
+          'sustained frame time below 14.5ms'
         );
       }
       return false;
