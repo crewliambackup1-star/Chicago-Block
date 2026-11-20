@@ -14,9 +14,9 @@ async function sendKey(page, key, type = 'keydown') {
 
 async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
-  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '5.0.0', 'startup should resolve the current release manifest');
-  assert.match(await page.title(), /V5\.0/, 'the document title should show the current release');
-  assert.match(await page.locator('#brand small').textContent(), /V5\.0/, 'the in-game version label should show the current release');
+  assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '6.0.0', 'startup should resolve the current release manifest');
+  assert.match(await page.title(), /V6\.0/, 'the document title should show the current release');
+  assert.match(await page.locator('#brand small').textContent(), /V6\.0/, 'the in-game version label should show the current release');
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
     null,
@@ -268,6 +268,57 @@ test('desktop browser playthrough: story missions, movement, side activities, ca
     await page.waitForTimeout(1100);
     await captureScreenshot(page, 'artifacts/v5-chromium-desktop-after-play.png');
     assert.deepEqual(pageErrors, [], 'page should not throw runtime exceptions');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('V6 local autosave restores rewards, snapshots and neighborhood time across reloads', async () => {
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader']
+  });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  try {
+    await page.goto(baseUrl + '?automation=1', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.evaluate(() => localStorage.clear());
+    await waitForReady(page);
+    await page.locator('#playButton').click();
+    await page.waitForFunction(() => window.__CHICAGO_BLOCK_TEST__?.getState().started === true);
+
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.setGameHours(8));
+    assert.equal((await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState())).neighborhoodEvent, 'morning-market',
+      'the event schedule should follow the in-game clock');
+
+    const nearbyNpc = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState().npcPositions[0]);
+    await page.evaluate(point => window.__CHICAGO_BLOCK_TEST__.teleport(point.x, point.z), nearbyNpc);
+    await page.waitForFunction(
+      () => window.__CHICAGO_BLOCK_TEST__.getState().pedestrianStates.includes('noticing'),
+      null,
+      { timeout: 5000 }
+    );
+
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.teleport(-91, -40));
+    await sendKey(page, 'f');
+    const earned = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(earned.discoveredLandmarks, 1, 'the snapshot activity should record one discovery');
+    assert.equal(earned.profile.cash, 25, 'a snapshot should award cash');
+    assert.equal(earned.profile.xp, 20, 'a snapshot should award XP');
+    assert.equal(earned.saveStatus, true, 'reward activity should create an automatic local save');
+    await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.saveNow());
+    const storedSave = await page.evaluate(() => localStorage.getItem('chicago-block-save-v6'));
+    assert.ok(storedSave, 'the V6 save should be stored in browser local storage');
+
+    await waitForReady(page);
+    const restored = await page.evaluate(() => window.__CHICAGO_BLOCK_TEST__.getState());
+    assert.equal(restored.profile.cash, 25, 'cash should survive a reload');
+    assert.equal(restored.profile.xp, 20, 'XP should survive a reload');
+    assert.equal(restored.discoveredLandmarks, 1, 'snapshot progress should survive a reload');
+    assert.equal(restored.neighborhoodEvent, 'morning-market', 'the saved time should restore its scheduled event');
+    assert.equal(restored.saveStatus, true, 'the save should remain available after reload');
+    assert.deepEqual(pageErrors, [], 'V6 save and living-world systems should not throw browser errors');
   } finally {
     await browser.close();
   }

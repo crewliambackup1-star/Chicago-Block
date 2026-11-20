@@ -1,8 +1,26 @@
-# Chicago Block — V5 Core Gameplay & Activities
+# Chicago Block — V6 Living World & Progression
 
-V5 builds gameplay on top of the existing V4.10 visual baseline. The playable neighborhood, lighting, weather, character and vehicle assets, streets, and glass-panel HUD remain in place.
+V6 builds a more reactive neighborhood and adds player progression with automatic local saves, while preserving the V5 mission framework and V4 visual baseline.
 
-## V5 gameplay
+## V6 living world
+
+- Pedestrians now take occasional short breaks at route points and notice the player when they get close, pausing and turning toward them before resuming their route.
+- Neighborhood schedules change across four periods: Morning Market Run, Courtyard Social, Evening Avenue Stroll, and Quiet Neighborhood.
+- The active scheduled event is shown in the HUD and on the minimap.
+- Pedestrian pace changes with the time of day and event; traffic adjusts its pace by schedule and slows near the player.
+
+## V6 player progression and saves
+
+- Missions award **$150 and 100 XP** when a story chapter is completed.
+- Snapshot discoveries award **$25 and 20 XP**.
+- Completed deliveries award **$75 and 45 XP**.
+- XP unlocks community ranks, from New Neighbor through Neighborhood Legend, with level-up feedback in the HUD.
+- Cash, XP, deliveries, discovered snapshots, campaign progress, package state, player/car position, game time, and weather are saved automatically.
+- Saves are stored in browser local storage on the current device/browser. They are not cloud saves and do not sync between browsers or devices. Clearing the browser's site data can remove the save.
+
+V6 keeps the existing keyboard/touch controls, camera modes, mission objectives, snapshots, delivery activity, city layout, licensed models, lighting and weather systems.
+
+## V5 core gameplay and activities
 
 - Adds an optional three-mission neighborhood story: meet Maya, help gather three supply crates, then prepare a courtyard gathering.
 - Mission objectives are tracked in the HUD, with gold world markers also shown on the minimap. Players can ignore the story and keep free-roaming.
@@ -10,9 +28,6 @@ V5 builds gameplay on top of the existing V4.10 visual baseline. The playable ne
 - Adds contextual interaction prompts for the car, story objectives, snapshots, and deliveries.
 - Makes vehicle exits collision-aware: the game tries several nearby exit positions and keeps the player in the car when no safe position is available.
 - Keeps A / Left Arrow as left steering and D / Right Arrow as right steering, with regression coverage for both directions.
-- Preserves the existing first- and third-person cameras, keyboard and touch controls, traffic routes, and graphics.
-
-V5 does not add a persistent save/progression economy or a wider dynamic NPC/traffic simulation. Those belong to the next gameplay release, after the core mission and activity loop is stable.
 
 ## V4.10 Instant Update Delivery
 
