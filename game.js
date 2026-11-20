@@ -1,15 +1,19 @@
 import * as THREE from 'three';
-import { applyPlayerReward, createPlayerProfile, getPlayerLevel, normalizePlayerProfile } from './progression.js?v=6.0.0';
-import { parseSave, serializeSave, SAVE_STORAGE_KEY } from './save-system.js?v=6.0.0';
-import { advancePedestrianRoutine, getNeighborhoodSchedule } from './world-simulation.js?v=6.0.0';
-import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=6.0.0';
-import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress, normalizeCampaignState } from './missions.js?v=6.0.0';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=6.0.0';
-import { getAtmosphereState } from './atmosphere.js?v=6.0.0';
-import { loadModelAssets } from './model-assets.js?v=6.0.0';
-import { addWorldEnvironmentDetails } from './environment-details.js?v=6.0.0';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=6.0.0';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=6.0.0';
+import { applyPlayerReward, createPlayerProfile, getPlayerLevel, normalizePlayerProfile } from './progression.js?v=7.0.0';
+import { parseSave, serializeSave, SAVE_STORAGE_KEY } from './save-system.js?v=7.0.0';
+import { advancePedestrianRoutine, getNeighborhoodSchedule } from './world-simulation.js?v=7.0.0';
+import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=7.0.0';
+import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress, normalizeCampaignState } from './missions.js?v=7.0.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=7.0.0';
+import { getAtmosphereState } from './atmosphere.js?v=7.0.0';
+import { loadModelAssets } from './model-assets.js?v=7.0.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=7.0.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=7.0.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=7.0.0';
+import { stepVehiclePhysics } from './vehicle-physics.js?v=7.0.0';
+import { CLEANUP_SPOTS, collectCleanupSpot, createCommunityState, getCommunityProgress, getNeighborById, greetNeighbor, normalizeCommunityState } from './community-activities.js?v=7.0.0';
+
+const LOADED_GAME_VERSION = new URL(import.meta.url).searchParams.get('v') || 'unversioned';
 
 const $ = (id) => document.getElementById(id);
 const scene = new THREE.Scene();
@@ -1355,7 +1359,7 @@ const routes=[
 for(let i=0;i<20;i++){
   const route=routes[i%routes.length].map(p=>new THREE.Vector3(p[0],0,p[1]));
   const g=person([M.blue,M.green,M.red][i%3],i);g.position.copy(route[i%route.length]);world.add(g);
-  pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8,routeIndex:i,mode:'walking',pauseTimer:0,reactionTimer:0,reactionCooldown:(i%5)*.35,stopCount:0});
+  pedestrians.push({g,route,target:(i+1)%route.length,speed:1.05+(i%4)*.12,phase:i*.8,routeIndex:i,neighborId:'neighbor-'+String(i+1).padStart(2,'0'),mode:'walking',pauseTimer:0,reactionTimer:0,reactionCooldown:(i%5)*.35,stopCount:0});
 }
 const plateCanvas=document.createElement('canvas');plateCanvas.width=512;plateCanvas.height=128;
 const plateContext=plateCanvas.getContext('2d');
@@ -1648,6 +1652,7 @@ const landmarks=landmarkSpots.map(spot=>{
 });
 // V5's optional neighborhood story uses the existing district and interaction key.
 let campaignState=createCampaignState();
+let communityState=createCommunityState();
 const maya=person(M.green,42);maya.position.set(-38,0,38);maya.rotation.y=Math.PI;maya.userData.characterName='Maya';world.add(maya);
 const campaignTargetSpecs=[
   ['maya','Maya',-35,38],['supply-market','Market supply crate',55,-27],
@@ -1662,6 +1667,15 @@ function updateCampaignMarkers(){
   const objective=getCampaignObjective(campaignState);
   const activeTargets=new Set(objective?.targetIds||[]);
   for(const [id,target] of campaignTargets)target.marker.visible=activeTargets.has(id);
+}
+const cleanupTargets=CLEANUP_SPOTS.map(spot=>{
+  const marker=activityBeacon(0xe0c17b);marker.scale.setScalar(.72);
+  marker.position.set(spot.x,.02,spot.z);world.add(marker);
+  return {...spot,marker};
+});
+function updateCleanupMarkers(){
+  const cleaned=new Set(communityState.cleanedSpotIds);
+  for(const target of cleanupTargets)target.marker.visible=!cleaned.has(target.id);
 }
 const neighborhoodEventMarker=activityBeacon(0x8db8b4);
 neighborhoodEventMarker.scale.setScalar(.58);world.add(neighborhoodEventMarker);
@@ -1916,10 +1930,26 @@ async function loadV46Models(){
     modelAssetStatus.vehicle='procedural-fallback';
     modelAssetStatus.errors.vehicle=loaded.errors?.vehicle||'No vehicle scene returned from GLTFLoader.';
   }
-  const label=$('brand')?.querySelector('small');
-  if(label)label.textContent=modelAssetStatus.pedestrian==='loaded-cc0-rigged-animated-glb'&&modelAssetStatus.vehicle==='loaded-cc0-glb'
-    ?'CHARACTER & VEHICLE REALISM · V4.8':'V4.8 CHARACTER & VEHICLE PASS · MODEL FALLBACK ACTIVE';
+  updateBuildIndicator();
 }
+function updateBuildIndicator(){
+  const release=window.__CHICAGO_BLOCK_RELEASE__||{};
+  const expected=typeof release.version==='string'?release.version:'unknown';
+  const shortVersion=release.shortVersion||expected.split('.').slice(0,2).join('.')||'unknown';
+  const verified=release.verified===true;
+  const matches=LOADED_GAME_VERSION===expected;
+  const label=$('brand')?.querySelector('small');
+  if(label){
+    if(!verified)label.textContent='RELEASE UNVERIFIED · BUNDLED V'+shortVersion;
+    else if(!matches)label.textContent='BUILD MISMATCH · MANIFEST '+expected+' / GAME '+LOADED_GAME_VERSION;
+    else label.textContent=(release.brand||'CORE GAMEPLAY & STABILITY · V'+shortVersion)+' · BUILD '+LOADED_GAME_VERSION;
+  }
+  window.__CHICAGO_BLOCK_BUILD__=Object.freeze({
+    version:LOADED_GAME_VERSION,manifestVersion:expected,manifestVerified:verified,matched:verified&&matches
+  });
+  document.documentElement.dataset.gameBuild=LOADED_GAME_VERSION;
+}
+updateBuildIndicator();
 if(!automationMode)void loadV46Models();
 
 let started=false,inCar=false,firstPerson=false,yaw=0,pitch=-.08,velocity=0;
@@ -1984,7 +2014,7 @@ function setSaveStatus(message){const node=$('saveStatus');if(node)node.textCont
 function saveGameProgress(){
   if(!saveAvailable)return false;
   try{
-    const snapshot={savedAt:Date.now(),profile:playerProfile,campaignState,deliveriesCompleted,carryingPackage,
+    const snapshot={savedAt:Date.now(),profile:playerProfile,campaignState,communityState,deliveriesCompleted,carryingPackage,
       discoveredLandmarks:landmarks.filter(item=>item.discovered).map(item=>item.name),
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z},gameHours,weatherMode};
     localStorage.setItem(SAVE_STORAGE_KEY,serializeSave(snapshot));setSaveStatus('AUTO-SAVED TO THIS DEVICE');return true;
@@ -1998,6 +2028,7 @@ function restoreGameProgress(){
   const saved=parseSave(serialized);
   if(!saved){setSaveStatus('SAVE DATA INVALID · STARTING FRESH');updateProgressHud();return false;}
   playerProfile=normalizePlayerProfile(saved.profile);campaignState=normalizeCampaignState(saved.campaignState);
+  communityState=normalizeCommunityState(saved.communityState);
   deliveriesCompleted=saved.deliveriesCompleted;playerProfile.deliveriesCompleted=deliveriesCompleted;carryingPackage=saved.carryingPackage;
   const discovered=new Set(saved.discoveredLandmarks);
   for(const landmark of landmarks){landmark.discovered=discovered.has(landmark.name);landmark.marker.visible=!landmark.discovered;}
@@ -2006,6 +2037,7 @@ function restoreGameProgress(){
   if(!blocked(saved.car.x,saved.car.z,1.35))playerCar.position.set(saved.car.x,0,saved.car.z);
   gameHours=saved.gameHours;weatherMode=saved.weatherMode;rainLines.visible=weatherMode==='rain';puddleGroup.visible=weatherMode==='rain';
   deliveryMarker.position.copy(carryingPackage?deliveryDropoff:deliveryPickup);
+  updateCleanupMarkers();updateCommunityHud();
   $('weatherLabel').textContent='· '+weatherMode.toUpperCase();setSaveStatus('LOCAL PROGRESS RESTORED');updateProgressHud();return true;
 }
 function awardPlayerReward(cash,xp,label){
@@ -2025,6 +2057,11 @@ function updateActivityHud(){
   const found=landmarks.filter(item=>item.discovered).length;
   $('collectionLabel').textContent='SNAPSHOTS '+found+'/'+landmarks.length+' · DELIVERIES '+deliveriesCompleted;
 }
+function updateCommunityHud(){
+  const progress=getCommunityProgress(communityState);
+  const node=$('communityLabel');
+  if(node)node.textContent='NEIGHBORS '+progress.neighborsGreeted+'/'+progress.neighborsRequired+' · CLEANUP '+progress.cleanupSpotsCleared+'/'+progress.cleanupSpotsTotal;
+}
 function updateCampaignHud(){
   const objective=getCampaignObjective(campaignState),progress=getCampaignProgress(campaignState);
   $('missionHeading').textContent=objective?'MAIN MISSION · '+objective.missionTitle.toUpperCase():'MAIN STORY COMPLETE';
@@ -2039,22 +2076,36 @@ function getNearbyCampaignTarget(){
     .map(target=>({...target,distance:Math.hypot(player.x-target.x,player.z-target.z)}))
     .filter(target=>target.distance<5.8).sort((a,b)=>a.distance-b.distance)[0]||null;
 }
+function getNearbyCleanupTarget(){
+  return cleanupTargets.map(target=>({...target,distance:Math.hypot(player.x-target.x,player.z-target.z)}))
+    .filter(target=>target.marker.visible&&target.distance<5.4).sort((a,b)=>a.distance-b.distance)[0]||null;
+}
+function getNearbyNeighbor(){
+  let nearest=null;
+  for(const pedestrian of pedestrians){
+    const profile=getNeighborById(pedestrian.neighborId);
+    if(!profile)continue;
+    const distance=Math.hypot(player.x-pedestrian.g.position.x,player.z-pedestrian.g.position.z);
+    if(distance<4.2&&(!nearest||distance<nearest.distance))nearest={pedestrian,profile,distance};
+  }
+  return nearest;
+}
 function updateInteractionPrompt(){
   const prompt=$('interactionPrompt');let message='';
   if(inCar)message='E · EXIT BLUE SEDAN';
   else if(nearCar())message='E · ENTER BLUE SEDAN';
   else{
     const campaignTarget=getNearbyCampaignTarget();
+    const cleanupTarget=getNearbyCleanupTarget();
+    const landmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
+    const neighbor=getNearbyNeighbor();
+    const deliveryTarget=carryingPackage?deliveryDropoff:deliveryPickup;
     if(campaignTarget)message='F · '+campaignTarget.label.toUpperCase();
-    else{
-      const landmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
-      if(landmark)message='F · DISCOVER SNAPSHOT';
-      else{
-        const deliveryTarget=carryingPackage?deliveryDropoff:deliveryPickup;
-        if(Math.hypot(player.x-deliveryTarget.x,player.z-deliveryTarget.z)<7)
-          message=carryingPackage?'F · COMPLETE DELIVERY':'F · START DELIVERY';
-      }
-    }
+    else if(cleanupTarget)message='F · CLEAN '+cleanupTarget.label.toUpperCase();
+    else if(landmark)message='F · DISCOVER SNAPSHOT';
+    else if(neighbor)message='F · TALK TO '+neighbor.profile.name.toUpperCase();
+    else if(Math.hypot(player.x-deliveryTarget.x,player.z-deliveryTarget.z)<7)
+      message=carryingPackage?'F · COMPLETE DELIVERY':'F · START DELIVERY';
   }
   prompt.textContent=message;prompt.style.display=message?'block':'none';
 }
@@ -2070,6 +2121,18 @@ function handleActivity(){
     }
     return;
   }
+  const nearbyCleanupTarget=getNearbyCleanupTarget();
+  if(nearbyCleanupTarget){
+    const result=collectCleanupSpot(communityState,nearbyCleanupTarget.id);
+    if(result.accepted){
+      communityState=result.state;nearbyCleanupTarget.marker.visible=false;updateCommunityHud();
+      awardPlayerReward(result.reward.cash,result.reward.xp,result.message);
+      $('objectiveText').textContent=result.completedNow
+        ?'Courtyard cleanup complete. Thanks for helping keep the neighborhood welcoming.'
+        :'Courtyard cleanup: '+getCommunityProgress(communityState).cleanupSpotsCleared+'/'+CLEANUP_SPOTS.length+' areas cleared.';
+    }
+    return;
+  }
   const nearbyLandmark=landmarks.find(item=>!item.discovered&&Math.hypot(player.x-item.x,player.z-item.z)<5.5);
   if(nearbyLandmark){
     nearbyLandmark.discovered=true;nearbyLandmark.marker.visible=false;updateActivityHud();
@@ -2078,6 +2141,19 @@ function handleActivity(){
       ?'All five neighborhood snapshots found! You can still deliver packages and explore the district.'
       :'Snapshot saved: '+nearbyLandmark.name+'. Find the remaining cyan beacons around the neighborhood.';
     awardPlayerReward(25,20,'Snapshot saved: '+nearbyLandmark.name);return;
+  }
+  const nearbyNeighbor=getNearbyNeighbor();
+  if(nearbyNeighbor){
+    const result=greetNeighbor(communityState,nearbyNeighbor.profile.id,gameHours);
+    if(result.accepted){
+      communityState=result.state;updateCommunityHud();
+      if(result.firstGreeting)awardPlayerReward(result.reward.cash,result.reward.xp,result.message);
+      else showToast(result.message);
+      if(result.completedNow)$('objectiveText').textContent='Side mission complete: you have introduced yourself to three neighbors. Keep exploring and helping around the block.';
+      else if(result.firstGreeting)$('objectiveText').textContent='Meet three neighbors around the block. Progress: '+getCommunityProgress(communityState).neighborsGreeted+'/3.';
+      saveGameProgress();
+    }
+    return;
   }
   if(!carryingPackage){
     if(Math.hypot(player.x-deliveryPickup.x,player.z-deliveryPickup.z)>6){showToast('Find a cyan snapshot beacon or the gold market marker');return;}
@@ -2235,13 +2311,13 @@ function movePlayer(dt){
   const f=(input('w')||input('arrowup')?1:0)-(input('s')||input('arrowdown')?1:0);
   const s=(input('d')||input('arrowright')?1:0)-(input('a')||input('arrowleft')?1:0);
   if(inCar){
-    velocity+=f*13.5*dt;velocity*=Math.pow((input(' ')||touch.space)?0.07:0.992,dt*60);
-    velocity=THREE.MathUtils.clamp(velocity,-7,19);
-    const steer=carSteeringInput();
-    playerCar.rotation.y+=steer*Math.min(Math.abs(velocity)/5.5,1)*1.45*dt*Math.sign(velocity||1);
-    const nx=playerCar.position.x-Math.sin(playerCar.rotation.y)*velocity*dt;
-    const nz=playerCar.position.z-Math.cos(playerCar.rotation.y)*velocity*dt;
-    if(!blocked(nx,nz,1.35)){playerCar.position.x=nx;playerCar.position.z=nz;}else velocity*=-.16;
+    const steering=carSteeringInput();
+    const next=stepVehiclePhysics({
+      x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,velocity
+    },{
+      forward:f>0,backward:f<0,left:steering>0,right:steering<0,brake:input(' ')||touch.space
+    },dt,(x,z)=>blocked(x,z,1.35));
+    velocity=next.velocity;playerCar.rotation.y=next.heading;playerCar.position.set(next.x,0,next.z);
     for(const wheel of playerCar.userData.wheels||[])wheel.rotation.x+=velocity*dt/.39;
     player.x=playerCar.position.x;player.z=playerCar.position.z;player.heading=playerCar.rotation.y;
   }else{
@@ -2322,6 +2398,7 @@ function updateMap(){
   ctx.fillStyle='#416a49';ctx.fillRect(96*scale,171*scale,58*scale,54*scale);
   for(const item of traffic){ctx.fillStyle='#e0c17b';ctx.beginPath();ctx.arc((160+item.g.position.x)*scale,(160+item.g.position.z)*scale,2.5,0,Math.PI*2);ctx.fill();}
   for(const landmark of landmarks){if(!landmark.discovered){ctx.fillStyle='#63cbd2';ctx.beginPath();ctx.arc((160+landmark.x)*scale,(160+landmark.z)*scale,3.2,0,Math.PI*2);ctx.fill();}}
+  for(const target of cleanupTargets)if(target.marker.visible){ctx.fillStyle='#e0c17b';ctx.beginPath();ctx.arc((160+target.x)*scale,(160+target.z)*scale,3.4,0,Math.PI*2);ctx.fill();}
   for(const target of campaignTargets.values())if(target.marker.visible){ctx.fillStyle='#e5b96d';ctx.beginPath();ctx.arc((160+target.x)*scale,(160+target.z)*scale,4,0,Math.PI*2);ctx.fill();}
   if(neighborhoodEventMarker.visible){ctx.fillStyle='#8db8b4';ctx.beginPath();ctx.arc((160+neighborhoodEventMarker.position.x)*scale,(160+neighborhoodEventMarker.position.z)*scale,3.6,0,Math.PI*2);ctx.fill();}
   ctx.fillStyle='#e8b45f';ctx.beginPath();ctx.arc((160+player.x)*scale,(160+player.z)*scale,4.5,0,Math.PI*2);ctx.fill();
@@ -2382,6 +2459,8 @@ if(automationMode){
       started,inCar,firstPerson,weatherMode,gameHours,atmosphere:getAtmosphereState(gameHours,weatherMode),carryingPackage,deliveriesCompleted,
       profile:{...playerProfile,level:getPlayerLevel(playerProfile.xp)},neighborhoodEvent:currentNeighborhoodEvent?.id||null,pedestrianStates:pedestrians.map(p=>p.mode),saveStatus:localStorage.getItem(SAVE_STORAGE_KEY)!==null,
       campaign:getCampaignProgress(campaignState),
+      community:getCommunityProgress(communityState),
+      cleanupTargets:cleanupTargets.map(({id,x,z,marker})=>({id,x,z,visible:marker.visible})),
       campaignTargets:[...campaignTargets.values()].map(({id,label,x,z})=>({id,label,x,z})),
       discoveredLandmarks:landmarks.filter(item=>item.discovered).length,
       player:{x:player.x,z:player.z},car:{x:playerCar.position.x,z:playerCar.position.z,heading:playerCar.rotation.y,wheelRotations:(playerCar.userData.wheels||[]).map(w=>w.rotation.x),details:{plates:playerCar.userData.plates,doorHandles:playerCar.userData.doorHandles,wheelSpokes:playerCar.userData.wheelSpokes,wheelLugs:playerCar.userData.wheelLugs,wheelArches:playerCar.userData.wheelArches,visualQuality:playerCar.userData.visualQuality,paintFinish:playerCar.userData.paintFinish,glassFinish:playerCar.userData.glassFinish,interiorType:playerCar.userData.interiorType,panelSeams:playerCar.userData.panelSeams,headlightDetails:playerCar.userData.headlightDetails,bodyStyle:playerCar.userData.bodyStyle,silhouette:playerCar.userData.silhouette,tireProfile:playerCar.userData.tireProfile,smoothProfileRadius:playerCar.userData.smoothProfileRadius}},
@@ -2410,7 +2489,7 @@ if(automationMode){
       modelAssets:{...modelAssetStatus},
       simulationRunning:started&&elapsed>0,
       pedestrians:pedestrians.length,traffic:traffic.length,
-      npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target})),
+      npcPositions:pedestrians.map(p=>({x:p.g.position.x,z:p.g.position.z,target:p.target,neighborId:p.neighborId,name:getNeighborById(p.neighborId)?.name||null})),
       trafficPositions:traffic.map(item=>({x:item.g.position.x,z:item.g.position.z}))
     }),
     setKey:(key,pressed)=>{
@@ -2428,6 +2507,7 @@ if(automationMode){
       player.x=x;player.z=z;player.y=0;player.vertical=0;player.grounded=true;avatar.position.set(x,0,z);
     },
     saveNow:()=>saveGameProgress(),
+    interact:()=>handleActivity(),
     clearSave:()=>localStorage.removeItem(SAVE_STORAGE_KEY),
     setGameHours:(hour)=>{
       if(!Number.isFinite(hour)||hour<0||hour>=24)throw new TypeError('Test game hour must be between 0 and 24');
@@ -2435,10 +2515,10 @@ if(automationMode){
     }
   }),configurable:false});
 }
-restoreGameProgress();updateActivityHud();updateCampaignMarkers();updateCampaignHud();updateProgressHud();updateNeighborhoodEvent(false);
+restoreGameProgress();updateActivityHud();updateCampaignMarkers();updateCleanupMarkers();updateCampaignHud();updateProgressHud();updateCommunityHud();updateNeighborhoodEvent(false);
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   adaptiveResolution.resize();
 });
 $('loading').textContent='Neighborhood ready';
-document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows+v5-core-gameplay';
+document.documentElement.dataset.visualVersion='v4-3-lighting-atmosphere+v4-6-realistic-model-overhaul+v4-7-world-environment-realism+v4-9-soft-contact-shadows+v7-core-gameplay-stability';
