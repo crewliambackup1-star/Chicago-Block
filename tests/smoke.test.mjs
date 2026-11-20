@@ -44,7 +44,7 @@ test('V6 adds local progression, autosaves and living neighborhood simulation', 
   assert.match(game, /AUTO-SAVED TO THIS DEVICE/);
   assert.match(game, /LEVEL UP!/);
   assert.match(readme, /automatic local saves/i);
-  assert.match(readme, /cash and XP/i);
+  assert.match(readme, /Missions award \*\*\$150 and 100 XP\*\*/i);
   assert.match(readme, /pedestrians react/i);
 });
 
@@ -179,8 +179,8 @@ test('V4.5 human models use smoother natural proportions and articulated gait ri
     'const headPivot=new THREE.Group()', 'headPivot.scale.setScalar(.78)', 'g.userData.head=headPivot',
     'g.userData.headScale=.78', 'g.userData.hairStyle=', 'g.userData.animationRig=\'v4.5-articulated-gait\'',
     'const elbowPivot=new THREE.Group()', 'const shinPivot=new THREE.Group()',
-    'const liftLeft=Math.max(0,Math.sin(phase))*.58',
-    'p.g.userData.torso.position.y=1.18+Math.abs(Math.sin(phase*2))*.018'
+    'const liftLeft=p.mode===\'walking\'?Math.max(0,Math.sin(phase))*.58:0',
+    'p.g.userData.torso.position.y=1.18+(p.mode===\'walking\'?Math.abs(Math.sin(phase*2))*.018:0)'
   ]) assert.ok(game.includes(feature), 'Missing V4.2 character feature: ' + feature);
   assert.match(readme, /four distinct procedural hairstyles/);
   assert.match(readme, /gait cycle/);
