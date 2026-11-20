@@ -1,6 +1,20 @@
-# Chicago Block — V6 Living World & Progression
+# Chicago Block — V7 Core Gameplay & Stability
 
 V6 builds a more reactive neighborhood and adds player progression with automatic local saves, while preserving the V5 mission framework and V4 visual baseline.
+
+V7 strengthens the release pipeline and expands the activities available around the neighborhood, building on V6 progression and local saves.
+
+## V7 core gameplay and stability
+
+- Fixes the V4.8 HUD label regression: the in-game release label now uses the version embedded in the actual loaded `game.js` module, compares it with the release manifest, and clearly marks an unverified or mismatched build instead of claiming the wrong version.
+- Keeps the manifest request cache-bypassed. When the manifest cannot be verified, the page continues with its bundled copy but marks the release as unverified/offline.
+- Adds two optional community side activities: meet three distinct neighbors and help clear three courtyard walkway spots. Both are tracked, award cash and XP, and save locally.
+- Adds named pedestrian conversations with time-varied dialogue. First introductions count once per neighbor; repeat conversations remain available without allowing reward farming.
+- Moves vehicle handling into a deterministic, testable physics module with speed-dependent steering, bounded acceleration/reverse speed, braking, and collision response.
+- Separates the desktop minimap from the expanded progress HUD and adds community activity progress to the HUD and minimap.
+- Preserves V5 story missions, V6 ranks/rewards/autosaves, camera modes, touch controls, and existing visual systems. V6 save files remain readable; the new community progress is stored as an optional backward-compatible field.
+
+Validation commands remain `npm run check`, `npm test`, and `npm run test:browser`.
 
 ## V6 living world
 
