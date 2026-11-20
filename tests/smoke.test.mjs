@@ -24,7 +24,7 @@ test('page checks the latest release before loading versioned game assets', () =
   assert.ok(imports.length >= 7, 'all main local modules should have release-specific URLs');
   for (const match of imports) assert.equal(match[2], packageInfo.version, match[1] + ' must use the current release cache key');
   assert.match(modelAssetsJs, /searchParams\.get\('v'\)/, 'GLB models must inherit the model module release cache key');
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'saveStatus', 'eventLabel']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'saveStatus', 'eventLabel', 'communityLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
   assert.match(html, /UPDATE 7\.0 · CORE GAMEPLAY & STABILITY/);
