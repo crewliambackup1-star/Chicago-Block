@@ -45,7 +45,7 @@ test('V6 adds local progression, autosaves and living neighborhood simulation', 
   assert.match(game, /LEVEL UP!/);
   assert.match(readme, /automatic local saves/i);
   assert.match(readme, /Missions award \*\*\$150 and 100 XP\*\*/i);
-  assert.match(readme, /pedestrians react/i);
+  assert.match(readme, /pedestrians now take occasional short breaks/i);
 });
 
 test('V5 adds an optional neighborhood story and contextual interaction prompts', () => {
