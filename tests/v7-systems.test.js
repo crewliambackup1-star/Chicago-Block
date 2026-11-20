@@ -12,8 +12,8 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const release = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
 const packageInfo = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
-test('V7 release version matches package and the actual loaded game module is identified', () => {
-  assert.equal(release.version, '7.0.0');
+test('V8 release version matches package and the actual loaded game module is identified', () => {
+  assert.equal(release.version, '8.0.0');
   assert.equal(packageInfo.version, release.version);
   assert.match(game, /new URL\(import\.meta\.url\)\.searchParams\.get\('v'\)/);
   assert.match(game, /window\.__CHICAGO_BLOCK_BUILD__/);
@@ -22,6 +22,9 @@ test('V7 release version matches package and the actual loaded game module is id
   assert.match(html, /manifestVerified/);
   assert.match(html, /cache: 'no-store'/);
   assert.match(html, /id="communityLabel"/);
+  assert.match(html, /id="performanceLabel"/);
+  assert.match(game, /renderer\.shadowMap\.autoUpdate = false/);
+  assert.match(game, /SHADOW_REFRESH_INTERVAL/);
 });
 
 test('vehicle physics accelerates, moves forward and steers with the intended direction', () => {

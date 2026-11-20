@@ -1,17 +1,17 @@
 import * as THREE from 'three';
-import { applyPlayerReward, createPlayerProfile, getPlayerLevel, normalizePlayerProfile } from './progression.js?v=7.0.0';
-import { parseSave, serializeSave, SAVE_STORAGE_KEY } from './save-system.js?v=7.0.0';
-import { advancePedestrianRoutine, getNeighborhoodSchedule } from './world-simulation.js?v=7.0.0';
-import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=7.0.0';
-import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress, normalizeCampaignState } from './missions.js?v=7.0.0';
-import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=7.0.0';
-import { getAtmosphereState } from './atmosphere.js?v=7.0.0';
-import { loadModelAssets } from './model-assets.js?v=7.0.0';
-import { addWorldEnvironmentDetails } from './environment-details.js?v=7.0.0';
-import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=7.0.0';
-import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=7.0.0';
-import { stepVehiclePhysics } from './vehicle-physics.js?v=7.0.0';
-import { CLEANUP_SPOTS, collectCleanupSpot, createCommunityState, getCommunityProgress, getNeighborById, greetNeighbor, normalizeCommunityState } from './community-activities.js?v=7.0.0';
+import { applyPlayerReward, createPlayerProfile, getPlayerLevel, normalizePlayerProfile } from './progression.js?v=8.0.0';
+import { parseSave, serializeSave, SAVE_STORAGE_KEY } from './save-system.js?v=8.0.0';
+import { advancePedestrianRoutine, getNeighborhoodSchedule } from './world-simulation.js?v=8.0.0';
+import { findVehicleExitPosition, getCarSteeringInput } from './controls.js?v=8.0.0';
+import { applyCampaignInteraction, createCampaignState, getCampaignObjective, getCampaignProgress, normalizeCampaignState } from './missions.js?v=8.0.0';
+import { createAdaptiveResolutionController, createGraphicsProfile } from './rendering.js?v=8.0.0';
+import { getAtmosphereState } from './atmosphere.js?v=8.0.0';
+import { loadModelAssets } from './model-assets.js?v=8.0.0';
+import { addWorldEnvironmentDetails } from './environment-details.js?v=8.0.0';
+import { getHumanAnimationState, getHumanSurfaceProfile, getVehicleSurfaceProfile, mapHumanAnimationClips } from './visual-profiles.js?v=8.0.0';
+import { createContactShadowBatch, createContactShadowTexture, updateContactShadowBatch } from './contact-shadows.js?v=8.0.0';
+import { stepVehiclePhysics } from './vehicle-physics.js?v=8.0.0';
+import { CLEANUP_SPOTS, collectCleanupSpot, createCommunityState, getCommunityProgress, getNeighborById, greetNeighbor, normalizeCommunityState } from './community-activities.js?v=8.0.0';
 
 const LOADED_GAME_VERSION = new URL(import.meta.url).searchParams.get('v') || 'unversioned';
 
@@ -101,7 +101,8 @@ renderer.setPixelRatio(renderProfile.initialPixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = renderProfile.shadowsEnabled;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.shadowMap.autoUpdate = true;
+renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.needsUpdate = true;
 renderer.toneMappingExposure = 1.04;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2409,13 +2410,25 @@ function updateZone(){
   $('zone').textContent='· '+z;
 }
 const timer=new THREE.Clock();let elapsed=0,automationRenderCounter=0;
+const SHADOW_REFRESH_INTERVAL=0.14,CONTACT_SHADOW_REFRESH_INTERVAL=0.05;
+let lastShadowRefreshElapsed=0,lastContactShadowRefreshElapsed=0;
+let performanceFrameCount=0,performanceLastSample=performance.now();
+const performanceLabel=$('performanceLabel');
+function updatePerformanceMonitor(now){
+  performanceFrameCount++;
+  const span=now-performanceLastSample;
+  if(span<1000)return;
+  const fps=performanceFrameCount*1000/span,averageFrameMs=span/performanceFrameCount;
+  if(performanceLabel)performanceLabel.textContent='FPS '+Math.round(fps)+' · '+averageFrameMs.toFixed(1)+' MS';
+  performanceFrameCount=0;performanceLastSample=now;
+}
 function frame(){
   requestAnimationFrame(frame);
-  const dt=Math.min(timer.getDelta(),.04),time=timer.elapsedTime;
+  const rawDt=timer.getDelta(),dt=Math.min(rawDt,.04),time=timer.elapsedTime;
   // The title screen fully covers the 3D scene. Skip simulation and WebGL draws until
   // the player starts, avoiding unnecessary GPU work while large models load.
   if(!started)return;
-  elapsed+=dt;movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
+  elapsed+=dt;updatePerformanceMonitor(performance.now());movePlayer(dt);updateAvatarAssetAnimation(dt);walkNPCs(dt,time);moveTraffic(dt);updateCamera(dt);updateClock(dt);updateRain(dt);
   if(elapsed-lastAutoSaveElapsed>=8){saveGameProgress();lastAutoSaveElapsed=elapsed;}
   deliveryMarker.position.y=.08+Math.sin(time*2.2)*.16;deliveryMarker.rotation.y+=dt*.65;
   for(let i=0;i<landmarks.length;i++){
@@ -2430,8 +2443,9 @@ function frame(){
   if(elapsed%0.22<dt){updateMap();updateZone();updateInteractionPrompt();}
   if(performance.now()-lastToast>1900)$('toast').classList.remove('show');
   updateVehicleAssetLods();
-  updateContactShadows();
-  adaptiveResolution.update(dt,!document.hidden);
+  if(elapsed-lastContactShadowRefreshElapsed>=CONTACT_SHADOW_REFRESH_INTERVAL){updateContactShadows();lastContactShadowRefreshElapsed=elapsed;}
+  if(elapsed-lastShadowRefreshElapsed>=SHADOW_REFRESH_INTERVAL){renderer.shadowMap.needsUpdate=true;lastShadowRefreshElapsed=elapsed;}
+  adaptiveResolution.update(rawDt,!document.hidden);
   // CI's software renderer draws less often; normal players render every frame.
   if(++automationRenderCounter%renderProfile.renderEveryNthFrame===0)renderer.render(scene,camera);
 }

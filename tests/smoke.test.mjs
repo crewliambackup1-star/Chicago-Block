@@ -24,11 +24,11 @@ test('page checks the latest release before loading versioned game assets', () =
   assert.ok(imports.length >= 7, 'all main local modules should have release-specific URLs');
   for (const match of imports) assert.equal(match[2], packageInfo.version, match[1] + ' must use the current release cache key');
   assert.match(modelAssetsJs, /searchParams\.get\('v'\)/, 'GLB models must inherit the model module release cache key');
-  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'saveStatus', 'eventLabel', 'communityLabel']) {
+  for (const id of ['game', 'startScreen', 'playButton', 'minimap', 'objectiveText', 'missionHeading', 'missionText', 'interactionPrompt', 'mode', 'speed', 'interactButton', 'cameraButton', 'brakeButton', 'activityButton', 'weatherButton', 'collectionLabel', 'progressLabel', 'saveStatus', 'eventLabel', 'communityLabel', 'performanceLabel']) {
     assert.ok(html.includes('id="' + id + '"'), 'Missing required element: ' + id);
   }
-  assert.match(html, /UPDATE 7\.0 · CORE GAMEPLAY & STABILITY/);
-  assert.match(html, /Core Gameplay & Stability \(V7\.0\)/);
+  assert.match(html, /UPDATE 8\.0 · PERFORMANCE & OPTIMIZATION/);
+  assert.match(html, /Performance & Optimization \(V8\.0\)/);
   assert.match(html, /automatic local saves/);
   assert.match(html, /Talk \/ activity/);
   assert.ok(html.includes('id="weatherLabel"'), 'Missing weather status');
