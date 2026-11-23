@@ -16,8 +16,8 @@ async function waitForReady(page) {
   await page.goto(baseUrl + '?automation=1', { waitUntil: 'networkidle', timeout: 60000 });
   assert.equal(await page.evaluate(() => window.__CHICAGO_BLOCK_RELEASE__?.version), '8.0.0', 'startup should resolve the current release manifest');
   assert.deepEqual(await page.evaluate(() => window.__CHICAGO_BLOCK_BUILD__), { version: '8.0.0', manifestVersion: '8.0.0', manifestVerified: true, matched: true }, 'the loaded game module should match the verified release manifest');
-  assert.match(await page.title(), /V7\.0/, 'the document title should show the current release');
-  assert.match(await page.locator('#brand small').textContent(), /V7\.0/, 'the in-game version label should show the current release');
+  assert.match(await page.title(), /V8\.0/, 'the document title should show the current release');
+  assert.match(await page.locator('#brand small').textContent(), /V8\.0/, 'the in-game version label should show the current release');
   await page.waitForFunction(
     () => document.querySelector('#loading')?.textContent === 'Neighborhood ready',
     null,
