@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const baseUrl = process.env.BASE_URL || 'http://128.0.0.1:4173/';
+const baseUrl = process.env.BASE_URL || 'http://127.0.0.1:4173/';
 await mkdir('artifacts', { recursive: true });
 
 async function sendKey(page, key, type = 'keydown') {
